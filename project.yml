@@ -1,0 +1,41 @@
+name: ClassroomManager
+options:
+  bundleIdPrefix: com.classroom
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+targets:
+  TeacherApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: TeacherApp
+      - path: Shared
+    info:
+      path: TeacherApp/Info.plist
+    entitlements:
+      path: TeacherApp/TeacherApp.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.classroom.teacher
+        PRODUCT_NAME: TeacherApp
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+  StudentApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: StudentApp
+      - path: Shared
+    info:
+      path: StudentApp/Info.plist
+    entitlements:
+      path: StudentApp/StudentApp.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.classroom.student
+        PRODUCT_NAME: StudentApp
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
