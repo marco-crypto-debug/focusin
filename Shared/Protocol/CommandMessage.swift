@@ -1,11 +1,11 @@
 import Foundation
 
-/// 端到端传输的统一消息信封。
+/// 端到端傳輸的統一訊息信封。
 struct CommandMessage: Codable, Equatable {
     let type: CommandType
     let senderID: String
     let senderName: String
-    let payload: String?      // 命令附带的 JSON 字符串或 base64 数据
+    let payload: String?      // 命令附帶的 JSON 字串或 base64 資料
     let timestamp: Date
 
     init(type: CommandType,

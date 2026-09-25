@@ -1,10 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// Kiosk 锁屏控制器：
-/// - 全屏无边框窗口覆盖所有显示器，层级高于菜单栏与 Dock
-/// - 系统级禁用快捷键（presentationOptions）+ 事件级拦截（CGEventTap）
-/// - 紧急解锁流程（本地管理员输密码，⌘⇧U 唤起）
+/// Kiosk 鎖屏控制器：
+/// - 全屏無邊框視窗覆蓋所有顯示器，層級高於選單列與 Dock
+/// - 系統級停用快捷鍵（presentationOptions）+ 事件級攔截（CGEventTap）
+/// - 緊急解鎖流程（本地管理員輸密碼，⌘⇧U 喚起）
 @MainActor
 final class KioskModeController: ObservableObject {
     static let shared = KioskModeController()
@@ -13,7 +13,7 @@ final class KioskModeController: ObservableObject {
     @Published var unlockRequested = false
     @Published var broadcastImage: NSImage?
 
-    /// 锁屏状态变化通知（供 CommandListener 更新 UI）。
+    /// 鎖屏狀態變化通知（供 CommandListener 更新 UI）。
     var onLockStateChanged: ((Bool) -> Void)?
 
     private var lockWindows: [NSWindow] = []
@@ -26,7 +26,7 @@ final class KioskModeController: ObservableObject {
         }
     }
 
-    // MARK: - 锁定 / 解锁
+    // MARK: - 鎖定 / 解鎖
 
     func enterKiosk() {
         guard !isLocked else { return }
@@ -34,26 +34,26 @@ final class KioskModeController: ObservableObject {
         unlockRequested = false
         broadcastImage = nil
 
-        // 1) 系统级：隐藏 Dock/菜单栏，禁用快捷键与系统入口。
-        //    较新的 macOS 上还可加 .disableScreenCapture/.disableSpotlight/
-        //    .disableControlCenter/.disableNotificationCenter；这里保持最小
-        //    兼容集合，其余快捷键由 InputInterceptor 在 HID 层兜底拦截。
+        // 1) 系統級：隱藏 Dock/選單列，停用快捷鍵與系統入口。
+        //    較新的 macOS 上還可加 .disableScreenCapture/.disableSpotlight/
+        //    .disableControlCenter/.disableNotificationCenter；這裡保持最小
+        //    相容集合，其餘快捷鍵由 InputInterceptor 在 HID 層兜底攔截。
         NSApp.presentationOptions = [
             .hideDock, .hideMenuBar,
-            .disableProcessSwitching,      // ⌘⇥ 应用切换
-            .disableForceQuit,             // ⌘⌥⎋ 强制退出
-            .disableAppleMenu,             // 苹果菜单
+            .disableProcessSwitching,      // ⌘⇥ 應用程式切換
+            .disableForceQuit,             // ⌘⌥⎋ 強制結束
+            .disableAppleMenu,             // 蘋果選單
             .disableHideApplication,       // ⌘H
             .disableSessionTermination
         ]
         NSApp.activate(ignoringOtherApps: true)
 
-        // 2) 事件级：吞掉本机键盘/鼠标输入
+        // 2) 事件級：吞掉本機鍵盤/滑鼠輸入
         if !interceptor.install() {
             promptAccessibility()
         }
 
-        // 3) 全屏锁窗覆盖所有显示器
+        // 3) 全屏鎖窗覆蓋所有顯示器
         showLockWindows()
         onLockStateChanged?(true)
     }
@@ -71,26 +71,26 @@ final class KioskModeController: ObservableObject {
         onLockStateChanged?(false)
     }
 
-    // MARK: - 紧急解锁（⌘⇧U）
+    // MARK: - 緊急解鎖（⌘⇧U）
 
     private func beginUnlockFlow() {
         guard isLocked, !unlockRequested else { return }
         unlockRequested = true
-        interceptor.uninstall()          // 暂时放行输入，允许管理员在锁窗内输入密码
+        interceptor.uninstall()          // 暫時放行輸入，允許管理員在鎖窗內輸入密碼
 
         guard KioskConfig.hasAdminPassword else {
-            // 从未设置过密码：无解锁途径，保持锁定
+            // 從未設定過密碼：無解鎖途徑，保持鎖定
             reinstallBlocking(after: 5)
             return
         }
-        // 60 秒内未输入正确密码则自动重新锁死
+        // 60 秒內未輸入正確密碼則自動重新鎖死
         relockTimer?.invalidate()
         relockTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: false) { [weak self] _ in
             Task { @MainActor in self?.abortUnlock() }
         }
     }
 
-    /// 校验密码。正确 → 解锁；错误 → 保持锁定并立即恢复输入拦截。
+    /// 校驗密碼。正確 → 解鎖；錯誤 → 保持鎖定並立即恢復輸入攔截。
     @discardableResult
     func submitUnlock(_ password: String) -> Bool {
         guard KioskConfig.verify(password) else {
@@ -119,10 +119,10 @@ final class KioskModeController: ObservableObject {
 
     private func promptAccessibility() {
         let alert = NSAlert()
-        alert.messageText = "需要辅助功能权限"
-        alert.informativeText = "学生端需要「辅助功能」权限才能在锁定时屏蔽本机键盘与鼠标输入。请在系统设置中开启后重新锁定。"
-        alert.addButton(withTitle: "打开系统设置")
-        alert.addButton(withTitle: "稍后")
+        alert.messageText = "需要輔助功能權限"
+        alert.informativeText = "學生端需要「輔助功能」權限才能在鎖定時屏蔽本機鍵盤與滑鼠輸入。請在系統設定中開啟後重新鎖定。"
+        alert.addButton(withTitle: "打開系統設定")
+        alert.addButton(withTitle: "稍後")
         if alert.runModal() == .alertFirstButtonReturn {
             NSWorkspace.shared.open(
                 URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
@@ -130,7 +130,7 @@ final class KioskModeController: ObservableObject {
         }
     }
 
-    // MARK: - 全屏锁窗
+    // MARK: - 全屏鎖窗
 
     private func showLockWindows() {
         let screens = NSScreen.screens.isEmpty ? [NSScreen.main!] : NSScreen.screens
@@ -141,7 +141,7 @@ final class KioskModeController: ObservableObject {
                 backing: .buffered,
                 defer: false
             )
-            window.level = .screenSaver                    // 高于菜单栏/Dock
+            window.level = .screenSaver                    // 高於選單列/Dock
             window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
             window.isOpaque = true
             window.backgroundColor = .black
@@ -153,7 +153,7 @@ final class KioskModeController: ObservableObject {
         }
     }
 
-    // MARK: - 广播画面
+    // MARK: - 廣播畫面
 
     func setBroadcastImage(_ image: NSImage?) {
         broadcastImage = image
@@ -164,7 +164,7 @@ final class KioskModeController: ObservableObject {
     }
 }
 
-/// 无边框但可以成为 Key 窗口（密码输入需要）。
+/// 無邊框但可以成為 Key 視窗（密碼輸入需要）。
 private final class LockWindow: NSWindow {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }

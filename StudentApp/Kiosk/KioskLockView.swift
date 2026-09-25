@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 锁屏界面：显示教师广播画面（或锁定提示），以及紧急解锁密码输入。
+/// 鎖屏介面：顯示教師廣播畫面（或鎖定提示），以及緊急解鎖密碼輸入。
 struct KioskLockView: View {
     @ObservedObject var controller: KioskModeController
     @State private var password = ""
@@ -20,10 +20,10 @@ struct KioskLockView: View {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 52))
                         .foregroundStyle(.white)
-                    Text("屏幕已被教师锁定")
+                    Text("屏幕已被教師鎖定")
                         .font(.title.bold())
                         .foregroundStyle(.white)
-                    Text("按 ⌘⇧U，输入本地管理员密码可紧急解锁")
+                    Text("按 ⌘⇧U，輸入本地管理員密碼可緊急解鎖")
                         .font(.callout)
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -31,14 +31,14 @@ struct KioskLockView: View {
 
             if controller.unlockRequested {
                 VStack(spacing: 12) {
-                    SecureField("管理员密码", text: $password)
+                    SecureField("管理員密碼", text: $password)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 240)
                         .onSubmit(submit)
                     if showError {
-                        Text("密码错误").foregroundStyle(.red)
+                        Text("密碼錯誤").foregroundStyle(.red)
                     }
-                    Button("解锁", action: submit)
+                    Button("解鎖", action: submit)
                         .keyboardShortcut(.defaultAction)
                 }
                 .padding(24)

@@ -4,12 +4,12 @@ import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
 
-/// 输入拦截器：通过 CGEventTap（.cghidEventTap）在系统级拦截键盘/鼠标事件，
-/// 实现「本机用户无法操作」的硬锁。需要辅助功能（Accessibility）权限。
+/// 輸入攔截器：透過 CGEventTap（.cghidEventTap）在系統級攔截鍵盤/滑鼠事件，
+/// 實現「本機使用者無法操作」的硬鎖。需要輔助功能（Accessibility）權限。
 final class InputInterceptor {
     static let shared = InputInterceptor()
 
-    /// 检测到紧急解锁组合键（⌘⇧U）时在主线程回调。
+    /// 偵測到緊急解鎖組合鍵（⌘⇧U）時在主執行緒回呼。
     var onEmergencyUnlockRequested: (() -> Void)?
 
     private var eventTap: CFMachPort?
@@ -19,15 +19,15 @@ final class InputInterceptor {
     private static let emergencyCombo: (flags: CGEventFlags, keyCode: CGKeyCode) =
         ([.maskCommand, .maskShift], CGKeyCode(kVK_ANSI_U))
 
-    // MARK: - 公共接口
+    // MARK: - 公共介面
 
-    /// 安装事件拦截。返回 false 表示缺少辅助功能权限。
+    /// 安裝事件攔截。返回 false 表示缺少輔助功能權限。
     @discardableResult
     func install() -> Bool {
         guard !isActive else { return true }
         guard AXIsProcessTrusted() else { return false }
 
-        // 覆盖所有需要的输入事件
+        // 覆蓋所有需要的輸入事件
         let mask = (1 << CGEventType.keyDown.rawValue)
             | (1 << CGEventType.keyUp.rawValue)
             | (1 << CGEventType.flagsChanged.rawValue)
@@ -43,7 +43,7 @@ final class InputInterceptor {
             | (1 << CGEventType.scrollWheel.rawValue)
 
         guard let tap = CGEvent.tapCreate(
-            tap: .cghidEventTap,          // 用户态可用的系统级 tap（需辅助功能权限）
+            tap: .cghidEventTap,          // 使用者態可用的系統級 tap（需輔助功能權限）
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: CGEventMask(mask),
@@ -74,7 +74,7 @@ final class InputInterceptor {
         isActive = false
     }
 
-    // MARK: - Tap 回调
+    // MARK: - Tap 回呼
 
     private static let tapCallback: CGEventTapCallBack = { _, type, event, userInfo in
         guard let userInfo else { return Unmanaged.passUnretained(event) }
@@ -83,7 +83,7 @@ final class InputInterceptor {
     }
 
     private func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
-        // 系统可能因长时间阻塞而禁用 tap，收到后立即重新启用
+        // 系統可能因長時間阻塞而停用 tap，收到後立即重新啟用
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
             return nil
@@ -94,25 +94,25 @@ final class InputInterceptor {
             let flags = event.flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
             let key = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
 
-            // 紧急解锁组合键：⌘⇧U
+            // 緊急解鎖組合鍵：⌘⇧U
             if type == .keyDown, flags == Self.emergencyCombo.flags, key == Self.emergencyCombo.keyCode {
                 DispatchQueue.main.async { self.onEmergencyUnlockRequested?() }
                 return nil
             }
 
-            // 即使 presentationOptions 失效也硬拦截的经典快捷键：
-            // ⌘⇥（应用切换）、⌘⌥⎋（强制退出）、⌃←/⌃→（桌面切换）
+            // 即使 presentationOptions 失效也硬攔截的經典快捷鍵：
+            // ⌘⇥（應用程式切換）、⌘⌥⎋（強制結束）、⌃←/⌃→（桌面切換）
             if flags.contains(.maskCommand) && key == CGKeyCode(kVK_Tab) { return nil }
             if flags == [.maskCommand, .maskAlternate] && key == CGKeyCode(kVK_Escape) { return nil }
             if flags.contains(.maskControl)
                 && (key == CGKeyCode(kVK_LeftArrow) || key == CGKeyCode(kVK_RightArrow)) { return nil }
 
-            return nil  // 硬锁：吞掉所有键盘事件
+            return nil  // 硬鎖：吞掉所有鍵盤事件
 
         case .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp,
              .otherMouseDown, .otherMouseUp, .mouseMoved, .leftMouseDragged,
              .rightMouseDragged, .scrollWheel:
-            return nil  // 硬锁：吞掉所有鼠标事件
+            return nil  // 硬鎖：吞掉所有滑鼠事件
 
         default:
             return Unmanaged.passUnretained(event)

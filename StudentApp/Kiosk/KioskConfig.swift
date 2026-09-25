@@ -1,8 +1,8 @@
 import CryptoKit
 import Foundation
 
-/// 本地管理员密码：只保存加盐 SHA-256 哈希，绝不保存明文。
-/// 密码需在部署时通过学生端「状态窗口」预设。
+/// 本地管理員密碼：只保存加鹽 SHA-256 雜湊，絕不保存明文。
+/// 密碼需在部署時透過學生端「狀態視窗」預設。
 enum KioskConfig {
     private static let hashKey = "kiosk.adminPasswordHash"
     private static let saltKey = "kiosk.adminPasswordSalt"

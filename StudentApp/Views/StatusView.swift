@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 学生端状态窗口：显示连接状态、锁屏状态，并用于部署时预设本地管理员密码。
+/// 學生端狀態視窗：顯示連線狀態、鎖屏狀態，並用於部署時預設本地管理員密碼。
 struct StatusView: View {
     @EnvironmentObject var listener: CommandListener
     @State private var newPassword = ""
@@ -18,26 +18,26 @@ struct StatusView: View {
                     .fill(listener.connectionCount > 0 ? Color.green : Color.red)
                     .frame(width: 10, height: 10)
                 Text(listener.connectionCount > 0
-                     ? "\(listener.connectionCount) 位教师已连接"
-                     : "等待教师连接…")
+                     ? "\(listener.connectionCount) 位教師已連線"
+                     : "等待教師連線…")
             }
 
             HStack {
                 Image(systemName: listener.isLocked ? "lock.fill" : "lock.open")
-                Text(listener.isLocked ? "已锁定" : "未锁定")
+                Text(listener.isLocked ? "已鎖定" : "未鎖定")
             }
 
             if listener.isBroadcasting {
-                Label("正在接收教师屏幕广播", systemImage: "rectangle.on.rectangle")
+                Label("正在接收教師屏幕廣播", systemImage: "rectangle.on.rectangle")
             }
 
             Divider()
 
-            Text("本地管理员密码（部署时设置）")
+            Text("本地管理員密碼（部署時設定）")
                 .font(.subheadline.bold())
-            SecureField("新密码（至少 4 位）", text: $newPassword)
-            SecureField("确认密码", text: $confirmPassword)
-            Button("保存密码", action: savePassword)
+            SecureField("新密碼（至少 4 位）", text: $newPassword)
+            SecureField("確認密碼", text: $confirmPassword)
+            Button("保存密碼", action: savePassword)
             if !passwordError.isEmpty {
                 Text(passwordError)
                     .font(.caption)
@@ -63,21 +63,21 @@ struct StatusView: View {
         passwordError = ""
         passwordSaved = false
         guard newPassword.count >= 4 else {
-            passwordError = "密码至少 4 位"
+            passwordError = "密碼至少 4 位"
             return
         }
         guard newPassword == confirmPassword else {
-            passwordError = "两次输入的密码不一致"
+            passwordError = "兩次輸入的密碼不一致"
             return
         }
         do {
             try KioskConfig.setAdminPassword(newPassword)
             passwordSaved = true
-            passwordError = "密码已保存（哈希存储，仅用于本地紧急解锁）"
+            passwordError = "密碼已保存（雜湊儲存，僅用於本地緊急解鎖）"
             newPassword = ""
             confirmPassword = ""
         } catch {
-            passwordError = "保存失败: \(error)"
+            passwordError = "保存失敗: \(error)"
         }
     }
 }

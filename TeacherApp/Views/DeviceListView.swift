@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 教师主界面：左侧设备列表（单选/全选），右侧控制面板。
+/// 教師主介面：左側裝置列表（單選/全選），右側控制面板。
 struct DeviceListView: View {
     @EnvironmentObject var viewModel: TeacherViewModel
     @State private var launchBundleID = "com.apple.Safari"
@@ -8,10 +8,10 @@ struct DeviceListView: View {
 
     var body: some View {
         HSplitView {
-            // —— 设备列表 ——
+            // —— 裝置列表 ——
             VStack(alignment: .leading, spacing: 8) {
-                Text("学生设备").font(.headline)
-                Toggle("全部学生", isOn: $allSelected)
+                Text("學生裝置").font(.headline)
+                Toggle("全部學生", isOn: $allSelected)
                     .onChange(of: allSelected) { value in
                         for i in viewModel.peers.indices {
                             viewModel.peers[i].isSelected = value
@@ -37,9 +37,9 @@ struct DeviceListView: View {
                             Image(systemName: "wifi.slash")
                                 .font(.system(size: 28))
                                 .foregroundStyle(.secondary)
-                            Text("未发现学生端")
+                            Text("未發現學生端")
                                 .font(.subheadline)
-                            Text("请确认学生端已启动且与教师机在同一 Wi-Fi 网络。")
+                            Text("請確認學生端已啟動，且與教師機在同一 Wi-Fi 網路。")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
@@ -58,24 +58,24 @@ struct DeviceListView: View {
                 Group {
                     HStack(spacing: 12) {
                         Button { viewModel.sendLock() } label: {
-                            Label("锁定屏幕", systemImage: "lock.fill")
+                            Label("鎖定屏幕", systemImage: "lock.fill")
                         }
                         Button { viewModel.sendUnlock() } label: {
-                            Label("解锁屏幕", systemImage: "lock.open")
+                            Label("解鎖屏幕", systemImage: "lock.open")
                         }
                     }
                     HStack(spacing: 12) {
                         Button { viewModel.sendShutdown() } label: {
-                            Label("远程关机", systemImage: "power")
+                            Label("遠端關機", systemImage: "power")
                         }
                         Button { viewModel.sendRestart() } label: {
-                            Label("远程重启", systemImage: "arrow.clockwise")
+                            Label("遠端重新啟動", systemImage: "arrow.clockwise")
                         }
                     }
                     HStack(spacing: 8) {
-                        TextField("应用 Bundle ID（如 com.apple.Safari）", text: $launchBundleID)
+                        TextField("應用程式 Bundle ID（如 com.apple.Safari）", text: $launchBundleID)
                             .textFieldStyle(.roundedBorder)
-                        Button("启动应用") { viewModel.sendLaunchApp(bundleID: launchBundleID) }
+                        Button("啟動應用程式") { viewModel.sendLaunchApp(bundleID: launchBundleID) }
                     }
                 }
                 .controlSize(.large)
@@ -85,7 +85,7 @@ struct DeviceListView: View {
                 Button {
                     viewModel.toggleBroadcast()
                 } label: {
-                    Label(viewModel.broadcastActive ? "停止广播" : "广播教师屏幕",
+                    Label(viewModel.broadcastActive ? "停止廣播" : "廣播教師屏幕",
                           systemImage: viewModel.broadcastActive ? "stop.circle.fill" : "rectangle.on.rectangle")
                 }
                 .buttonStyle(.borderedProminent)
@@ -94,7 +94,7 @@ struct DeviceListView: View {
 
                 Divider()
 
-                Text("事件日志").font(.subheadline.bold())
+                Text("事件日誌").font(.subheadline.bold())
                 ScrollView {
                     ForEach(viewModel.log, id: \.self) { line in
                         Text(line)

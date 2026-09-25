@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>zh_CN</string>
+	<string>zh_Hant</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -23,6 +23,6 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>学生端在教师下达关机/重启指令时，需要向「系统事件」发送 Apple Events 以执行操作。</string>
+	<string>學生端在教師下達關機/重新啟動指令時，需要向「系統事件」傳送 Apple Events 以執行操作。</string>
 </dict>
 </plist>

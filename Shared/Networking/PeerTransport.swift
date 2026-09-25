@@ -1,20 +1,20 @@
 import Foundation
 import Network
 
-/// 网络参数工厂：两端共用一套 NWParameters，默认协议栈最上层挂 WebSocket。
+/// 網路參數工廠：兩端共用同一套 NWParameters，預設協定棧最上層掛載 WebSocket。
 enum PeerTransport {
-    /// Bonjour 服务类型（两端共用，同一 Wi-Fi 子网内自动发现）。
+    /// Bonjour 服務類型（兩端共用，同一 Wi-Fi 子網路內自動發現）。
     static let serviceType = "_classroom-ctrl._tcp."
     static let defaultPort: UInt16 = 4477
 
-    /// 构建带 WebSocket 应用协议的 NWParameters。
+    /// 構建帶 WebSocket 應用程式協定的 NWParameters。
     static func webSocketParameters() -> NWParameters {
         let parameters = NWParameters.tcp
         let ws = NWProtocolWebSocket.Options()
-        ws.autoReplyPing = true                       // 协议层自动回 PONG
+        ws.autoReplyPing = true                       // 協定層自動回覆 PONG
         parameters.defaultProtocolStack.applicationProtocols.insert(ws, at: 0)
         parameters.allowLocalEndpointReuse = true
-        parameters.serviceClass = .interactiveVideo   // 实时画面 + 命令的低延迟优先级
+        parameters.serviceClass = .interactiveVideo   // 即時畫面 + 命令的低延遲優先級
         return parameters
     }
 

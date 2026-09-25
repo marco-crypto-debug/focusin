@@ -1,7 +1,7 @@
 import Foundation
 import Network
 
-/// 学生端：通过 Bonjour 在本地网络广告 Kiosk 服务。
+/// 學生端：透過 Bonjour 在本機網路公布 Kiosk 服務。
 final class PeerAdvertiser {
     private var listener: NWListener?
     private let serviceName: String
@@ -38,16 +38,16 @@ final class PeerAdvertiser {
     }
 }
 
-/// 教师端：通过 Bonjour 自动发现同网段的学生端。
+/// 教師端：透過 Bonjour 自動發現同網段（同一子網路）的學生端。
 final class PeerBrowser {
     private var browser: NWBrowser?
 
-    var onPeerFound: ((NWEndpoint, String) -> Void)?   // (endpoint, 服务名)
+    var onPeerFound: ((NWEndpoint, String) -> Void)?   // (endpoint, 服務名稱)
     var onPeerLost: ((NWEndpoint) -> Void)?
 
     func start() {
         let parameters = NWParameters()
-        parameters.includePeerToPeer = true            // 允许 AWDL/点对点 发现
+        parameters.includePeerToPeer = true            // 允許 AWDL/點對點 發現
         let browser = NWBrowser(for: .bonjour(type: PeerTransport.serviceType, domain: nil),
                                 using: parameters)
         browser.browseResultsChangedHandler = { _, changes in
@@ -60,7 +60,7 @@ final class PeerBrowser {
                 case .removed(let result):
                     self.onPeerLost?(result.endpoint)
                 case .changed(let old, let new, _):
-                    // 服务参数变化（如改名），视作重新发现
+                    // 服務參數變化（如改名），視作重新發現
                     if case .service(let name, _, _, _) = new.endpoint {
                         self.onPeerLost?(old.endpoint)
                         self.onPeerFound?(new.endpoint, name)

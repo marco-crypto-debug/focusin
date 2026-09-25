@@ -1,8 +1,8 @@
 import Foundation
 import Network
 
-/// 一条 WebSocket 连接。应用层消息统一为 JSON 编码的 `CommandMessage`；
-/// 屏幕帧封装在 `streamFrame` 的 payload（base64 JPEG）中。
+/// 一條 WebSocket 連線。應用程式層訊息統一為 JSON 編碼的 `CommandMessage`；
+/// 屏幕幀封裝在 `streamFrame` 的 payload（base64 JPEG）中。
 final class PeerConnection {
     enum Mode { case client, server }
 
@@ -14,13 +14,13 @@ final class PeerConnection {
     var onConnectionLost: (() -> Void)?
     var onError: ((Error) -> Void)?
 
-    /// 客户端侧：主动连接被发现的教师/学生。
+    /// 用戶端側：主動連線被發現的教師/學生。
     init(connectTo endpoint: NWEndpoint) {
         self.mode = .client
         self.connection = NWConnection(to: endpoint, using: PeerTransport.webSocketParameters())
     }
 
-    /// 服务端侧：包装监听器接受的连接。
+    /// 服務端側：包裝監聽器接受的連線。
     init(accepted connection: NWConnection) {
         self.mode = .server
         self.connection = connection
@@ -56,14 +56,14 @@ final class PeerConnection {
         })
     }
 
-    // MARK: - 接收循环
+    // MARK: - 接收循環
 
     private func receiveNext() {
         connection.receiveMessage { [weak self] data, context, _, error in
             guard let self else { return }
             if error == nil {
                 if let data, !data.isEmpty {
-                    // 校验该帧确为 WebSocket 消息后解码
+                    // 校驗該幀確為 WebSocket 訊息後解碼
                     let isWebSocketFrame =
                         (context?.protocolMetadata(definition: NWProtocolWebSocket.definition)
                             as? NWProtocolWebSocket.Metadata) != nil

@@ -1,7 +1,7 @@
 import Foundation
 import Network
 
-/// 教师端视图模型：Bonjour 设备发现、连接管理、命令广播。
+/// 教師端視圖模型：Bonjour 裝置發現、連線管理、命令廣播。
 @MainActor
 final class TeacherViewModel: ObservableObject {
     @Published var peers: [StudentPeer] = []
@@ -22,7 +22,7 @@ final class TeacherViewModel: ObservableObject {
         startDiscovery()
     }
 
-    // MARK: - 发现与连接
+    // MARK: - 發現與連線
 
     private func startDiscovery() {
         let browser = PeerBrowser()
@@ -34,11 +34,11 @@ final class TeacherViewModel: ObservableObject {
         }
         browser.start()
         self.browser = browser
-        appendLog("正在搜索学生端（\(PeerTransport.serviceType)）…")
+        appendLog("正在搜索學生端（\(PeerTransport.serviceType)）…")
     }
 
     private func connect(to endpoint: NWEndpoint, name: String) {
-        // 防止同一学生重复入列
+        // 防止同一學生重複入列
         let endpointKey = endpoint.debugDescription
         guard !peers.contains(where: { $0.endpoint.debugDescription == endpointKey }) else { return }
 
@@ -60,7 +60,7 @@ final class TeacherViewModel: ObservableObject {
         case .hello:
             if let idx = peers.firstIndex(where: { $0.id == id }) {
                 peers[idx].name = message.senderName
-                appendLog("学生上线: \(message.senderName)")
+                appendLog("學生上線: \(message.senderName)")
             }
             send(CommandMessage(type: .helloAck), to: [id])
         default:
@@ -79,10 +79,10 @@ final class TeacherViewModel: ObservableObject {
             if match { connections.removeValue(forKey: peer.id) }
             return match
         }
-        appendLog("学生已离线")
+        appendLog("學生已離線")
     }
 
-    // MARK: - 命令下发
+    // MARK: - 命令下發
 
     var selectedIDs: [String] {
         peers.filter(\.isSelected).map(\.id)
@@ -103,20 +103,20 @@ final class TeacherViewModel: ObservableObject {
         send(CommandMessage(type: .launchApp, payload: bundleID))
     }
 
-    // MARK: - 屏幕广播
+    // MARK: - 屏幕廣播
 
     func toggleBroadcast() {
         if broadcastActive {
             broadcaster.stop()
             send(CommandMessage(type: .streamStop))
             broadcastActive = false
-            appendLog("已停止广播")
+            appendLog("已停止廣播")
         } else {
             broadcaster.start { [weak self] in
                 guard let self else { return }
                 self.send(CommandMessage(type: .streamStart))
                 self.broadcastActive = true
-                self.appendLog("开始广播教师屏幕")
+                self.appendLog("開始廣播教師屏幕")
             }
         }
     }
@@ -124,7 +124,7 @@ final class TeacherViewModel: ObservableObject {
     private func appendLog(_ text: String) { log.append(text) }
 }
 
-/// 一台已发现的学生设备。
+/// 一台已發現的學生裝置。
 struct StudentPeer: Identifiable {
     let id: String
     var name: String
