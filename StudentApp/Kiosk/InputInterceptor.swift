@@ -16,8 +16,8 @@ final class InputInterceptor {
     private var runLoopSource: CFRunLoopSource?
     private(set) var isActive = false
 
-    private static let emergencyCombo: (flags: CGEventFlags, keyCode: CGKeyCode) =
-        ([.maskCommand, .maskShift], CGKeyCode(kVK_ANSI_U))
+    /// 緊急解鎖的按鍵：'U'（美國鍵盤佈局的實體按鍵，多數佈局相同）。
+    private static let emergencyKeyCode = CGKeyCode(kVK_ANSI_U)
 
     // MARK: - 公共介面
 
@@ -94,8 +94,11 @@ final class InputInterceptor {
             let flags = event.flags.intersection([.maskCommand, .maskShift, .maskControl, .maskAlternate])
             let key = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
 
-            // 緊急解鎖組合鍵：⌘⇧U
-            if type == .keyDown, flags == Self.emergencyCombo.flags, key == Self.emergencyCombo.keyCode {
+            // 緊急解鎖組合鍵：⌘⇧U。
+            // 用「包含」而非「完全相等」判斷，容許 Caps Lock / Fn 等額外旗標同時存在。
+            if type == .keyDown,
+               flags.contains(.maskCommand) && flags.contains(.maskShift),
+               key == Self.emergencyKeyCode {
                 DispatchQueue.main.async { self.onEmergencyUnlockRequested?() }
                 return nil
             }

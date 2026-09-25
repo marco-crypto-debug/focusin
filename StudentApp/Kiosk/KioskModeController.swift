@@ -12,6 +12,10 @@ final class KioskModeController: ObservableObject {
     @Published var isLocked = false
     @Published var unlockRequested = false
     @Published var broadcastImage: NSImage?
+    /// 目前是否正由 CGEventTap 攔截輸入（決定鎖屏是否提示輔助功能授權）。
+    @Published var isInputBlocked = false
+    /// 鎖屏上的瞬時提示訊息（如「密碼錯誤」「未設定密碼」）。
+    @Published var unlockHint: String?
 
     /// 鎖屏狀態變化通知（供 CommandListener 更新 UI）。
     var onLockStateChanged: ((Bool) -> Void)?
@@ -33,6 +37,7 @@ final class KioskModeController: ObservableObject {
         isLocked = true
         unlockRequested = false
         broadcastImage = nil
+        unlockHint = nil
 
         // 1) 系統級：隱藏 Dock/選單列，停用快捷鍵與系統入口。
         //    較新的 macOS 上還可加 .disableScreenCapture/.disableSpotlight/
@@ -50,7 +55,10 @@ final class KioskModeController: ObservableObject {
 
         // 2) 事件級：吞掉本機鍵盤/滑鼠輸入
         if !interceptor.install() {
+            isInputBlocked = false
             promptAccessibility()
+        } else {
+            isInputBlocked = true
         }
 
         // 3) 全屏鎖窗覆蓋所有顯示器
@@ -68,6 +76,8 @@ final class KioskModeController: ObservableObject {
         NSApp.presentationOptions = []
         isLocked = false
         unlockRequested = false
+        isInputBlocked = false
+        unlockHint = nil
         onLockStateChanged?(false)
     }
 
@@ -75,14 +85,18 @@ final class KioskModeController: ObservableObject {
 
     private func beginUnlockFlow() {
         guard isLocked, !unlockRequested else { return }
-        unlockRequested = true
-        interceptor.uninstall()          // 暫時放行輸入，允許管理員在鎖窗內輸入密碼
 
+        // 從未設定管理員密碼：沒有可用的緊急解鎖途徑，保持鎖定並明確提示
         guard KioskConfig.hasAdminPassword else {
-            // 從未設定過密碼：無解鎖途徑，保持鎖定
-            reinstallBlocking(after: 5)
+            flashHint("未設定本地管理員密碼，無法緊急解鎖；請由教師下發解鎖指令。")
             return
         }
+
+        unlockRequested = true
+        interceptor.uninstall()          // 暫時放行輸入，允許管理員在鎖窗內輸入密碼
+        isInputBlocked = false
+        flashHint("請輸入本地管理員密碼（60 秒內未輸入將自動重新鎖定）")
+
         // 60 秒內未輸入正確密碼則自動重新鎖死
         relockTimer?.invalidate()
         relockTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: false) { [weak self] _ in
@@ -94,8 +108,11 @@ final class KioskModeController: ObservableObject {
     @discardableResult
     func submitUnlock(_ password: String) -> Bool {
         guard KioskConfig.verify(password) else {
+            relockTimer?.invalidate()
+            relockTimer = nil
             unlockRequested = false
             reinstallBlocking(after: 0)
+            flashHint("密碼錯誤，已恢復鎖定（再次按 ⌘⇧U 重試）")
             return false
         }
         exitKiosk()
@@ -106,21 +123,34 @@ final class KioskModeController: ObservableObject {
         guard isLocked else { return }
         unlockRequested = false
         reinstallBlocking(after: 0)
+        flashHint("已逾時，重新鎖定")
     }
 
     private func reinstallBlocking(after delay: TimeInterval) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self, self.isLocked else { return }
             if !self.interceptor.install() {
+                self.isInputBlocked = false
                 self.promptAccessibility()
+            } else {
+                self.isInputBlocked = true
             }
+        }
+    }
+
+    /// 在鎖屏顯示一條瞬時提示，5 秒後自動清除。
+    private func flashHint(_ text: String) {
+        unlockHint = text
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+            guard let self, self.unlockHint == text else { return }
+            self.unlockHint = nil
         }
     }
 
     private func promptAccessibility() {
         let alert = NSAlert()
         alert.messageText = "需要輔助功能權限"
-        alert.informativeText = "學生端需要「輔助功能」權限才能在鎖定時屏蔽本機鍵盤與滑鼠輸入。請在系統設定中開啟後重新鎖定。"
+        alert.informativeText = "學生端需要「輔助功能」權限才能在鎖定時屏蔽本機鍵盤與滑鼠輸入，緊急解鎖（⌘⇧U）也依賴該權限。請在系統設定中開啟後重新鎖定。"
         alert.addButton(withTitle: "打開系統設定")
         alert.addButton(withTitle: "稍後")
         if alert.runModal() == .alertFirstButtonReturn {

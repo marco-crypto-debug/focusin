@@ -5,6 +5,7 @@ struct KioskLockView: View {
     @ObservedObject var controller: KioskModeController
     @State private var password = ""
     @State private var showError = false
+    @FocusState private var passwordFocused: Bool
 
     var body: some View {
         ZStack {
@@ -29,23 +30,65 @@ struct KioskLockView: View {
                 }
             }
 
+            // 輸入攔截未生效（缺少輔助功能權限）時，明確提示原因
+            if !controller.isInputBlocked && !controller.unlockRequested {
+                VStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.yellow)
+                    Text("緊急解鎖（⌘⇧U）需要「輔助功能」權限，尚未授權")
+                        .font(.callout.bold())
+                        .foregroundStyle(.white)
+                    Text("請在 系統設定 → 私隱與安全性 → 輔助功能 開啟後重新鎖定")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                .padding(16)
+                .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 12))
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .padding(.bottom, 24)
+            }
+
+            // 瞬時提示（未設定密碼 / 密碼錯誤 / 逾時等），不在解鎖面板中時顯示於底部
+            if let hint = controller.unlockHint, !controller.unlockRequested {
+                Text(hint)
+                    .font(.callout)
+                    .foregroundStyle(.white)
+                    .padding(12)
+                    .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 10))
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, 24)
+            }
+
             if controller.unlockRequested {
                 VStack(spacing: 12) {
                     SecureField("管理員密碼", text: $password)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 240)
+                        .focused($passwordFocused)
                         .onSubmit(submit)
                     if showError {
                         Text("密碼錯誤").foregroundStyle(.red)
+                    }
+                    if let hint = controller.unlockHint {
+                        Text(hint)
+                            .font(.caption)
+                            .foregroundStyle(.white.opacity(0.85))
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 260)
                     }
                     Button("解鎖", action: submit)
                         .keyboardShortcut(.defaultAction)
                 }
                 .padding(24)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+                .onAppear { passwordFocused = true }
             }
         }
         .frame(minWidth: 800, minHeight: 600)
+        .onChange(of: controller.unlockRequested) { value in
+            if value { passwordFocused = true }
+        }
     }
 
     private func submit() {
