@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ClassroomManager 課堂管理架構示意</title>
+<title>FocusIn 課堂管理架構示意</title>
 </head>
 <body style="margin:0;padding:16px;background:#f1f5f9;font-family:-apple-system,'PingFang TC','Helvetica Neue',sans-serif;">
 
 <div style="max-width:1060px;margin:0 auto;">
-  <h1 style="font-size:20px;color:#0f172a;margin:4px 0 12px;">ClassroomManager — 教師端 / 學生端 課堂管理架構（示意）</h1>
+  <h1 style="font-size:20px;color:#0f172a;margin:4px 0 12px;">FocusIn — 教師端 / 學生端 課堂管理架構（示意）</h1>
 
   <div style="width:100%;box-sizing:border-box;overflow-x:auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;">
   <svg viewBox="0 0 1020 790" width="100%" style="min-width:820px;display:block;" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="課堂管理架構示意圖">
@@ -33,7 +33,7 @@
     <rect x="370" y="92" width="280" height="100" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
     <text x="386" y="120" font-size="14" font-weight="700" fill="#1e3a8a">ScreenBroadcaster</text>
     <text x="386" y="143" font-size="13" fill="#334155">ScreenCaptureKit 採集教師屏幕</text>
-    <text x="386" y="163" font-size="13" fill="#334155">→ JPEG 幀（10fps · 全分辨率）</text>
+    <text x="386" y="163" font-size="13" fill="#334155">→ JPEG 幀（30fps · 0.8 縮放）</text>
 
     <rect x="674" y="92" width="280" height="100" rx="10" fill="#ffffff" stroke="#93c5fd" stroke-width="1.5"/>
     <text x="690" y="120" font-size="14" font-weight="700" fill="#1e3a8a">CommandCenter</text>

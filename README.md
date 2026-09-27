@@ -1,6 +1,6 @@
-# ClassroomManager — macOS 課堂管理（教師端 / 學生端）
+# FocusIn — macOS 課堂管理（教師端 / 學生端）
 
-面向 iMac 機房的區域網課堂管理：教師端自動發現學生端、即時廣播教師屏幕、下發鎖屏/解鎖/關機/重新啟動/啟動應用程式指令；學生端提供 Kiosk 全屏鎖定、輸入攔截與本地緊急解鎖。
+FocusIn 是面向 iMac 機房的區域網課堂管理方案：教師端（TeacherApp）自動發現學生端、即時廣播教師屏幕、下發鎖屏/解鎖/關機/重新啟動/啟動應用程式指令；學生端（StudentApp）提供 Kiosk 全屏鎖定、輸入攔截與本地緊急解鎖。
 
 技術棧：Swift / SwiftUI（macOS 13+）、Network.framework（WebSocket + Bonjour/mDNS）、ScreenCaptureKit。
 
@@ -73,8 +73,8 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 4. 建議對兩個 target 使用獨立簽名 Team（本地開發可直接 Sign to Run Locally）。
 
 部署流程
-1. 學生機先啟動 StudentApp → 在狀態視窗設定本地管理員密碼（至少 4 位）。
-2. 教師機啟動 TeacherApp → 自動發現學生端（同一 Wi-Fi）。
+1. 學生機先啟動 FocusIn 學生端（StudentApp）→ 在狀態視窗設定本地管理員密碼（至少 4 位；之後變更密碼需先輸入目前密碼）。
+2. 教師機啟動 FocusIn 教師端（TeacherApp）→ 自動發現學生端（同一 Wi-Fi）。
 3. 勾選「全部學生」或具體裝置 → 廣播 / 鎖定 / 解鎖 / 關機 / 重新啟動 / 啟動應用程式。
 4. 學生端鎖定時：教師可隨時下發 `unlock`；若網路中斷，本地管理員按 **⌘⇧U** 輸入預設密碼緊急解鎖。
 
@@ -84,9 +84,9 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 
 | 應用程式 | 權限 | 用途 | 位置 |
 |---|---|---|---|
-| TeacherApp | 屏幕錄製 (Screen Recording) | 採集教師屏幕用於廣播 | 私隱與安全性 → 屏幕錄製 |
-| StudentApp | 輔助功能 (Accessibility) | CGEventTap 攔截鍵盤/滑鼠 | 私隱與安全性 → 輔助功能 |
-| StudentApp | 自動化 (Automation, 可選) | 關機/重新啟動走 System Events，首次執行會彈授權框 | 私隱與安全性 → 自動化 |
+| FocusIn 教師端（TeacherApp） | 屏幕錄製 (Screen Recording) | 採集教師屏幕用於廣播 | 私隱與安全性 → 屏幕錄製 |
+| FocusIn 學生端（StudentApp） | 輔助功能 (Accessibility) | CGEventTap 攔截鍵盤/滑鼠 | 私隱與安全性 → 輔助功能 |
+| FocusIn 學生端（StudentApp） | 自動化 (Automation, 可選) | 關機/重新啟動走 System Events，首次執行會彈授權框 | 私隱與安全性 → 自動化 |
 | 兩端 | 本地網路/防火牆 | macOS 防火牆首次運行可能彈「接受傳入連線」，需允許 | 系統設定 → 網路 → 防火牆 |
 
 ### 2. Info.plist 鍵（已在檔案內提供）
@@ -109,10 +109,10 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 | `shutdown` / `restart` | T→S | — | 遠端關機 / 重新啟動（System Events） |
 | `launchApp` | T→S | Bundle ID | 啟動應用程式（NSWorkspace） |
 | `streamStart` / `streamStop` | T→S | — | 廣播開始 / 結束 |
-| `streamFrame` | T→S | base64 JPEG | 一幀畫面（10fps，全分辨率，JPEG 0.8） |
+| `streamFrame` | T→S | base64 JPEG | 一幀畫面（30fps，0.8 縮放，JPEG 0.75） |
 | `ping` / `pong` | 雙向 | — | 應用程式層保活（協定層另有 WS Ping） |
 
-> 清晰度參數集中在 `TeacherApp/ScreenBroadcaster.swift` 頂部（`captureScale` / `framesPerSecond` / `jpegQuality`），如需調整可在該處修改。
+> 流暢度/清晰度參數集中在 `TeacherApp/ScreenBroadcaster.swift` 頂部（`captureScale` / `framesPerSecond` / `jpegQuality`），如需調整可在該處修改。
 
 ## 鎖屏機制說明（StudentApp）
 
@@ -126,7 +126,7 @@ Kiosk 由三層組成，任一被攻破仍有兜底：
 
 > 緊急解鎖注意事項：
 > - **必須先在學生端狀態視窗設定本地管理員密碼**；若未設定，按 ⌘⇧U 會在鎖屏顯示「未設定本地管理員密碼」提示並保持鎖定（不會出現無法輸入的死鎖密碼框）。
-> - **⌘⇧U 依賴「輔助功能」權限**：未授權時輸入攔截器不會安裝，組合鍵無法被偵測，鎖屏會顯示黃色「需要輔助功能權限」提示。請在系統設定 → 私隱與安全性 → 輔助功能 中勾選 StudentApp。
+> - **⌘⇧U 依賴「輔助功能」權限**：未授權時輸入攔截器不會安裝，組合鍵無法被偵測，鎖屏會顯示黃色「需要輔助功能權限」提示。請在系統設定 → 私隱與安全性 → 輔助功能 中勾選 FocusIn 學生端（StudentApp）。
 > - ⌘⇧U 必須在**被鎖定的學生機本機**按下；在教師機上按無效。
 
 ## 安全與運維注意事項
@@ -135,7 +135,7 @@ Kiosk 由三層組成，任一被攻破仍有兜底：
 - **遠端關機/重新啟動**：`System Events` 方案首次會彈自動化授權，部分網路帳戶環境可能要求管理員權限；也可改用 `Process` 執行 `/sbin/shutdown -h now` / `-r now`（需 root）。
 - **Kiosk 的邊界**：事件攔截只作用於圖形會話內的輸入；對 SSH、另一個管理員帳戶、或直接 kill 程序沒有防禦力。生產級機房管理應疊加 MDM（Jamf / Apple School Manager / 描述檔 + 單一 App 模式）。
 - **Wi-Fi 注意**：若學校 AP 開啟「用戶端隔離」，Bonjour 發現與直連會被阻斷；請在支援多播/二層互通的 VLAN 上運行。
-- **效能**：廣播為 10fps / 全分辨率 JPEG（品質 0.8），單學生約 5–15 Mbps；如需更高幀率或更低頻寬，可改用 VideoToolbox H.264 編碼或 WebRTC。
+- **效能**：廣播為 30fps / 0.8 縮放 JPEG（品質 0.75），單學生約 15–40 Mbps（視畫面內容而定）；如需更高幀率或更低頻寬，可改用 VideoToolbox H.264 編碼或 WebRTC。
 
 ## 已知限制
 

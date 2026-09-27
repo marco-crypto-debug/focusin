@@ -11,8 +11,16 @@ enum KioskConfig {
         UserDefaults.standard.string(forKey: hashKey) != nil
     }
 
-    static func setAdminPassword(_ password: String) throws {
+    /// 設定或變更管理員密碼。
+    /// - Parameter oldPassword: 已設定過密碼時必填（變更前先驗證舊密碼）；首次設定可傳 nil。
+    static func setAdminPassword(_ password: String, oldPassword: String? = nil) throws {
         guard password.count >= 4 else { throw KioskError.weakPassword }
+        // 已有密碼時，必須先通過舊密碼驗證才能變更
+        if hasAdminPassword {
+            guard let old = oldPassword, verify(old) else {
+                throw KioskError.oldPasswordMismatch
+            }
+        }
         let salt = Data((0..<16).map { _ in UInt8.random(in: .min ... .max) })
         UserDefaults.standard.set(salt.hexString, forKey: saltKey)
         UserDefaults.standard.set(hash(password, salt: salt), forKey: hashKey)
@@ -34,6 +42,7 @@ enum KioskConfig {
 
     enum KioskError: Swift.Error {
         case weakPassword
+        case oldPasswordMismatch
     }
 }
 

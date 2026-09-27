@@ -9,13 +9,13 @@ final class ScreenBroadcaster: NSObject {
     /// 每幀 JPEG 資料回呼（在採集佇列上觸發）。
     var onFrame: ((Data) -> Void)?
 
-    // —— 清晰度參數（如網速不足可在此調低）——
-    /// 採集縮放比例：1.0 = 顯示器原生全分辨率（最清晰）。
-    private let captureScale: Double = 1.0
-    /// 目標幀率（fps）。
-    private let framesPerSecond: Int = 10
+    // —— 流暢度 / 清晰度參數（如網速不足或更追求流暢可在此調整）——
+    /// 採集縮放比例：0.8 = 顯示器解析度的 80%（約 4K 級），兼顧清晰度與 30fps 編碼/頻寬。
+    private let captureScale: Double = 0.8
+    /// 目標幀率（fps）。30fps 提供流暢的即時畫面。
+    private let framesPerSecond: Int = 30
     /// JPEG 壓縮品質（0~1，越高越清晰、體積越大）。
-    private let jpegQuality: Double = 0.8
+    private let jpegQuality: Double = 0.75
 
     private var stream: SCStream?
     private let context = CIContext(options: [.cacheIntermediates: false])
@@ -33,11 +33,11 @@ final class ScreenBroadcaster: NSObject {
                 let filter = SCContentFilter(display: display, excludingWindows: [])
 
                 let config = SCStreamConfiguration()
-                // 全分辨率 + 10fps：清晰度優先，區域網（LAN）頻寬足以支撐
+                // 0.8 縮放 + 30fps：流暢優先，區域網（LAN）頻寬足以支撐
                 config.width = Int(Double(display.width) * captureScale)
                 config.height = Int(Double(display.height) * captureScale)
                 config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(framesPerSecond))
-                config.queueDepth = 3
+                config.queueDepth = 4
                 config.showsCursor = false
                 // captureResolution 預設為 .automatic（macOS 14+ 才可明確設定，這裡保持預設）
 

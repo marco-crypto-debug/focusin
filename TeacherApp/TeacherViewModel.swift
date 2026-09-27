@@ -14,9 +14,10 @@ final class TeacherViewModel: ObservableObject {
 
     init() {
         broadcaster.onFrame = { [weak self] jpegData in
+            // base64 編碼較耗時，先在採集佇列完成，再切回主執行緒僅做分發，避免卡頓
+            let payload = jpegData.base64EncodedString()
             Task { @MainActor in
-                self?.send(CommandMessage(type: .streamFrame,
-                                          payload: jpegData.base64EncodedString()))
+                self?.send(CommandMessage(type: .streamFrame, payload: payload))
             }
         }
         startDiscovery()

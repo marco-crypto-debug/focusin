@@ -1,4 +1,4 @@
-name: ClassroomManager
+name: FocusIn
 options:
   bundleIdPrefix: com.classroom
   deploymentTarget:

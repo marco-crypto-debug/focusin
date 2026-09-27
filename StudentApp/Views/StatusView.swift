@@ -3,6 +3,7 @@ import SwiftUI
 /// 學生端狀態視窗：顯示連線狀態、鎖屏狀態，並用於部署時預設本地管理員密碼。
 struct StatusView: View {
     @EnvironmentObject var listener: CommandListener
+    @State private var oldPassword = ""
     @State private var newPassword = ""
     @State private var confirmPassword = ""
     @State private var passwordSaved = false
@@ -33,11 +34,16 @@ struct StatusView: View {
 
             Divider()
 
-            Text("本地管理員密碼（部署時設定）")
+            Text(KioskConfig.hasAdminPassword
+                 ? "變更本地管理員密碼（需先驗證目前密碼）"
+                 : "設定本地管理員密碼（部署時設定）")
                 .font(.subheadline.bold())
+            if KioskConfig.hasAdminPassword {
+                SecureField("目前密碼", text: $oldPassword)
+            }
             SecureField("新密碼（至少 4 位）", text: $newPassword)
             SecureField("確認密碼", text: $confirmPassword)
-            Button("保存密碼", action: savePassword)
+            Button(KioskConfig.hasAdminPassword ? "變更密碼" : "保存密碼", action: savePassword)
             if !passwordError.isEmpty {
                 Text(passwordError)
                     .font(.caption)
@@ -71,11 +77,19 @@ struct StatusView: View {
             return
         }
         do {
-            try KioskConfig.setAdminPassword(newPassword)
+            // 已設定過密碼時，必須先通過目前密碼驗證
+            try KioskConfig.setAdminPassword(newPassword,
+                                             oldPassword: KioskConfig.hasAdminPassword ? oldPassword : nil)
             passwordSaved = true
-            passwordError = "密碼已保存（雜湊儲存，僅用於本地緊急解鎖）"
+            passwordError = KioskConfig.hasAdminPassword
+                ? "密碼已變更（雜湊儲存，僅用於本地緊急解鎖）"
+                : "密碼已保存（雜湊儲存，僅用於本地緊急解鎖）"
+            oldPassword = ""
             newPassword = ""
             confirmPassword = ""
+        } catch KioskConfig.KioskError.oldPasswordMismatch {
+            passwordError = "目前密碼不正確，無法變更"
+            oldPassword = ""
         } catch {
             passwordError = "保存失敗: \(error)"
         }
