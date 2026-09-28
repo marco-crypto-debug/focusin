@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// 學生端狀態視窗：顯示連線狀態、鎖屏狀態，並用於部署時預設本地管理員密碼。
+/// 學生端狀態視窗：顯示連線狀態、鎖屏狀態、廣播預覽，並用於部署時預設本地管理員密碼。
 struct StatusView: View {
     @EnvironmentObject var listener: CommandListener
+    @ObservedObject private var kiosk = KioskModeController.shared
     @State private var oldPassword = ""
     @State private var newPassword = ""
     @State private var confirmPassword = ""
@@ -30,6 +31,16 @@ struct StatusView: View {
 
             if listener.isBroadcasting {
                 Label("正在接收教師屏幕廣播", systemImage: "rectangle.on.rectangle")
+                if let image = kiosk.broadcastImage {
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                        .frame(maxHeight: 220)
+                    Text("廣播預覽 — 教師鎖定學生端後將全屏顯示")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Divider()

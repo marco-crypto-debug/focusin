@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// 教師主介面：左側裝置列表（單選/全選），右側控制面板。
@@ -81,6 +82,32 @@ struct DeviceListView: View {
                 .controlSize(.large)
 
                 Divider()
+
+                // 廣播失敗 / 權限不足時顯示明確指引，可一鍵開啟「屏幕錄製」設定頁
+                if let error = viewModel.broadcastError {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("屏幕廣播未啟動", systemImage: "exclamationmark.triangle.fill")
+                            .font(.subheadline.bold())
+                            .foregroundStyle(.red)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 10) {
+                            Button("開啟屏幕錄製設定") {
+                                NSWorkspace.shared.open(
+                                    URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!
+                                )
+                            }
+                            .controlSize(.small)
+                            Button("知道了") { viewModel.broadcastError = nil }
+                                .controlSize(.small)
+                        }
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.red.opacity(0.35)))
+                }
 
                 Button {
                     viewModel.toggleBroadcast()

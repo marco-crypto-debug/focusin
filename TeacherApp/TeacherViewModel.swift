@@ -6,6 +6,8 @@ import Network
 final class TeacherViewModel: ObservableObject {
     @Published var peers: [StudentPeer] = []
     @Published var broadcastActive = false
+    /// 廣播啟動失敗訊息（如未授權屏幕錄製），用於介面顯示權限指引。
+    @Published var broadcastError: String?
     @Published var log: [String] = []
 
     private var browser: PeerBrowser?
@@ -113,11 +115,18 @@ final class TeacherViewModel: ObservableObject {
             broadcastActive = false
             appendLog("已停止廣播")
         } else {
+            broadcastError = nil
             broadcaster.start { [weak self] in
                 guard let self else { return }
+                self.broadcastError = nil
                 self.send(CommandMessage(type: .streamStart))
                 self.broadcastActive = true
                 self.appendLog("開始廣播教師屏幕")
+            } onError: { [weak self] message in
+                Task { @MainActor in
+                    self?.broadcastActive = false
+                    self?.broadcastError = message
+                }
             }
         }
     }

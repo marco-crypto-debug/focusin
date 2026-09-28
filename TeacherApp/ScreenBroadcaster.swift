@@ -1,4 +1,5 @@
 import AppKit
+import CoreGraphics
 import CoreImage
 import Foundation
 import ScreenCaptureKit
@@ -8,6 +9,8 @@ import ScreenCaptureKit
 final class ScreenBroadcaster: NSObject {
     /// 每幀 JPEG 資料回呼（在採集佇列上觸發）。
     var onFrame: ((Data) -> Void)?
+    /// 啟動失敗回呼（例如未授權「屏幕錄製」），在主執行緒觸發，用於在介面顯示指引。
+    var onStartError: ((String) -> Void)?
 
     // —— 流暢度 / 清晰度參數（如網速不足或更追求流暢可在此調整）——
     /// 採集縮放比例：0.8 = 顯示器解析度的 80%（約 4K 級），兼顧清晰度與 30fps 編碼/頻寬。
@@ -20,14 +23,27 @@ final class ScreenBroadcaster: NSObject {
     private var stream: SCStream?
     private let context = CIContext(options: [.cacheIntermediates: false])
 
-    func start(completion: @escaping () -> Void) {
+    /// 啟動廣播。
+    /// - Parameters:
+    ///   - completion: 啟動成功後在主執行緒回呼。
+    ///   - onError: 啟動失敗（含未授權屏幕錄製）時在主執行緒回呼。
+    func start(completion: @escaping () -> Void, onError: ((String) -> Void)? = nil) {
         let startHandler = completion
         Task {
+            // 權限預檢：未授權「屏幕錄製」時，先觸發系統授權提示，並回報明確指引
+            guard CGPreflightScreenCaptureAccess() else {
+                await MainActor.run {
+                    onStartError?("廣播需要「屏幕錄製」權限。請開啟 系統設定 → 私隱與安全性 → 屏幕錄製，勾選 FocusIn 教師端（TeacherApp），完成後重新點擊「廣播教師屏幕」。若之前選擇過「拒絕」，請先在該頁面取消勾選再重新勾選。")
+                    NSApp.activate(ignoringOtherApps: true)
+                    CGRequestScreenCaptureAccess()   // 觸發系統權限彈窗（首次）
+                }
+                return
+            }
             do {
                 let content = try await SCShareableContent.excludingDesktopWindows(false,
                                                                                   onScreenWindowsOnly: true)
                 guard let display = content.displays.first else {
-                    print("[Broadcaster] 未找到顯示器")
+                    await MainActor.run { onStartError?("未找到可廣播的顯示器。") }
                     return
                 }
                 let filter = SCContentFilter(display: display, excludingWindows: [])
@@ -50,6 +66,9 @@ final class ScreenBroadcaster: NSObject {
                 DispatchQueue.main.async { startHandler() }
             } catch {
                 print("[Broadcaster] 屏幕捕獲失敗: \(error)")
+                await MainActor.run {
+                    onStartError?("屏幕捕獲失敗：\(error.localizedDescription)\n請確認已授權「屏幕錄製」後重試。")
+                }
             }
         }
     }
