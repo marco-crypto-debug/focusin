@@ -23,6 +23,8 @@ final class KioskModeController: ObservableObject {
     private var lockWindows: [NSWindow] = []
     private var relockTimer: Timer?
     private let interceptor = InputInterceptor.shared
+    /// 鎖定期間註冊的系統通知觀察者（螢幕參數變化 / 失去焦點），用於鎖屏自愈。
+    private var observers: [NSObjectProtocol] = []
 
     private init() {
         interceptor.onEmergencyUnlockRequested = { [weak self] in
@@ -61,8 +63,9 @@ final class KioskModeController: ObservableObject {
             isInputBlocked = true
         }
 
-        // 3) 全屏鎖窗覆蓋所有顯示器
+        // 3) 全屏鎖窗覆蓋所有顯示器（並註冊自愈機制）
         showLockWindows()
+        registerLockObservers()
         onLockStateChanged?(true)
     }
 
@@ -70,6 +73,7 @@ final class KioskModeController: ObservableObject {
         guard isLocked else { return }
         relockTimer?.invalidate()
         relockTimer = nil
+        removeLockObservers()
         interceptor.uninstall()
         lockWindows.forEach { $0.orderOut(nil) }
         lockWindows.removeAll()
@@ -164,6 +168,11 @@ final class KioskModeController: ObservableObject {
 
     private func showLockWindows() {
         let screens = NSScreen.screens.isEmpty ? [NSScreen.main!] : NSScreen.screens
+
+        // 先移除舊鎖窗，避免「螢幕參數變化」觸發重建時重複疊加
+        lockWindows.forEach { $0.orderOut(nil) }
+        lockWindows.removeAll()
+
         lockWindows = screens.map { screen in
             let window = LockWindow(
                 contentRect: screen.frame,
@@ -176,11 +185,63 @@ final class KioskModeController: ObservableObject {
             window.isOpaque = true
             window.backgroundColor = .black
             window.hidesOnDeactivate = false
+            window.isReleasedWhenClosed = false
             window.contentView = NSHostingView(rootView: KioskLockView(controller: self))
             window.makeKeyAndOrderFront(nil)
-            window.makeKey()
+            // 關鍵：即使本 App 不是前臺應用（例如學生機正處於其他 App 的全屏模式/全屏 Space），
+            // orderFrontRegardless 也會強制把鎖窗抬到最上層。
+            window.orderFrontRegardless()
             return window
         }
+
+        // 啟動後再抬升一次，確保蓋過全屏 App 與全屏 Space
+        NSApp.activate(ignoringOtherApps: true)
+        for window in lockWindows {
+            window.makeKey()
+            window.orderFrontRegardless()
+        }
+    }
+
+    // MARK: - 鎖定期間的自愈機制
+
+    private func registerLockObservers() {
+        let center = NotificationCenter.default
+        // 螢幕參數變化（接上/喚醒外接顯示器、解析度改變）：重建鎖窗，避免出現未覆蓋的縫隙
+        observers.append(center.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.isLocked, !self.unlockRequested else { return }
+                self.showLockWindows()
+            }
+        })
+        // 被其他 App 搶走焦點（例如尚未授予輔助功能權限時）：
+        // 奪回焦點、把鎖窗抬回最上層，並嘗試補裝輸入攔截。
+        observers.append(center.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.isLocked else { return }
+                NSApp.activate(ignoringOtherApps: true)
+                for window in self.lockWindows { window.orderFrontRegardless() }
+                guard !self.unlockRequested else { return }
+                if self.interceptor.isActive {
+                    self.isInputBlocked = true
+                } else if self.interceptor.install() {
+                    self.isInputBlocked = true
+                } else {
+                    self.isInputBlocked = false
+                    self.promptAccessibility()
+                }
+            }
+        })
+    }
+
+    private func removeLockObservers() {
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        observers.removeAll()
     }
 
     // MARK: - 廣播畫面
