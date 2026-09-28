@@ -25,6 +25,8 @@ enum BroadcastQuality: String, CaseIterable, Identifiable {
 final class ScreenBroadcaster: NSObject {
     /// 每幀 JPEG 資料回呼（在採集佇列上觸發）。
     var onFrame: ((Data) -> Void)?
+    /// 音訊 PCM 資料回呼（在採集佇列上觸發）。
+    var onAudio: ((Data, PeerConnection.AudioFormatInfo) -> Void)?
     /// 啟動失敗回呼（例如未授權「屏幕錄製」），在主執行緒觸發，用於在介面顯示指引。
     var onStartError: ((String) -> Void)?
 
@@ -87,12 +89,20 @@ final class ScreenBroadcaster: NSObject {
                 config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(params.fps))
                 config.queueDepth = 4
                 config.showsCursor = false
+                // 音訊：同步採集系統聲音（44.1kHz 立體聲），隨廣播一起傳給學生端
+                config.capturesAudio = true
+                config.sampleRate = 44100
+                config.channelCount = 2
+                config.excludesCurrentProcessAudio = false
                 // captureResolution 預設為 .automatic（macOS 14+ 才可明確設定，這裡保持預設）
 
                 let stream = SCStream(filter: filter, configuration: config, delegate: nil)
                 try stream.addStreamOutput(self,
                                            type: .screen,
                                            sampleHandlerQueue: .global(qos: .userInitiated))
+                try stream.addStreamOutput(self,
+                                           type: .audio,
+                                           sampleHandlerQueue: .global(qos: .userInteractive))
                 try await stream.startCapture()
                 self.stream = stream
                 DispatchQueue.main.async { startHandler() }
@@ -117,6 +127,32 @@ extension ScreenBroadcaster: SCStreamOutput {
     func stream(_ stream: SCStream,
                 didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
                 of type: SCStreamOutputType) {
+        // —— 音訊緩衝區：帶格式標頭原樣直送（不節流）——
+        if type == .audio {
+            guard let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer),
+                  let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription)?.pointee,
+                  let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return }
+
+            var length = 0
+            var dataPointer: UnsafeMutablePointer<Int8>?
+            let status = CMBlockBufferGetDataPointer(blockBuffer,
+                                                     atOffset: 0,
+                                                     lengthAtOffsetOut: nil,
+                                                     totalLengthOut: &length,
+                                                     dataPointerOut: &dataPointer)
+            guard status == kCMBlockBufferNoErr, let dataPointer, length > 0 else { return }
+
+            let info = PeerConnection.AudioFormatInfo(
+                sampleRate: asbd.mSampleRate,
+                channels: asbd.mChannelsPerFrame,
+                bits: UInt8(asbd.mBitsPerChannel),
+                isFloat: (asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0,
+                interleaved: (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0
+            )
+            onAudio?(Data(bytes: dataPointer, count: length), info)
+            return
+        }
+
         guard type == .screen,
               let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
 

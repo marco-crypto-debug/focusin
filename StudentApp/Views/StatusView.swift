@@ -9,6 +9,7 @@ struct StatusView: View {
     @State private var confirmPassword = ""
     @State private var passwordSaved = false
     @State private var passwordError = ""
+    @State private var autoStartError = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -24,6 +25,27 @@ struct StatusView: View {
                      : "等待教師連線…")
             }
 
+            Toggle("登入時自動啟動學生端", isOn: Binding(
+                get: { LoginStartManager.isEnabled },
+                set: { on in
+                    autoStartError = ""
+                    do {
+                        if on {
+                            try LoginStartManager.enable()
+                        } else {
+                            LoginStartManager.disable()
+                        }
+                    } catch {
+                        autoStartError = "自動啟動設定失敗：\(error.localizedDescription)"
+                    }
+                }
+            ))
+            if !autoStartError.isEmpty {
+                Text(autoStartError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
             HStack {
                 Image(systemName: listener.isLocked ? "lock.fill" : "lock.open")
                 Text(listener.isLocked ? "已鎖定" : "未鎖定")
@@ -37,7 +59,7 @@ struct StatusView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(maxWidth: .infinity)
                         .frame(maxHeight: 220)
-                    Text("廣播預覽 — 教師鎖定學生端後將全屏顯示")
+                    Text("廣播預覽 — 教師鎖定學生端後將全屏顯示，聲音同步播放")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

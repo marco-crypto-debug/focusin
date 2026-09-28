@@ -13,6 +13,7 @@ final class CommandListener: ObservableObject {
     private var advertiser: PeerAdvertiser?
     private var connections: [PeerConnection] = []
     private let kiosk = KioskModeController.shared
+    private let audio = BroadcastAudioPlayer()
 
     private var deviceID: String {
         if let id = UserDefaults.standard.string(forKey: "student.deviceID") { return id }
@@ -50,6 +51,11 @@ final class CommandListener: ObservableObject {
                         Task { @MainActor in
                             self.kiosk.setBroadcastImage(image)
                         }
+                    }
+                }
+                peer.onAudio = { pcm, info in
+                    Task { @MainActor in
+                        self.audio.play(pcm: pcm, format: info)
                     }
                 }
                 peer.onConnectionLost = {
@@ -105,6 +111,7 @@ final class CommandListener: ObservableObject {
         case .streamStart:
             isBroadcasting = true
             kiosk.clearBroadcastImage()
+            audio.start()
 
         // 廣播幀改走二進位通道（PeerConnection.onFrame），此處不再處理 JSON 幀
         case .streamFrame:
@@ -113,6 +120,7 @@ final class CommandListener: ObservableObject {
         case .streamStop:
             isBroadcasting = false
             kiosk.clearBroadcastImage()
+            audio.stop()
 
         default:
             break

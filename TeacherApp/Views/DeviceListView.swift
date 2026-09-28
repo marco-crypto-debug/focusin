@@ -6,6 +6,7 @@ struct DeviceListView: View {
     @EnvironmentObject var viewModel: TeacherViewModel
     @State private var launchBundleID = "com.apple.Safari"
     @State private var allSelected = false
+    @State private var autoStartError = ""
 
     var body: some View {
         HSplitView {
@@ -112,7 +113,7 @@ struct DeviceListView: View {
                 Button {
                     viewModel.toggleBroadcast()
                 } label: {
-                    Label(viewModel.broadcastActive ? "停止廣播" : "廣播教師屏幕",
+                    Label(viewModel.broadcastActive ? "停止廣播" : "廣播教師屏幕（含聲音）",
                           systemImage: viewModel.broadcastActive ? "stop.circle.fill" : "rectangle.on.rectangle")
                 }
                 .buttonStyle(.borderedProminent)
@@ -131,9 +132,35 @@ struct DeviceListView: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    Text("高 = 原生全分辨率（30fps）｜自動 = 依顯示器自動選擇")
+                    Text("高 = 原生全分辨率（30fps）｜自動 = 依顯示器自動選擇｜聲音隨廣播同步傳輸")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                }
+
+                Divider()
+
+                // 登入時自動啟動（LaunchAgent 註冊）
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle("登入時自動啟動教師端", isOn: Binding(
+                        get: { LoginStartManager.isEnabled },
+                        set: { on in
+                            autoStartError = ""
+                            do {
+                                if on {
+                                    try LoginStartManager.enable()
+                                } else {
+                                    LoginStartManager.disable()
+                                }
+                            } catch {
+                                autoStartError = "自動啟動設定失敗：\(error.localizedDescription)"
+                            }
+                        }
+                    ))
+                    if !autoStartError.isEmpty {
+                        Text(autoStartError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Divider()

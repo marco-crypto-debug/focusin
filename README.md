@@ -1,6 +1,6 @@
 # FocusIn — macOS 課堂管理（教師端 / 學生端）
 
-FocusIn 是面向 iMac 機房的區域網課堂管理方案：教師端（TeacherApp）自動發現學生端、即時廣播教師屏幕、下發鎖屏/解鎖/關機/重新啟動/啟動應用程式指令；學生端（StudentApp）提供 Kiosk 全屏鎖定、輸入攔截與本地緊急解鎖。
+FocusIn 是面向 iMac 機房的區域網課堂管理方案：教師端（TeacherApp）自動發現學生端、即時廣播教師屏幕**與聲音**、下發鎖屏/解鎖/關機/重新啟動/啟動應用程式指令；學生端（StudentApp）提供 Kiosk 全屏鎖定、輸入攔截與本地緊急解鎖，並可設定登入時自動啟動。
 
 技術棧：Swift / SwiftUI（macOS 13+）、Network.framework（WebSocket + Bonjour/mDNS）、ScreenCaptureKit。
 
@@ -34,17 +34,20 @@ ClassroomManager/
 │   └── Protocol/
 │       ├── CommandType.swift       # 命令列舉：lock/unlock/shutdown/restart/launchApp/stream*
 │       └── CommandMessage.swift    # JSON 訊息信封
+├── Shared/Utility/
+│   └── LoginStartManager.swift     # 登入時自動啟動（LaunchAgent 註冊，兩端共用）
 ├── TeacherApp/
 │   ├── TeacherApp.swift            # @main 入口
 │   ├── TeacherViewModel.swift      # 發現/連線/命令分發
-│   ├── ScreenBroadcaster.swift     # ScreenCaptureKit 採集 → JPEG 幀
-│   ├── Views/DeviceListView.swift  # 裝置列表 + 控制面板 UI
+│   ├── ScreenBroadcaster.swift     # ScreenCaptureKit 採集 → JPEG 幀 + 音訊 PCM
+│   ├── Views/DeviceListView.swift  # 裝置列表 + 控制面板 UI（含畫質/自動啟動）
 │   ├── Info.plist
 │   └── TeacherApp.entitlements
 └── StudentApp/
     ├── StudentApp.swift            # @main 入口
     ├── CommandListener.swift       # 公布服務 + 命令監聽 + 系統動作
-    ├── Views/StatusView.swift      # 狀態視窗（含管理員密碼預設）
+    ├── AudioPlayer.swift           # 廣播音訊播放（AVAudioEngine）
+    ├── Views/StatusView.swift      # 狀態視窗（管理員密碼 + 自動啟動）
     ├── Kiosk/
     │   ├── KioskModeController.swift # 全屏鎖窗 + presentationOptions + 解鎖流程
     │   ├── InputInterceptor.swift    # CGEventTap 鍵盤/滑鼠攔截
@@ -73,9 +76,9 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 4. 建議對兩個 target 使用獨立簽名 Team（本地開發可直接 Sign to Run Locally）。
 
 部署流程
-1. 學生機先啟動 FocusIn 學生端（StudentApp）→ 在狀態視窗設定本地管理員密碼（至少 4 位；之後變更密碼需先輸入目前密碼）。
-2. 教師機啟動 FocusIn 教師端（TeacherApp）→ 自動發現學生端（同一 Wi-Fi）。
-3. 勾選「全部學生」或具體裝置 → 廣播 / 鎖定 / 解鎖 / 關機 / 重新啟動 / 啟動應用程式。
+1. 學生機先啟動 FocusIn 學生端（StudentApp）→ 在狀態視窗設定本地管理員密碼（至少 4 位；之後變更密碼需先輸入目前密碼）；建議勾選「登入時自動啟動學生端」，開機登入即自動就緒。
+2. 教師機啟動 FocusIn 教師端（TeacherApp）→ 自動發現學生端（同一 Wi-Fi）；可勾選「登入時自動啟動教師端」。
+3. 勾選「全部學生」或具體裝置 → 廣播（含聲音）/ 鎖定 / 解鎖 / 關機 / 重新啟動 / 啟動應用程式。
 4. 學生端鎖定時：教師可隨時下發 `unlock`；若網路中斷，本地管理員按 **⌘⇧U** 輸入預設密碼緊急解鎖。
 
 ## 權限清單
@@ -84,7 +87,7 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 
 | 應用程式 | 權限 | 用途 | 位置 |
 |---|---|---|---|
-| FocusIn 教師端（TeacherApp） | 屏幕錄製 (Screen Recording) | 採集教師屏幕用於廣播 | 私隱與安全性 → 屏幕錄製 |
+| FocusIn 教師端（TeacherApp） | 屏幕錄製 (Screen Recording) | 採集教師屏幕**與聲音**用於廣播（音訊採集共用同一權限） | 私隱與安全性 → 屏幕錄製 |
 | FocusIn 學生端（StudentApp） | 輔助功能 (Accessibility) | CGEventTap 攔截鍵盤/滑鼠 | 私隱與安全性 → 輔助功能 |
 | FocusIn 學生端（StudentApp） | 自動化 (Automation, 可選) | 關機/重新啟動走 System Events，首次執行會彈授權框 | 私隱與安全性 → 自動化 |
 | 兩端 | 本地網路/防火牆 | macOS 防火牆首次運行可能彈「接受傳入連線」，需允許 | 系統設定 → 網路 → 防火牆 |
@@ -114,6 +117,7 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 | `launchApp` | T→S | Bundle ID | 啟動應用程式（NSWorkspace） |
 | `streamStart` / `streamStop` | T→S | — | 廣播開始 / 結束 |
 | 廣播幀（二進位） | T→S | 魔數 `FZFR` + 原始 JPEG | 低延遲路徑：跳過 JSON/base64（約省 33% 體積與大量編解碼） |
+| 廣播音訊（二進位） | T→S | 魔數 `FZAU` + 格式標頭 + PCM | 44.1kHz 立體聲；學生端 AVAudioEngine 播放 |
 | `ping` / `pong` | 雙向 | — | 應用程式層保活（協定層另有 WS Ping） |
 
 > 延遲優化：TCP 啟用 `TCP_NODELAY`；教師端編碼節流（編不過來丟舊幀、不積壓）；每條連線同一時間只允許一幀在途；學生端 JPEG 解碼在背景佇列進行。
@@ -141,7 +145,8 @@ Kiosk 由三層組成，任一被攻破仍有兜底：
 - **遠端關機/重新啟動**：`System Events` 方案首次會彈自動化授權，部分網路帳戶環境可能要求管理員權限；也可改用 `Process` 執行 `/sbin/shutdown -h now` / `-r now`（需 root）。
 - **Kiosk 的邊界**：事件攔截只作用於圖形會話內的輸入；對 SSH、另一個管理員帳戶、或直接 kill 程序沒有防禦力。生產級機房管理應疊加 MDM（Jamf / Apple School Manager / 描述檔 + 單一 App 模式）。
 - **Wi-Fi 注意**：若學校 AP 開啟「用戶端隔離」，Bonjour 發現與直連會被阻斷；請在支援多播/二層互通的 VLAN 上運行。
-- **效能**：廣播畫質可於教師端切換——**高**：原生全分辨率（30fps，JPEG 0.92）；**中**：0.75 縮放（30fps）；**低**：0.5 縮放（24fps）；**自動**：≤4K 用原生分辨率，5K 以上微縮至 0.85。區域網環境建議使用「高」或「自動」。
+- **效能**：廣播畫質可於教師端切換——**高**：原生全分辨率（30fps，JPEG 0.92）；**中**：0.75 縮放（30fps）；**低**：0.5 縮放（24fps）；**自動**：≤4K 用原生分辨率，5K 以上微縮至 0.85。區域網環境建議使用「高」或「自動」。聲音以 44.1kHz 立體聲 PCM 隨廣播同步傳輸，學生端即時播放。
+- **登入時自動啟動**：兩端介面均有開關，透過寫入 `~/Library/LaunchAgents/<bundleID>.plist`（LaunchAgent，RunAtLoad）註冊。取消勾選即移除；App 移動位置後重新勾選一次即可更新路徑。
 
 ## 已知限制
 

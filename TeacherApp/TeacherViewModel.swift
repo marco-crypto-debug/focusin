@@ -129,6 +129,11 @@ final class TeacherViewModel: ObservableObject {
                 target.sendFrame(jpegData)
             }
         }
+        broadcaster.onAudio = { pcm, info in
+            for target in targets {
+                target.sendAudio(pcm, format: info)
+            }
+        }
         broadcaster.start { [weak self] in
             guard let self else { return }
             self.broadcastError = nil
@@ -146,6 +151,7 @@ final class TeacherViewModel: ObservableObject {
     private func stopBroadcast() {
         broadcaster.stop()
         broadcaster.onFrame = nil
+        broadcaster.onAudio = nil
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         appendLog("已停止廣播")
@@ -155,6 +161,7 @@ final class TeacherViewModel: ObservableObject {
     private func restartBroadcast() {
         broadcaster.stop()
         broadcaster.onFrame = nil
+        broadcaster.onAudio = nil
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         startBroadcast()
