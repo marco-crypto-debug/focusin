@@ -121,6 +121,23 @@ struct DeviceListView: View {
 
                 Divider()
 
+                // 廣播畫質：教師可自行調整分辨率/清晰度（自動 / 低 / 中 / 高）
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("廣播畫質").font(.subheadline.bold())
+                    Picker("廣播畫質", selection: $viewModel.broadcastQuality) {
+                        ForEach(BroadcastQuality.allCases) { q in
+                            Text(q.label).tag(q)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    Text("高 = 原生全分辨率（30fps）｜自動 = 依顯示器自動選擇")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Divider()
+
                 Text("事件日誌").font(.subheadline.bold())
                 ScrollView {
                     ForEach(viewModel.log, id: \.self) { line in

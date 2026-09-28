@@ -113,10 +113,10 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 | `shutdown` / `restart` | T→S | — | 遠端關機 / 重新啟動（System Events） |
 | `launchApp` | T→S | Bundle ID | 啟動應用程式（NSWorkspace） |
 | `streamStart` / `streamStop` | T→S | — | 廣播開始 / 結束 |
-| `streamFrame` | T→S | base64 JPEG | 一幀畫面（30fps，0.8 縮放，JPEG 0.75） |
+| `streamFrame` | T→S | base64 JPEG | 一幀畫面（30fps，畫質可調：自動/低/中/高） |
 | `ping` / `pong` | 雙向 | — | 應用程式層保活（協定層另有 WS Ping） |
 
-> 流暢度/清晰度參數集中在 `TeacherApp/ScreenBroadcaster.swift` 頂部（`captureScale` / `framesPerSecond` / `jpegQuality`），如需調整可在該處修改。
+> 廣播畫質由教師端介面切換（自動/低/中/高），採集參數集中在 `TeacherApp/ScreenBroadcaster.swift` 的 `BroadcastQuality` 與 `resolutionParameters`，如需自訂可在該處修改。
 
 ## 鎖屏機制說明（StudentApp）
 
@@ -139,7 +139,7 @@ Kiosk 由三層組成，任一被攻破仍有兜底：
 - **遠端關機/重新啟動**：`System Events` 方案首次會彈自動化授權，部分網路帳戶環境可能要求管理員權限；也可改用 `Process` 執行 `/sbin/shutdown -h now` / `-r now`（需 root）。
 - **Kiosk 的邊界**：事件攔截只作用於圖形會話內的輸入；對 SSH、另一個管理員帳戶、或直接 kill 程序沒有防禦力。生產級機房管理應疊加 MDM（Jamf / Apple School Manager / 描述檔 + 單一 App 模式）。
 - **Wi-Fi 注意**：若學校 AP 開啟「用戶端隔離」，Bonjour 發現與直連會被阻斷；請在支援多播/二層互通的 VLAN 上運行。
-- **效能**：廣播為 30fps / 0.8 縮放 JPEG（品質 0.75），單學生約 15–40 Mbps（視畫面內容而定）；如需更高幀率或更低頻寬，可改用 VideoToolbox H.264 編碼或 WebRTC。
+- **效能**：廣播畫質可於教師端切換——**高**：原生全分辨率（30fps，JPEG 0.92）；**中**：0.75 縮放（30fps）；**低**：0.5 縮放（24fps）；**自動**：≤4K 用原生分辨率，5K 以上微縮至 0.85。區域網環境建議使用「高」或「自動」。
 
 ## 已知限制
 

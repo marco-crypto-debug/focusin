@@ -4,6 +4,22 @@ import CoreImage
 import Foundation
 import ScreenCaptureKit
 
+/// 廣播畫質模式（教師端介面可切換，頻寬不作限制、以清晰度優先）。
+enum BroadcastQuality: String, CaseIterable, Identifiable {
+    case auto, low, mid, high
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .auto: return "自動"
+        case .low:  return "低"
+        case .mid:  return "中"
+        case .high: return "高"
+        }
+    }
+}
+
 /// 教師屏幕採集：ScreenCaptureKit 捕獲主顯示器，逐幀轉 JPEG 交給回呼。
 /// 需要「屏幕錄製」權限（系統設定 → 私隱與安全性 → 屏幕錄製）。
 final class ScreenBroadcaster: NSObject {
@@ -12,13 +28,24 @@ final class ScreenBroadcaster: NSObject {
     /// 啟動失敗回呼（例如未授權「屏幕錄製」），在主執行緒觸發，用於在介面顯示指引。
     var onStartError: ((String) -> Void)?
 
-    // —— 流暢度 / 清晰度參數（如網速不足或更追求流暢可在此調整）——
-    /// 採集縮放比例：0.8 = 顯示器解析度的 80%（約 4K 級），兼顧清晰度與 30fps 編碼/頻寬。
-    private let captureScale: Double = 0.8
-    /// 目標幀率（fps）。30fps 提供流暢的即時畫面。
-    private let framesPerSecond: Int = 30
-    /// JPEG 壓縮品質（0~1，越高越清晰、體積越大）。
-    private let jpegQuality: Double = 0.75
+    /// 目前畫質模式（教師端切換後，廣播中會即時重啟套用）。
+    var quality: BroadcastQuality = .high
+    /// 目前生效的 JPEG 品質（於 start 時依畫質模式決定）。
+    private var activeJpegQuality: Double = 0.92
+
+    /// 依畫質模式與顯示器解析度決定採集參數。
+    /// - 高：原生全分辨率（1.0）× 30fps × JPEG 0.92
+    /// - 中：0.75 縮放 × 30fps × JPEG 0.85
+    /// - 低：0.5 縮放 × 24fps × JPEG 0.75
+    /// - 自動：≤4K 用原生全分辨率；5K 以上微縮至 0.85（兼顧編碼穩定性）
+    private func resolutionParameters(displayWidth: Int) -> (scale: Double, fps: Int, jpeg: Double) {
+        switch quality {
+        case .high: return (1.0, 30, 0.92)
+        case .mid:  return (0.75, 30, 0.85)
+        case .low:  return (0.5, 24, 0.75)
+        case .auto: return displayWidth > 3840 ? (0.85, 30, 0.92) : (1.0, 30, 0.92)
+        }
+    }
 
     private var stream: SCStream?
     private let context = CIContext(options: [.cacheIntermediates: false])
@@ -48,11 +75,14 @@ final class ScreenBroadcaster: NSObject {
                 }
                 let filter = SCContentFilter(display: display, excludingWindows: [])
 
+                // 依畫質模式（自動/低/中/高）決定縮放、幀率與 JPEG 品質
+                let params = resolutionParameters(displayWidth: display.width)
+                activeJpegQuality = params.jpeg
+
                 let config = SCStreamConfiguration()
-                // 0.8 縮放 + 30fps：流暢優先，區域網（LAN）頻寬足以支撐
-                config.width = Int(Double(display.width) * captureScale)
-                config.height = Int(Double(display.height) * captureScale)
-                config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(framesPerSecond))
+                config.width = Int(Double(display.width) * params.scale)
+                config.height = Int(Double(display.height) * params.scale)
+                config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(params.fps))
                 config.queueDepth = 4
                 config.showsCursor = false
                 // captureResolution 預設為 .automatic（macOS 14+ 才可明確設定，這裡保持預設）
@@ -91,7 +121,7 @@ extension ScreenBroadcaster: SCStreamOutput {
         let image = CIImage(cvPixelBuffer: pixelBuffer)
         guard let cgImage = context.createCGImage(image, from: image.extent) else { return }
         guard let jpeg = NSBitmapImageRep(cgImage: cgImage)
-            .representation(using: .jpeg, properties: [.compressionFactor: jpegQuality]) else { return }
+            .representation(using: .jpeg, properties: [.compressionFactor: activeJpegQuality]) else { return }
 
         onFrame?(jpeg)
     }

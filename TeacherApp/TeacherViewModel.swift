@@ -108,27 +108,54 @@ final class TeacherViewModel: ObservableObject {
 
     // MARK: - 屏幕廣播
 
+    /// 廣播畫質模式（教師端切換；廣播中切換會即時重啟套用）。
+    var broadcastQuality: BroadcastQuality = .high {
+        didSet {
+            guard oldValue != broadcastQuality else { return }
+            broadcaster.quality = broadcastQuality
+            appendLog("廣播畫質切換為「\(broadcastQuality.label)」")
+            if broadcastActive { restartBroadcast() }
+        }
+    }
+
     func toggleBroadcast() {
         if broadcastActive {
-            broadcaster.stop()
-            send(CommandMessage(type: .streamStop))
-            broadcastActive = false
-            appendLog("已停止廣播")
+            stopBroadcast()
         } else {
-            broadcastError = nil
-            broadcaster.start { [weak self] in
-                guard let self else { return }
-                self.broadcastError = nil
-                self.send(CommandMessage(type: .streamStart))
-                self.broadcastActive = true
-                self.appendLog("開始廣播教師屏幕")
-            } onError: { [weak self] message in
-                Task { @MainActor in
-                    self?.broadcastActive = false
-                    self?.broadcastError = message
-                }
+            startBroadcast()
+        }
+    }
+
+    private func startBroadcast() {
+        broadcastError = nil
+        broadcaster.quality = broadcastQuality
+        broadcaster.start { [weak self] in
+            guard let self else { return }
+            self.broadcastError = nil
+            self.send(CommandMessage(type: .streamStart))
+            self.broadcastActive = true
+            self.appendLog("開始廣播教師屏幕（畫質：\(self.broadcastQuality.label)）")
+        } onError: { [weak self] message in
+            Task { @MainActor in
+                self?.broadcastActive = false
+                self?.broadcastError = message
             }
         }
+    }
+
+    private func stopBroadcast() {
+        broadcaster.stop()
+        send(CommandMessage(type: .streamStop))
+        broadcastActive = false
+        appendLog("已停止廣播")
+    }
+
+    /// 畫質切換時：先停再開，讓新畫質立即生效。
+    private func restartBroadcast() {
+        broadcaster.stop()
+        send(CommandMessage(type: .streamStop))
+        broadcastActive = false
+        startBroadcast()
     }
 
     private func appendLog(_ text: String) { log.append(text) }
