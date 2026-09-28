@@ -49,6 +49,8 @@ final class ScreenBroadcaster: NSObject {
 
     private var stream: SCStream?
     private let context = CIContext(options: [.cacheIntermediates: false])
+    /// 編碼節流旗標：上一幀尚未完成編碼時，直接丟棄新幀（保延遲優先於幀率）。
+    private var isEncodingFrame = false
 
     /// 啟動廣播。
     /// - Parameters:
@@ -117,6 +119,11 @@ extension ScreenBroadcaster: SCStreamOutput {
                 of type: SCStreamOutputType) {
         guard type == .screen,
               let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+
+        // 低延遲策略：上一幀還在編碼就跳過本幀，不讓畫面延遲隨佇列堆積
+        guard !isEncodingFrame else { return }
+        isEncodingFrame = true
+        defer { isEncodingFrame = false }
 
         let image = CIImage(cvPixelBuffer: pixelBuffer)
         guard let cgImage = context.createCGImage(image, from: image.extent) else { return }

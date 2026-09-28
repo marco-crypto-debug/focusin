@@ -15,13 +15,6 @@ final class TeacherViewModel: ObservableObject {
     private let broadcaster = ScreenBroadcaster()
 
     init() {
-        broadcaster.onFrame = { [weak self] jpegData in
-            // base64 編碼較耗時，先在採集佇列完成，再切回主執行緒僅做分發，避免卡頓
-            let payload = jpegData.base64EncodedString()
-            Task { @MainActor in
-                self?.send(CommandMessage(type: .streamFrame, payload: payload))
-            }
-        }
         startDiscovery()
     }
 
@@ -129,6 +122,13 @@ final class TeacherViewModel: ObservableObject {
     private func startBroadcast() {
         broadcastError = nil
         broadcaster.quality = broadcastQuality
+        // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
+        let targets = selectedIDs.compactMap { connections[$0] }
+        broadcaster.onFrame = { jpegData in
+            for target in targets {
+                target.sendFrame(jpegData)
+            }
+        }
         broadcaster.start { [weak self] in
             guard let self else { return }
             self.broadcastError = nil
@@ -145,6 +145,7 @@ final class TeacherViewModel: ObservableObject {
 
     private func stopBroadcast() {
         broadcaster.stop()
+        broadcaster.onFrame = nil
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         appendLog("已停止廣播")
@@ -153,6 +154,7 @@ final class TeacherViewModel: ObservableObject {
     /// 畫質切換時：先停再開，讓新畫質立即生效。
     private func restartBroadcast() {
         broadcaster.stop()
+        broadcaster.onFrame = nil
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         startBroadcast()

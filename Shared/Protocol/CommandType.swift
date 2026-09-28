@@ -1,7 +1,7 @@
 import Foundation
 
 /// 教師端與學生端之間交換的命令類型。
-/// 所有訊息均為 JSON 編碼的 `CommandMessage`，透過 WebSocket 二進位幀傳輸。
+/// 控制命令為 JSON 編碼的 `CommandMessage`；屏幕幀另走二進位通道（`PeerConnection.sendFrame`，魔數 FZFR + 原始 JPEG），不經 JSON/base64。
 enum CommandType: String, Codable {
     // —— 握手 ——
     case hello          // 學生端 → 教師端：自我介紹（攜帶裝置名稱）
@@ -16,7 +16,7 @@ enum CommandType: String, Codable {
 
     // —— 屏幕廣播 ——
     case streamStart    // 教師端開始廣播
-    case streamFrame    // 一幀畫面，payload = base64 JPEG
+    case streamFrame    // 歷史：JSON 幀（base64 JPEG）；現行幀走二進位通道
     case streamStop     // 教師端停止廣播
 
     // —— 保活 ——

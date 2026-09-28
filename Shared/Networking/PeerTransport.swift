@@ -9,7 +9,10 @@ enum PeerTransport {
 
     /// 構建帶 WebSocket 應用程式協定的 NWParameters。
     static func webSocketParameters() -> NWParameters {
-        let parameters = NWParameters.tcp
+        // 自訂 TCP：關閉 Nagle 演算法（TCP_NODELAY），降低小包與命令的傳輸延遲
+        let tcp = NWProtocolTCP.Options()
+        tcp.noDelay = true
+        let parameters = NWParameters(tls: nil, tcp: tcp)
         let ws = NWProtocolWebSocket.Options()
         ws.autoReplyPing = true                       // 協定層自動回覆 PONG
         parameters.defaultProtocolStack.applicationProtocols.insert(ws, at: 0)

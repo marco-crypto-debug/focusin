@@ -43,6 +43,15 @@ final class CommandListener: ObservableObject {
                 peer.onCommand = { message in
                     Task { @MainActor in self.handle(message, from: peer) }
                 }
+                peer.onFrame = { jpegData in
+                    // JPEG 解碼較耗時：先在背景佇列解碼，再切回主執行緒更新畫面，避免卡頓
+                    DispatchQueue.global(qos: .userInteractive).async {
+                        guard let image = NSImage(data: jpegData) else { return }
+                        Task { @MainActor in
+                            self.kiosk.setBroadcastImage(image)
+                        }
+                    }
+                }
                 peer.onConnectionLost = {
                     Task { @MainActor in
                         self.connections.removeAll { $0 === peer }
@@ -97,12 +106,9 @@ final class CommandListener: ObservableObject {
             isBroadcasting = true
             kiosk.clearBroadcastImage()
 
+        // 廣播幀改走二進位通道（PeerConnection.onFrame），此處不再處理 JSON 幀
         case .streamFrame:
-            if let payload = message.payload,
-               let data = Data(base64Encoded: payload),
-               let image = NSImage(data: data) {
-                kiosk.setBroadcastImage(image)
-            }
+            break
 
         case .streamStop:
             isBroadcasting = false

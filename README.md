@@ -113,8 +113,10 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 | `shutdown` / `restart` | T→S | — | 遠端關機 / 重新啟動（System Events） |
 | `launchApp` | T→S | Bundle ID | 啟動應用程式（NSWorkspace） |
 | `streamStart` / `streamStop` | T→S | — | 廣播開始 / 結束 |
-| `streamFrame` | T→S | base64 JPEG | 一幀畫面（30fps，畫質可調：自動/低/中/高） |
+| 廣播幀（二進位） | T→S | 魔數 `FZFR` + 原始 JPEG | 低延遲路徑：跳過 JSON/base64（約省 33% 體積與大量編解碼） |
 | `ping` / `pong` | 雙向 | — | 應用程式層保活（協定層另有 WS Ping） |
+
+> 延遲優化：TCP 啟用 `TCP_NODELAY`；教師端編碼節流（編不過來丟舊幀、不積壓）；每條連線同一時間只允許一幀在途；學生端 JPEG 解碼在背景佇列進行。
 
 > 廣播畫質由教師端介面切換（自動/低/中/高），採集參數集中在 `TeacherApp/ScreenBroadcaster.swift` 的 `BroadcastQuality` 與 `resolutionParameters`，如需自訂可在該處修改。
 
