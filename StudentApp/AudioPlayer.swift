@@ -23,6 +23,16 @@ final class BroadcastAudioPlayer {
     private let maxPendingChunks = 8
     private var isPrimed = false
 
+    // —— 崩潰防護 ——
+    // 播放節點一經啟動就會鎖定輸出格式；後續若排入「格式不同」的緩衝
+    // （例如個別塊的取樣率/聲道數不同），渲染執行緒的取樣率轉換器會
+    // 讀到錯位指標 → EXC_BAD_ACCESS（見崩潰報告 IOThread.client + memmove）。
+    // 解法：整個廣播期間鎖定第一個塊的格式，其餘格式不符的塊一律丟棄。
+    private var lockedFormat: (rate: Double, channels: UInt32, bits: UInt8, isFloat: Bool, interleaved: Bool)?
+    /// 已排入節點但尚未播完的緩衝，以強引用保活至播放完成，
+    /// 確保渲染執行緒讀取期間資料絕不被提前釋放。
+    private var inFlight: [AVAudioPCMBuffer] = []
+
     init() {
         engine.attach(player)
         engine.connect(player, to: engine.mainMixerNode, format: nil)
@@ -37,6 +47,7 @@ final class BroadcastAudioPlayer {
             queuedBuffers = 0
             pending.removeAll()
             isPrimed = false
+            lockedFormat = nil
         } catch {
             isRunning = false
             print("[AudioPlayer] 引擎啟動失敗（可能是無音訊輸出裝置）: \(error)")
@@ -51,13 +62,32 @@ final class BroadcastAudioPlayer {
         isRunning = false
         queuedBuffers = 0
         pending.removeAll()
+        inFlight.removeAll()
         isPrimed = false
+        lockedFormat = nil
     }
 
     /// 播放一段 PCM。格式必須與標頭一致。
     func play(pcm: Data, format: PeerConnection.AudioFormatInfo) {
         if !isRunning { start() }
         guard isRunning, !pcm.isEmpty else { return }
+
+        // 格式鎖：只接受與首塊完全一致的格式；不符（或明顯畸形）的塊直接丟棄，
+        // 避免播放節點排入異構格式緩衝造成渲染執行緒崩潰。
+        if lockedFormat == nil {
+            guard format.sampleRate >= 8000, format.sampleRate <= 96000,
+                  format.channels >= 1, format.channels <= 2,
+                  format.bits == 16 || format.bits == 32 else { return }
+            lockedFormat = (format.sampleRate, format.channels, format.bits,
+                            format.isFloat, format.interleaved)
+        } else {
+            let locked = lockedFormat!
+            guard format.sampleRate == locked.rate,
+                  format.channels == locked.channels,
+                  format.bits == locked.bits,
+                  format.isFloat == locked.isFloat,
+                  format.interleaved == locked.interleaved else { return }
+        }
 
         guard let buffer = makeBuffer(pcm: pcm, format: format) else { return }
 
@@ -132,10 +162,14 @@ final class BroadcastAudioPlayer {
     }
 
     private func schedule(_ buffer: AVAudioPCMBuffer) {
+        // 以強引用保活至播放完成：AVAudioPlayerNode 正常會自行保留，
+        // 此處再兜一層，杜絕任何「渲染執行緒讀取已釋放緩衝」的野指標崩潰。
+        inFlight.append(buffer)
         player.scheduleBuffer(buffer) { [weak self] in
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.queuedBuffers = max(self.queuedBuffers - 1, 0)
+                self.inFlight.removeAll { $0 === buffer }
                 // 播放佇列完全乾涸 → 節點已停止/將停止，重設預卷狀態，
                 // 待下一個塊累積滿預卷再重新開播（避免碎塊反覆起停）
                 if self.queuedBuffers == 0 { self.isPrimed = false }

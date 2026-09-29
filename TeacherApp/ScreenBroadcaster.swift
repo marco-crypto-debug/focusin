@@ -58,20 +58,21 @@ final class ScreenBroadcaster: NSObject {
     //    大幅減少訊息數量與學生端排程抖動（低延遲 + 更穩）——
     private var pendingAudio = Data()
     private var pendingFrames = 0
-    private var pendingFormat: PeerConnection.AudioFormatInfo?
+    /// 本次廣播的規範音訊格式（由首個音訊緩衝決定後鎖定）。
+    /// 崩潰防護：後續緩衝若格式與首塊不同（取樣率/聲道數/位深等），直接丟棄，
+    /// 避免學生端播放節點排入異構格式緩衝而在渲染執行緒崩潰。
+    private var canonicalFormat: PeerConnection.AudioFormatInfo?
     private let audioTargetFramesMs = 80
 
     private func flushPendingAudio() {
-        guard let format = pendingFormat, pendingFrames > 0 else {
+        guard canonicalFormat != nil, pendingFrames > 0 else {
             pendingAudio = Data()
             pendingFrames = 0
-            pendingFormat = nil
             return
         }
-        onAudio?(pendingAudio, format)
+        onAudio?(pendingAudio, canonicalFormat!)
         pendingAudio = Data()
         pendingFrames = 0
-        pendingFormat = nil
     }
 
     /// 啟動廣播。
@@ -81,6 +82,8 @@ final class ScreenBroadcaster: NSObject {
     func start(completion: @escaping () -> Void, onError: ((String) -> Void)? = nil) {
         let startHandler = completion
         Task {
+            // 每次廣播重新鎖定規範音訊格式
+            self.canonicalFormat = nil
             // 權限預檢：未授權「屏幕錄製」時，先觸發系統授權提示，並回報明確指引
             guard CGPreflightScreenCaptureAccess() else {
                 await MainActor.run {
@@ -188,14 +191,23 @@ extension ScreenBroadcaster: SCStreamOutput {
                 chunk.append(Data(bytes: dataPointer, count: length))
             }
 
-            if pendingFormat == nil {
-                pendingFormat = PeerConnection.AudioFormatInfo(
-                    sampleRate: asbd.mSampleRate,
-                    channels: asbd.mChannelsPerFrame,
-                    bits: UInt8(asbd.mBitsPerChannel),
-                    isFloat: isFloat,
-                    interleaved: true   // 統一為交錯
-                )
+            // 崩潰防護：整個廣播期間鎖定同一個格式；若個別緩衝的取樣率/聲道數/
+            // 位深與首塊不一致，直接丟棄（極罕見），避免學生端播放節點排入
+            // 異構格式緩衝而在渲染執行緒崩潰（EXC_BAD_ACCESS in IOThread）。
+            let info = PeerConnection.AudioFormatInfo(
+                sampleRate: asbd.mSampleRate,
+                channels: asbd.mChannelsPerFrame,
+                bits: UInt8(asbd.mBitsPerChannel),
+                isFloat: isFloat,
+                interleaved: true   // 統一為交錯
+            )
+            if canonicalFormat == nil {
+                canonicalFormat = info
+            } else if canonicalFormat!.sampleRate != info.sampleRate
+                        || canonicalFormat!.channels != info.channels
+                        || canonicalFormat!.bits != info.bits
+                        || canonicalFormat!.isFloat != info.isFloat {
+                return
             }
             pendingAudio.append(chunk)
             pendingFrames += frames
