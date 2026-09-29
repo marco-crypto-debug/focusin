@@ -59,7 +59,6 @@ final class ScreenBroadcaster: NSObject {
     private var pendingAudio = Data()
     private var pendingFrames = 0
     private var pendingFormat: PeerConnection.AudioFormatInfo?
-    private var pendingBytesPerFrame = 0
     private let audioTargetFramesMs = 80
 
     private func flushPendingAudio() {
@@ -165,8 +164,10 @@ extension ScreenBroadcaster: SCStreamOutput {
                                                      dataPointerOut: &dataPointer)
             guard status == kCMBlockBufferNoErr, let dataPointer, length > 0 else { return }
 
-            let bytesPerFrame = max(Int(asbd.mBytesPerFrame), 1)
-            let frames = length / bytesPerFrame
+            // 幀數計算：非交錯（non-interleaved）時 mBytesPerFrame 是「單聲道」位元組數，
+            // 必須乘上聲道數才是完整一幀的大小，否則幀數會算成 2 倍。
+            let bytesPerSample = max(Int(asbd.mBitsPerChannel) / 8, 1)
+            let frames = length / (Int(asbd.mChannelsPerFrame) * bytesPerSample)
             guard frames > 0 else { return }
 
             if pendingFormat == nil {
@@ -177,7 +178,6 @@ extension ScreenBroadcaster: SCStreamOutput {
                     isFloat: (asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0,
                     interleaved: (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0
                 )
-                pendingBytesPerFrame = bytesPerFrame
             }
             pendingAudio.append(Data(bytes: dataPointer, count: length))
             pendingFrames += frames
