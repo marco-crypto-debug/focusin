@@ -179,6 +179,16 @@ final class TeacherViewModel: ObservableObject {
         }
     }
 
+    /// 廣播是否同步傳送聲音（教師端可關閉；關閉可繞過個別機器音訊鏈路的相容問題）。
+    var broadcastWithAudio = true {
+        didSet {
+            guard oldValue != broadcastWithAudio else { return }
+            broadcaster.withAudio = broadcastWithAudio
+            appendLog(broadcastWithAudio ? "已開啟聲音廣播" : "已關閉聲音廣播（僅傳畫面）")
+            if broadcastActive { restartBroadcast() }
+        }
+    }
+
     func toggleBroadcast() {
         if broadcastActive {
             stopBroadcast()
@@ -190,6 +200,7 @@ final class TeacherViewModel: ObservableObject {
     private func startBroadcast() {
         broadcastError = nil
         broadcaster.quality = broadcastQuality
+        broadcaster.withAudio = broadcastWithAudio
         // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
         let targets = selectedIDs.compactMap { connections[$0] }
         // 為每個目標開闢「音訊專屬連線」：與畫面分開傳輸，避免被大畫面幀阻塞造成聲音延遲

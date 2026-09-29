@@ -124,7 +124,7 @@ struct DeviceListView: View {
                 Button {
                     viewModel.toggleBroadcast()
                 } label: {
-                    Label(viewModel.broadcastActive ? "停止廣播" : "廣播教師屏幕（含聲音）",
+                    Label(viewModel.broadcastActive ? "停止廣播" : (viewModel.broadcastWithAudio ? "廣播教師屏幕（含聲音）" : "廣播教師屏幕（僅畫面）"),
                           systemImage: viewModel.broadcastActive ? "stop.circle.fill" : "rectangle.on.rectangle")
                 }
                 .buttonStyle(.borderedProminent)
@@ -143,10 +143,14 @@ struct DeviceListView: View {
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
-                    Text("高 = 原生全分辨率（30fps）｜自動 = 依顯示器自動選擇｜聲音隨廣播同步傳輸")
+                    Text("高 = 原生全分辨率（30fps）｜自動 = 依顯示器自動選擇")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                // 聲音廣播開關：若個別學生機音訊鏈路有相容問題，可關閉聲音僅傳畫面
+                Toggle("傳送聲音（關閉時僅傳畫面）", isOn: $viewModel.broadcastWithAudio)
+                    .font(.subheadline)
 
                 Divider()
 

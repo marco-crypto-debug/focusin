@@ -32,6 +32,8 @@ final class ScreenBroadcaster: NSObject {
 
     /// 目前畫質模式（教師端切換後，廣播中會即時重啟套用）。
     var quality: BroadcastQuality = .high
+    /// 是否同步傳送聲音（教師端可關閉，僅傳畫面；關閉可繞過音訊鏈路的個別相容問題）。
+    var withAudio = true
     /// 目前生效的 JPEG 品質（於 start 時依畫質模式決定）。
     private var activeJpegQuality: Double = 0.92
 
@@ -112,8 +114,8 @@ final class ScreenBroadcaster: NSObject {
                 config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(params.fps))
                 config.queueDepth = 4
                 config.showsCursor = false
-                // 音訊：同步採集系統聲音（44.1kHz 立體聲），隨廣播一起傳給學生端
-                config.capturesAudio = true
+                // 音訊：依教師端開關決定是否同步採集系統聲音（44.1kHz 立體聲）
+                config.capturesAudio = withAudio
                 config.sampleRate = 44100
                 config.channelCount = 2
                 config.excludesCurrentProcessAudio = false
@@ -154,6 +156,8 @@ extension ScreenBroadcaster: SCStreamOutput {
                 of type: SCStreamOutputType) {
         // —— 音訊緩衝區：累積至 ~80ms 聚合後送出（低延遲 + 減少訊息數）——
         if type == .audio {
+            // 教師端關閉聲音時，不採集也不處理音訊（防呆）
+            guard withAudio else { return }
             guard let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer),
                   let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription)?.pointee,
                   let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return }
