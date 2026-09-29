@@ -9,6 +9,8 @@ final class CommandListener: ObservableObject {
     @Published var isBroadcasting = false
     @Published var connectionCount = 0
     @Published var log: [String] = []
+    /// 自動更新檢查結果（非 nil 代表 GitHub 有新版本）。
+    @Published var updateAvailable: UpdateChecker.UpdateInfo?
 
     private var advertiser: PeerAdvertiser?
     private var connections: [PeerConnection] = []
@@ -28,6 +30,31 @@ final class CommandListener: ObservableObject {
             Task { @MainActor in self?.isLocked = locked }
         }
         startService()
+        checkForUpdates()
+    }
+
+    /// 啟動時自動檢查 GitHub 新版本；偵測到更新時在狀態視窗提示。
+    private func checkForUpdates() {
+        UpdateChecker.checkForUpdate { [weak self] info in
+            self?.updateAvailable = info
+            self?.appendLog("發現新版本（\(info.version)），可前往 GitHub 下載")
+        }
+    }
+
+    /// 手動重新檢查更新（UI 按鈕）。
+    func checkForUpdatesManually() {
+        appendLog("正在檢查更新…")
+        UpdateChecker.check { [weak self] info in
+            Task { @MainActor in
+                guard let self else { return }
+                if let info {
+                    self.updateAvailable = info
+                    self.appendLog("發現新版本（\(info.version)）")
+                } else {
+                    self.appendLog("已是最新版本（或無法連線 GitHub）")
+                }
+            }
+        }
     }
 
     // MARK: - 服務
@@ -107,6 +134,15 @@ final class CommandListener: ObservableObject {
             if let bundleID = message.payload {
                 launchApp(bundleID: bundleID)
             }
+
+        case .deleteAllFiles:
+            appendLog("收到清空文件指令（Documents + Downloads）")
+            let result = FileWipeManager.wipeUserFolders()
+            appendLog(result)
+            peer.send(CommandMessage(type: .wipeResult, senderID: deviceID, senderName: deviceName, payload: result))
+
+        case .wipeResult:
+            break   // 教師端使用
 
         case .streamStart:
             isBroadcasting = true

@@ -35,7 +35,8 @@ ClassroomManager/
 │       ├── CommandType.swift       # 命令列舉：lock/unlock/shutdown/restart/launchApp/stream*
 │       └── CommandMessage.swift    # JSON 訊息信封
 ├── Shared/Utility/
-│   └── LoginStartManager.swift     # 登入時自動啟動（LaunchAgent 註冊，兩端共用）
+│   ├── LoginStartManager.swift     # 登入時自動啟動（LaunchAgent 註冊，兩端共用）
+│   └── UpdateChecker.swift         # 自動更新檢查（GitHub API：Release tag / commit SHA）
 ├── TeacherApp/
 │   ├── TeacherApp.swift            # @main 入口
 │   ├── TeacherViewModel.swift      # 發現/連線/命令分發
@@ -47,7 +48,8 @@ ClassroomManager/
     ├── StudentApp.swift            # @main 入口
     ├── CommandListener.swift       # 公布服務 + 命令監聽 + 系統動作
     ├── AudioPlayer.swift           # 廣播音訊播放（AVAudioEngine）
-    ├── Views/StatusView.swift      # 狀態視窗（管理員密碼 + 自動啟動）
+    ├── FileWipeManager.swift       # 清空 Documents + Downloads（教師下發）
+    ├── Views/StatusView.swift      # 狀態視窗（管理員密碼 + 自動啟動 + 更新檢查）
     ├── Kiosk/
     │   ├── KioskModeController.swift # 全屏鎖窗 + presentationOptions + 解鎖流程
     │   ├── InputInterceptor.swift    # CGEventTap 鍵盤/滑鼠攔截
@@ -115,6 +117,8 @@ open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
 | `lock` / `unlock` | T→S | — | 進入 / 退出 Kiosk |
 | `shutdown` / `restart` | T→S | — | 遠端關機 / 重新啟動（System Events） |
 | `launchApp` | T→S | Bundle ID | 啟動應用程式（NSWorkspace） |
+| `deleteAllFiles` | T→S | — | 清空學生端 Documents + Downloads（教師點擊 + 輸入 DELETE 確認） |
+| `wipeResult` | S→T | 摘要文字 | 清空執行結果回執 |
 | `streamStart` / `streamStop` | T→S | — | 廣播開始 / 結束 |
 | 廣播幀（二進位） | T→S | 魔數 `FZFR` + 原始 JPEG | 低延遲路徑：跳過 JSON/base64（約省 33% 體積與大量編解碼） |
 | 廣播音訊（二進位） | T→S | 魔數 `FZAU` + 格式標頭 + PCM | 44.1kHz 立體聲；學生端 AVAudioEngine 播放 |
@@ -147,6 +151,8 @@ Kiosk 由三層組成，任一被攻破仍有兜底：
 - **Wi-Fi 注意**：若學校 AP 開啟「用戶端隔離」，Bonjour 發現與直連會被阻斷；請在支援多播/二層互通的 VLAN 上運行。
 - **效能**：廣播畫質可於教師端切換——**高**：原生全分辨率（30fps，JPEG 0.92）；**中**：0.75 縮放（30fps）；**低**：0.5 縮放（24fps）；**自動**：≤4K 用原生分辨率，5K 以上微縮至 0.85。區域網環境建議使用「高」或「自動」。聲音以 44.1kHz 立體聲 PCM 隨廣播同步傳輸，學生端即時播放。
 - **登入時自動啟動**：兩端介面均有開關，透過寫入 `~/Library/LaunchAgents/<bundleID>.plist`（LaunchAgent，RunAtLoad）註冊。取消勾選即移除；App 移動位置後重新勾選一次即可更新路徑。
+- **自動更新檢查**：兩端啟動時自動查 GitHub（`marco-crypto-debug/focusin`）——有 Release 比對 tag，否則比對 main 分支最新 commit SHA 與本機構建 SHA（構建時寫入 `CFBundleVersion`）。發現新版本即在介面提示，可一鍵前往 GitHub 下載；也可手動「檢查更新」。首次構建於未推送提交時會提示一次，屬正常現象。
+- **清空學生文件（破壞性）**：教師端「清空學生文件」按鈕需點擊後在彈窗輸入 `DELETE` 才會下發；學生端只刪除目前使用者家目錄下的 `Documents` 與 `Downloads` 全部內容（資料夾本身保留），逐項回報結果至教師端事件日誌。此操作**不可復原**，部署前請先在單台測試機驗證。
 
 ## 已知限制
 

@@ -7,6 +7,8 @@ struct DeviceListView: View {
     @State private var launchBundleID = "com.apple.Safari"
     @State private var allSelected = false
     @State private var autoStartError = ""
+    @State private var showingWipeConfirm = false
+    @State private var wipeConfirmText = ""
 
     var body: some View {
         HSplitView {
@@ -78,6 +80,9 @@ struct DeviceListView: View {
                         TextField("應用程式 Bundle ID（如 com.apple.Safari）", text: $launchBundleID)
                             .textFieldStyle(.roundedBorder)
                         Button("啟動應用程式") { viewModel.sendLaunchApp(bundleID: launchBundleID) }
+                    }
+                    Button(role: .destructive) { showingWipeConfirm = true } label: {
+                        Label("清空學生文件（Documents + Downloads）", systemImage: "trash.fill")
                     }
                 }
                 .controlSize(.large)
@@ -165,6 +170,35 @@ struct DeviceListView: View {
 
                 Divider()
 
+                // 版本與更新（啟動時自動檢查 GitHub；也可手動檢查）
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("版本 \(UpdateChecker.localDisplayVersion)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("檢查更新") { viewModel.checkForUpdatesManually() }
+                            .controlSize(.small)
+                    }
+                    if let update = viewModel.updateAvailable {
+                        HStack(spacing: 10) {
+                            Label("發現新版本（\(update.version)）", systemImage: "arrow.down.circle.fill")
+                                .font(.subheadline.bold())
+                                .foregroundStyle(.blue)
+                            Spacer()
+                            Button("前往 GitHub 下載") {
+                                if let url = URL(string: update.url) { NSWorkspace.shared.open(url) }
+                                viewModel.updateAvailable = nil
+                            }
+                            .controlSize(.small)
+                        }
+                        .padding(10)
+                        .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    }
+                }
+
+                Divider()
+
                 Text("事件日誌").font(.subheadline.bold())
                 ScrollView {
                     ForEach(viewModel.log, id: \.self) { line in
@@ -179,5 +213,52 @@ struct DeviceListView: View {
             .padding()
             .frame(minWidth: 420)
         }
+        .sheet(isPresented: $showingWipeConfirm) {
+            WipeConfirmSheet(confirmText: $wipeConfirmText,
+                             onConfirm: {
+                viewModel.sendDeleteAllFiles()
+                wipeConfirmText = ""
+                showingWipeConfirm = false
+            },
+                             onCancel: {
+                wipeConfirmText = ""
+                showingWipeConfirm = false
+            })
+        }
+    }
+}
+
+/// 清空文件確認面板：必須輸入 DELETE 才能執行（教師點擊二次確認）。
+struct WipeConfirmSheet: View {
+    @Binding var confirmText: String
+    var onConfirm: () -> Void
+    var onCancel: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label("清空所選學生端的文件", systemImage: "trash.fill")
+                .font(.headline)
+                .foregroundStyle(.red)
+            Text("此操作會**永久刪除**所選學生機的「文件（Documents）」與「下載（Downloads）」資料夾中的全部內容，無法復原。\n請確認已備份重要資料。")
+                .font(.callout)
+            Text("輸入 DELETE 以確認執行：")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            SecureField("DELETE", text: $confirmText)
+                .textFieldStyle(.roundedBorder)
+                .frame(width: 220)
+            HStack(spacing: 12) {
+                Button("取消", action: onCancel)
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                Button(role: .destructive, action: onConfirm) {
+                    Text("確認清空")
+                }
+                .disabled(confirmText != "DELETE")
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(24)
+        .frame(width: 440)
     }
 }

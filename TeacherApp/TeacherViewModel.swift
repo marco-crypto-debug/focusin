@@ -9,6 +9,8 @@ final class TeacherViewModel: ObservableObject {
     /// 廣播啟動失敗訊息（如未授權屏幕錄製），用於介面顯示權限指引。
     @Published var broadcastError: String?
     @Published var log: [String] = []
+    /// 自動更新檢查結果（非 nil 代表 GitHub 有新版本）。
+    @Published var updateAvailable: UpdateChecker.UpdateInfo?
 
     private var browser: PeerBrowser?
     private var connections: [String: PeerConnection] = [:]   // studentID -> connection
@@ -16,6 +18,33 @@ final class TeacherViewModel: ObservableObject {
 
     init() {
         startDiscovery()
+        checkForUpdates()
+    }
+
+    // MARK: - 自動更新
+
+    /// 啟動時自動檢查 GitHub 新版本；偵測到更新時在介面提示。
+    private func checkForUpdates() {
+        UpdateChecker.checkForUpdate { [weak self] info in
+            self?.updateAvailable = info
+            self?.appendLog("發現新版本（\(info.version)），可前往 GitHub 下載")
+        }
+    }
+
+    /// 手動重新檢查更新（UI 按鈕）。
+    func checkForUpdatesManually() {
+        appendLog("正在檢查更新…")
+        UpdateChecker.check { [weak self] info in
+            Task { @MainActor in
+                guard let self else { return }
+                if let info {
+                    self.updateAvailable = info
+                    self.appendLog("發現新版本（\(info.version)）")
+                } else {
+                    self.appendLog("已是最新版本（或無法連線 GitHub）")
+                }
+            }
+        }
     }
 
     // MARK: - 發現與連線
@@ -59,6 +88,9 @@ final class TeacherViewModel: ObservableObject {
                 appendLog("學生上線: \(message.senderName)")
             }
             send(CommandMessage(type: .helloAck), to: [id])
+        case .wipeResult:
+            let name = peers.first(where: { $0.id == id })?.name ?? "學生"
+            appendLog("\(name) 回報：\(message.payload ?? "")")
         default:
             break
         }
@@ -97,6 +129,11 @@ final class TeacherViewModel: ObservableObject {
     func sendRestart() { send(CommandMessage(type: .restart)) }
     func sendLaunchApp(bundleID: String) {
         send(CommandMessage(type: .launchApp, payload: bundleID))
+    }
+    /// 清空所選學生端的 Documents + Downloads（僅在教師點擊確認後呼叫）。
+    func sendDeleteAllFiles() {
+        send(CommandMessage(type: .deleteAllFiles))
+        appendLog("已下發清空文件指令（Documents + Downloads）")
     }
 
     // MARK: - 屏幕廣播

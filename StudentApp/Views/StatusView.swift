@@ -51,6 +51,31 @@ struct StatusView: View {
                 Text(listener.isLocked ? "已鎖定" : "未鎖定")
             }
 
+            // 自動更新：啟動時檢查 GitHub，發現新版本提示下載
+            HStack {
+                Text("版本 \(UpdateChecker.localDisplayVersion)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("檢查更新") { listener.checkForUpdatesManually() }
+                    .controlSize(.small)
+            }
+            if let update = listener.updateAvailable {
+                HStack(spacing: 10) {
+                    Label("發現新版本（\(update.version)）", systemImage: "arrow.down.circle.fill")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.blue)
+                    Spacer()
+                    Button("前往 GitHub 下載") {
+                        if let url = URL(string: update.url) { NSWorkspace.shared.open(url) }
+                        listener.updateAvailable = nil
+                    }
+                    .controlSize(.small)
+                }
+                .padding(10)
+                .background(Color.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+            }
+
             if listener.isBroadcasting {
                 Label("正在接收教師屏幕廣播", systemImage: "rectangle.on.rectangle")
                 if let image = kiosk.broadcastImage {
