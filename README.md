@@ -4,6 +4,11 @@ FocusIn 是面向 iMac 機房的區域網課堂管理方案：教師端（Teache
 
 技術棧：Swift / SwiftUI（macOS 13+）、Network.framework（WebSocket + Bonjour/mDNS）、ScreenCaptureKit。
 
+## 版本劃分
+
+- **release（穩定版）**：`release/` 下的 `FocusIn.dmg`（含 `TeacherApp.app` + `StudentApp.app`）。教師端/學生端均為**僅傳畫面**的精簡版——程式碼層面不採集、不傳輸、不播放聲音，徹底避開音訊渲染鏈路；鎖屏/解鎖、關機/重啟、啟動應用程式、**清空文件（Documents + Downloads，需輸 DELETE 二次確認）**、自動更新、登入自動啟動全部保留。課堂環境請使用此版。
+- **alpha（含聲音測試版）**：`release/alpha/` 下的 `FocusIn-Alpha.dmg`（含 `TeacherApp-Alpha.app` + `StudentApp-Alpha.app`）。教師端與學生端含**聲音廣播**（48kHz 立體聲，專屬音訊通道 + 抖動緩衝 + 雙端格式鎖 + 交錯緩衝播放）。此版用於測試/回報音訊問題，不代表穩定交付。教師端另有「傳送聲音」開關可臨時只傳畫面。
+
 ## 架構
 
 ```
