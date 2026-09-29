@@ -11,14 +11,37 @@ final class TeacherViewModel: ObservableObject {
     @Published var log: [String] = []
     /// 自動更新檢查結果（非 nil 代表 GitHub 有新版本）。
     @Published var updateAvailable: UpdateChecker.UpdateInfo?
+    /// 各學生端即時網路延遲（ms），由 ping/pong 測得。
+    @Published var latencies: [String: Int] = [:]
 
     private var browser: PeerBrowser?
-    private var connections: [String: PeerConnection] = [:]   // studentID -> connection
+    private var connections: [String: PeerConnection] = [:]   // studentID -> command connection
+    /// 廣播音訊專屬連線（studentID -> audio connection）：與畫面分開，避免被大畫面幀阻塞。
+    private var audioConnections: [String: PeerConnection] = [:]
     private let broadcaster = ScreenBroadcaster()
+    private var pingTimer: Timer?
 
     init() {
         startDiscovery()
         checkForUpdates()
+        startPingLoop()
+    }
+
+    // MARK: - 即時延遲（ping/pong）
+
+    private func startPingLoop() {
+        pingTimer?.invalidate()
+        pingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.pingAll() }
+        }
+    }
+
+    private func pingAll() {
+        let stamp = Date().timeIntervalSinceReferenceDate
+        for (id, connection) in connections {
+            connection.send(CommandMessage(type: .ping, payload: String(stamp)))
+            _ = id
+        }
     }
 
     // MARK: - 自動更新
@@ -91,6 +114,11 @@ final class TeacherViewModel: ObservableObject {
         case .wipeResult:
             let name = peers.first(where: { $0.id == id })?.name ?? "學生"
             appendLog("\(name) 回報：\(message.payload ?? "")")
+        case .pong:
+            if let payload = message.payload, let stamp = Double(payload) {
+                let rtt = Int((Date().timeIntervalSinceReferenceDate - stamp) * 1000)
+                latencies[id] = max(rtt, 0)
+            }
         default:
             break
         }
@@ -104,7 +132,10 @@ final class TeacherViewModel: ObservableObject {
         peers.removeAll { peer in
             let match = (id != nil && peer.id == id)
                 || (endpointKey != nil && peer.endpoint.debugDescription == endpointKey)
-            if match { connections.removeValue(forKey: peer.id) }
+            if match {
+                connections.removeValue(forKey: peer.id)?.close()
+                audioConnections.removeValue(forKey: peer.id)?.close()
+            }
             return match
         }
         appendLog("學生已離線")
@@ -161,13 +192,30 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.quality = broadcastQuality
         // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
         let targets = selectedIDs.compactMap { connections[$0] }
+        // 為每個目標開闢「音訊專屬連線」：與畫面分開傳輸，避免被大畫面幀阻塞造成聲音延遲
+        let audioTargets: [PeerConnection] = selectedIDs.compactMap { id in
+            guard let peer = peers.first(where: { $0.id == id }) else { return nil }
+            let audioConn = PeerConnection(connectTo: peer.endpoint)
+            audioConn.onStateChange = { [weak audioConn] state in
+                if case .ready = state {
+                    // 以 hello + "audio" 標記此連線為音訊通道
+                    audioConn?.send(CommandMessage(type: .hello, payload: "audio"))
+                }
+            }
+            audioConn.onConnectionLost = { [weak self] in
+                Task { @MainActor in self?.audioConnections.removeValue(forKey: id) }
+            }
+            audioConn.start()
+            audioConnections[id] = audioConn
+            return audioConn
+        }
         broadcaster.onFrame = { jpegData in
             for target in targets {
                 target.sendFrame(jpegData)
             }
         }
         broadcaster.onAudio = { pcm, info in
-            for target in targets {
+            for target in audioTargets where target.connection.state == .ready {
                 target.sendAudio(pcm, format: info)
             }
         }
@@ -189,6 +237,8 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
+        audioConnections.values.forEach { $0.close() }
+        audioConnections.removeAll()
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         appendLog("已停止廣播")
@@ -199,6 +249,8 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
+        audioConnections.values.forEach { $0.close() }
+        audioConnections.removeAll()
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         startBroadcast()

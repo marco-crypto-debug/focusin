@@ -54,6 +54,27 @@ final class ScreenBroadcaster: NSObject {
     /// 編碼節流旗標：上一幀尚未完成編碼時，直接丟棄新幀（保延遲優先於幀率）。
     private var isEncodingFrame = false
 
+    // —— 音訊聚合：把 ~10ms 的小緩衝區併成 ~80ms 一塊再送出，
+    //    大幅減少訊息數量與學生端排程抖動（低延遲 + 更穩）——
+    private var pendingAudio = Data()
+    private var pendingFrames = 0
+    private var pendingFormat: PeerConnection.AudioFormatInfo?
+    private var pendingBytesPerFrame = 0
+    private let audioTargetFramesMs = 80
+
+    private func flushPendingAudio() {
+        guard let format = pendingFormat, pendingFrames > 0 else {
+            pendingAudio = Data()
+            pendingFrames = 0
+            pendingFormat = nil
+            return
+        }
+        onAudio?(pendingAudio, format)
+        pendingAudio = Data()
+        pendingFrames = 0
+        pendingFormat = nil
+    }
+
     /// 啟動廣播。
     /// - Parameters:
     ///   - completion: 啟動成功後在主執行緒回呼。
@@ -116,6 +137,8 @@ final class ScreenBroadcaster: NSObject {
     }
 
     func stop() {
+        // 停止前先送出剩餘的聚合音訊，避免結尾被截斷
+        flushPendingAudio()
         stream?.stopCapture { _ in }
         stream = nil
     }
@@ -127,7 +150,7 @@ extension ScreenBroadcaster: SCStreamOutput {
     func stream(_ stream: SCStream,
                 didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
                 of type: SCStreamOutputType) {
-        // —— 音訊緩衝區：帶格式標頭原樣直送（不節流）——
+        // —— 音訊緩衝區：累積至 ~80ms 聚合後送出（低延遲 + 減少訊息數）——
         if type == .audio {
             guard let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer),
                   let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription)?.pointee,
@@ -142,14 +165,27 @@ extension ScreenBroadcaster: SCStreamOutput {
                                                      dataPointerOut: &dataPointer)
             guard status == kCMBlockBufferNoErr, let dataPointer, length > 0 else { return }
 
-            let info = PeerConnection.AudioFormatInfo(
-                sampleRate: asbd.mSampleRate,
-                channels: asbd.mChannelsPerFrame,
-                bits: UInt8(asbd.mBitsPerChannel),
-                isFloat: (asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0,
-                interleaved: (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0
-            )
-            onAudio?(Data(bytes: dataPointer, count: length), info)
+            let bytesPerFrame = max(Int(asbd.mBytesPerFrame), 1)
+            let frames = length / bytesPerFrame
+            guard frames > 0 else { return }
+
+            if pendingFormat == nil {
+                pendingFormat = PeerConnection.AudioFormatInfo(
+                    sampleRate: asbd.mSampleRate,
+                    channels: asbd.mChannelsPerFrame,
+                    bits: UInt8(asbd.mBitsPerChannel),
+                    isFloat: (asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0,
+                    interleaved: (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0
+                )
+                pendingBytesPerFrame = bytesPerFrame
+            }
+            pendingAudio.append(Data(bytes: dataPointer, count: length))
+            pendingFrames += frames
+
+            let targetFrames = Int(asbd.mSampleRate) * audioTargetFramesMs / 1000
+            if pendingFrames >= targetFrames {
+                flushPendingAudio()
+            }
             return
         }
 

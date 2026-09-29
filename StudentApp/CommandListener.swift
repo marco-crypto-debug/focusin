@@ -14,6 +14,8 @@ final class CommandListener: ObservableObject {
 
     private var advertiser: PeerAdvertiser?
     private var connections: [PeerConnection] = []
+    /// 教師為廣播開闢的「音訊專屬通道」（hello payload = "audio"），不計入教師連線數。
+    private var audioPeers: [PeerConnection] = []
     private let kiosk = KioskModeController.shared
     private let audio = BroadcastAudioPlayer()
 
@@ -87,9 +89,13 @@ final class CommandListener: ObservableObject {
                 }
                 peer.onConnectionLost = {
                     Task { @MainActor in
-                        self.connections.removeAll { $0 === peer }
-                        self.connectionCount = self.connections.count
-                        self.appendLog("教師連線已中斷")
+                        if self.audioPeers.contains(where: { $0 === peer }) {
+                            self.audioPeers.removeAll { $0 === peer }
+                        } else {
+                            self.connections.removeAll { $0 === peer }
+                            self.connectionCount = self.connections.count
+                            self.appendLog("教師連線已中斷")
+                        }
                     }
                 }
                 peer.start()
@@ -114,6 +120,27 @@ final class CommandListener: ObservableObject {
 
     private func handle(_ message: CommandMessage, from peer: PeerConnection) {
         switch message.type {
+        case .hello:
+            // 教師端開闢音訊專屬通道：hello + "audio"，移出常規連線計數，僅用於廣播音訊
+            if message.payload == "audio" {
+                connections.removeAll { $0 === peer }
+                connectionCount = connections.count
+                if !audioPeers.contains(where: { $0 === peer }) {
+                    audioPeers.append(peer)
+                }
+                appendLog("音訊通道已建立")
+            } else {
+                appendLog("收到握手（教師）")
+                peer.send(CommandMessage(type: .helloAck))
+            }
+
+        case .helloAck:
+            break
+
+        case .ping:
+            // 即時延遲測量：原樣回傳時間戳
+            peer.send(CommandMessage(type: .pong, payload: message.payload))
+
         case .lock:
             appendLog("收到鎖定指令")
             kiosk.enterKiosk()

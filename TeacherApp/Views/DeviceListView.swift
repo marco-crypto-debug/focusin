@@ -29,6 +29,12 @@ struct DeviceListView: View {
                                 .foregroundStyle(.secondary)
                             Text(peer.name)
                             Spacer()
+                            if let ms = viewModel.latencies[peer.id] {
+                                Text("\(ms) ms")
+                                    .font(.caption2)
+                                    .monospacedDigit()
+                                    .foregroundStyle(ms > 80 ? .orange : .secondary)
+                            }
                             Circle()
                                 .fill(Color.green)
                                 .frame(width: 8, height: 8)
