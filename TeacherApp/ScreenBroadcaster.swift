@@ -164,22 +164,40 @@ extension ScreenBroadcaster: SCStreamOutput {
                                                      dataPointerOut: &dataPointer)
             guard status == kCMBlockBufferNoErr, let dataPointer, length > 0 else { return }
 
-            // 幀數計算：非交錯（non-interleaved）時 mBytesPerFrame 是「單聲道」位元組數，
-            // 必須乘上聲道數才是完整一幀的大小，否則幀數會算成 2 倍。
             let bytesPerSample = max(Int(asbd.mBitsPerChannel) / 8, 1)
-            let frames = length / (Int(asbd.mChannelsPerFrame) * bytesPerSample)
+            let channelCount = max(Int(asbd.mChannelsPerFrame), 1)
+            let frames = length / (channelCount * bytesPerSample)
             guard frames > 0 else { return }
+            let isFloat = (asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0
+            let isNonInterleaved = (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) != 0
+
+            // 統一重排成交錯（interleaved）格式再送出：
+            // ScreenCaptureKit 送來的是非交錯緩衝（內部排列 [L 全部][R 全部]），
+            // 若直接拼接多個緩衝再整段傳送，接收端無法分辨子緩衝邊界，
+            // 會把「L、R 交替切片」誤當左右聲道 → 產生低頻風鳴/哼聲。
+            var chunk = Data(capacity: frames * channelCount * bytesPerSample)
+            if isNonInterleaved {
+                for f in 0..<frames {
+                    for c in 0..<channelCount {
+                        let offset = c * frames * bytesPerSample + f * bytesPerSample
+                        chunk.append(contentsOf: UnsafeRawBufferPointer(start: dataPointer + offset,
+                                                                        count: bytesPerSample))
+                    }
+                }
+            } else {
+                chunk.append(Data(bytes: dataPointer, count: length))
+            }
 
             if pendingFormat == nil {
                 pendingFormat = PeerConnection.AudioFormatInfo(
                     sampleRate: asbd.mSampleRate,
                     channels: asbd.mChannelsPerFrame,
                     bits: UInt8(asbd.mBitsPerChannel),
-                    isFloat: (asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0,
-                    interleaved: (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) == 0
+                    isFloat: isFloat,
+                    interleaved: true   // 統一為交錯
                 )
             }
-            pendingAudio.append(Data(bytes: dataPointer, count: length))
+            pendingAudio.append(chunk)
             pendingFrames += frames
 
             let targetFrames = Int(asbd.mSampleRate) * audioTargetFramesMs / 1000

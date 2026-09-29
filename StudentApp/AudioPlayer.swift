@@ -18,7 +18,8 @@ final class BroadcastAudioPlayer {
     private var pending: [AVAudioPCMBuffer] = []
     /// 預卷：累積滿 3 塊（≈240ms）才開始播放。
     private let preRollChunks = 3
-    /// 積壓上限：超過 8 塊（≈640ms）丟棄最舊的，保證延遲有界（寧可跳聲，不要越拖越慢）。
+    /// 積壓上限：超過 8 塊（≈640ms）時丟棄「新到的」資料，保證延遲有界；
+    /// 丟新不丟舊，已排程的音訊保持連續，不會產生跳段破音/低頻哼聲。
     private let maxPendingChunks = 8
     private var isPrimed = false
 
@@ -60,11 +61,13 @@ final class BroadcastAudioPlayer {
 
         guard let buffer = makeBuffer(pcm: pcm, format: format) else { return }
 
-        // 積壓超過上限 → 丟棄最舊的（延遲保護）
-        pending.append(buffer)
-        if pending.count > maxPendingChunks {
-            pending.removeFirst()
+        // 積壓超過上限 → 丟棄「新到的」這塊（保舊不丟舊）：
+        // 已排程/已緩衝的音訊必須保持連續，丟中間的舊塊會製造時間斷層，
+        // 聽起來像低頻馬達聲/風鳴；丟掉新到的只會讓延遲有界，播放本身不破音。
+        if pending.count >= maxPendingChunks {
+            return
         }
+        pending.append(buffer)
 
         if !isPrimed {
             // 預卷未滿：繼續累積，不要急著播放
