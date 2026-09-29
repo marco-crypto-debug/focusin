@@ -114,9 +114,11 @@ final class ScreenBroadcaster: NSObject {
                 config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(params.fps))
                 config.queueDepth = 4
                 config.showsCursor = false
-                // 音訊：依教師端開關決定是否同步採集系統聲音（44.1kHz 立體聲）
+                // 音訊：依教師端開關決定是否同步採集系統聲音。
+                // 取樣率用 48000Hz：與 macOS 內建輸出裝置的預設取樣率一致，
+                // 學生端播放時無需取樣率轉換（消除渲染執行緒 SRC 的潛在崩潰點）。
                 config.capturesAudio = withAudio
-                config.sampleRate = 44100
+                config.sampleRate = 48000
                 config.channelCount = 2
                 config.excludesCurrentProcessAudio = false
                 // captureResolution 預設為 .automatic（macOS 14+ 才可明確設定，這裡保持預設）
@@ -125,9 +127,11 @@ final class ScreenBroadcaster: NSObject {
                 try stream.addStreamOutput(self,
                                            type: .screen,
                                            sampleHandlerQueue: .global(qos: .userInitiated))
+#if !FOCUSIN_STABLE
                 try stream.addStreamOutput(self,
                                            type: .audio,
                                            sampleHandlerQueue: .global(qos: .userInteractive))
+#endif
                 try await stream.startCapture()
                 self.stream = stream
                 DispatchQueue.main.async { startHandler() }
@@ -156,6 +160,7 @@ extension ScreenBroadcaster: SCStreamOutput {
                 of type: SCStreamOutputType) {
         // —— 音訊緩衝區：累積至 ~80ms 聚合後送出（低延遲 + 減少訊息數）——
         if type == .audio {
+#if !FOCUSIN_STABLE
             // 教師端關閉聲音時，不採集也不處理音訊（防呆）
             guard withAudio else { return }
             guard let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer),
@@ -220,6 +225,7 @@ extension ScreenBroadcaster: SCStreamOutput {
             if pendingFrames >= targetFrames {
                 flushPendingAudio()
             }
+#endif
             return
         }
 

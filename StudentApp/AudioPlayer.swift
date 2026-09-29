@@ -110,16 +110,18 @@ final class BroadcastAudioPlayer {
         }
     }
 
-    /// 把一段 PCM 轉成 AVAudioPCMBuffer（依標頭格式與緩衝區佈局精確拷貝）。
+    /// 把一段 PCM 轉成 AVAudioPCMBuffer。
+    /// 無論線上格式是否交錯，**一律以「交錯」格式建立緩衝**：
+    /// 單一連續記憶體 + 整段拷貝（或手動重排），完全不涉及非交錯緩衝的
+    /// 分通道指標運算與「每通道單獨 mDataByteSize」的記憶體佈局假設——
+    /// 從根本上排除緩衝越界/野指標類別的渲染執行緒崩潰。
     private func makeBuffer(pcm: Data, format: PeerConnection.AudioFormatInfo) -> AVAudioPCMBuffer? {
         let common: AVAudioCommonFormat = format.isFloat ? .pcmFormatFloat32 : .pcmFormatInt16
         guard let audioFormat = AVAudioFormat(commonFormat: common,
                                               sampleRate: format.sampleRate,
                                               channels: format.channels,
-                                              interleaved: format.interleaved) else { return nil }
+                                              interleaved: true) else { return nil }
 
-        // 關鍵：非交錯（non-interleaved）時 mBytesPerFrame 是「單聲道」每幀位元組數，
-        // 不能直接用來算幀數（雙聲道資料會被算成 2 倍 → 半速播放 + 聲道串擾 + 吱吱聲）。
         let bytesPerSample = max(Int(format.bits) / 8, 1)
         let channelCount = max(Int(format.channels), 1)
         let frames = pcm.count / (channelCount * bytesPerSample)
@@ -129,24 +131,22 @@ final class BroadcastAudioPlayer {
         buffer.frameLength = AVAudioFrameCount(frames)
 
         let buffers = UnsafeMutableAudioBufferListPointer(buffer.mutableAudioBufferList)
-        guard buffers.count > 0 else { return nil }
+        guard buffers.count == 1, let dst = buffers[0].mData else { return nil }
+        buffers[0].mDataByteSize = UInt32(pcm.count)
         pcm.withUnsafeBytes { (src: UnsafeRawBufferPointer) in
             guard let base = src.baseAddress else { return }
-            if buffers.count == 1 {
-                // 交錯（interleaved）：單一緩衝區一次拷貝整段
-                guard let dst = buffers[0].mData else { return }
-                buffers[0].mDataByteSize = UInt32(pcm.count)
+            if format.interleaved {
+                // 交錯：[L0 R0 L1 R1 ...] → 一次整段拷貝
                 memcpy(dst, base, pcm.count)
             } else {
-                // 非交錯（non-interleaved）：資料排列為 [L 全部][R 全部]，
-                // 每個聲道各拷一份
-                let channelBytes = frames * bytesPerSample
-                for i in 0..<buffers.count {
-                    guard let dst = buffers[i].mData else { continue }
-                    let offset = i * channelBytes
-                    guard offset + channelBytes <= pcm.count else { continue }
-                    buffers[i].mDataByteSize = UInt32(channelBytes)
-                    memcpy(dst, base + offset, channelBytes)
+                // 非交錯：[L 全部][R 全部] → 手動重排成交錯 [L0 R0 L1 R1 ...]
+                let m = dst.assumingMemoryBound(to: UInt8.self)
+                for f in 0..<frames {
+                    for c in 0..<channelCount {
+                        let srcOffset = c * frames * bytesPerSample + f * bytesPerSample
+                        let dstOffset = (f * channelCount + c) * bytesPerSample
+                        memcpy(m + dstOffset, base + srcOffset, bytesPerSample)
+                    }
                 }
             }
         }

@@ -200,9 +200,15 @@ final class TeacherViewModel: ObservableObject {
     private func startBroadcast() {
         broadcastError = nil
         broadcaster.quality = broadcastQuality
+#if FOCUSIN_STABLE
+        // 穩定版：不傳聲音，只傳畫面
+        broadcaster.withAudio = false
+#else
         broadcaster.withAudio = broadcastWithAudio
+#endif
         // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
         let targets = selectedIDs.compactMap { connections[$0] }
+#if !FOCUSIN_STABLE
         // 為每個目標開闢「音訊專屬連線」：與畫面分開傳輸，避免被大畫面幀阻塞造成聲音延遲
         let audioTargets: [PeerConnection] = selectedIDs.compactMap { id in
             guard let peer = peers.first(where: { $0.id == id }) else { return nil }
@@ -220,16 +226,19 @@ final class TeacherViewModel: ObservableObject {
             audioConnections[id] = audioConn
             return audioConn
         }
+#endif
         broadcaster.onFrame = { jpegData in
             for target in targets {
                 target.sendFrame(jpegData)
             }
         }
+#if !FOCUSIN_STABLE
         broadcaster.onAudio = { pcm, info in
             for target in audioTargets where target.connection.state == .ready {
                 target.sendAudio(pcm, format: info)
             }
         }
+#endif
         broadcaster.start { [weak self] in
             guard let self else { return }
             self.broadcastError = nil

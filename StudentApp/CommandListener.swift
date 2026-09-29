@@ -14,10 +14,14 @@ final class CommandListener: ObservableObject {
 
     private var advertiser: PeerAdvertiser?
     private var connections: [PeerConnection] = []
+#if !FOCUSIN_STABLE
     /// 教師為廣播開闢的「音訊專屬通道」（hello payload = "audio"），不計入教師連線數。
     private var audioPeers: [PeerConnection] = []
     private let kiosk = KioskModeController.shared
     private let audio = BroadcastAudioPlayer()
+#else
+    private let kiosk = KioskModeController.shared
+#endif
 
     private var deviceID: String {
         if let id = UserDefaults.standard.string(forKey: "student.deviceID") { return id }
@@ -82,13 +86,16 @@ final class CommandListener: ObservableObject {
                         }
                     }
                 }
+#if !FOCUSIN_STABLE
                 peer.onAudio = { pcm, info in
                     Task { @MainActor in
                         self.audio.play(pcm: pcm, format: info)
                     }
                 }
+#endif
                 peer.onConnectionLost = {
                     Task { @MainActor in
+#if !FOCUSIN_STABLE
                         if self.audioPeers.contains(where: { $0 === peer }) {
                             self.audioPeers.removeAll { $0 === peer }
                         } else {
@@ -96,6 +103,11 @@ final class CommandListener: ObservableObject {
                             self.connectionCount = self.connections.count
                             self.appendLog("教師連線已中斷")
                         }
+#else
+                        self.connections.removeAll { $0 === peer }
+                        self.connectionCount = self.connections.count
+                        self.appendLog("教師連線已中斷")
+#endif
                     }
                 }
                 peer.start()
@@ -123,12 +135,14 @@ final class CommandListener: ObservableObject {
         case .hello:
             // 教師端開闢音訊專屬通道：hello + "audio"，移出常規連線計數，僅用於廣播音訊
             if message.payload == "audio" {
+#if !FOCUSIN_STABLE
                 connections.removeAll { $0 === peer }
                 connectionCount = connections.count
                 if !audioPeers.contains(where: { $0 === peer }) {
                     audioPeers.append(peer)
                 }
                 appendLog("音訊通道已建立")
+#endif
             } else {
                 appendLog("收到握手（教師）")
                 peer.send(CommandMessage(type: .helloAck))
@@ -174,7 +188,9 @@ final class CommandListener: ObservableObject {
         case .streamStart:
             isBroadcasting = true
             kiosk.clearBroadcastImage()
+#if !FOCUSIN_STABLE
             audio.start()
+#endif
 
         // 廣播幀改走二進位通道（PeerConnection.onFrame），此處不再處理 JSON 幀
         case .streamFrame:
@@ -183,7 +199,9 @@ final class CommandListener: ObservableObject {
         case .streamStop:
             isBroadcasting = false
             kiosk.clearBroadcastImage()
+#if !FOCUSIN_STABLE
             audio.stop()
+#endif
 
         default:
             break

@@ -149,8 +149,10 @@ struct DeviceListView: View {
                 }
 
                 // 聲音廣播開關：若個別學生機音訊鏈路有相容問題，可關閉聲音僅傳畫面
+#if !FOCUSIN_STABLE
                 Toggle("傳送聲音（關閉時僅傳畫面）", isOn: $viewModel.broadcastWithAudio)
                     .font(.subheadline)
+#endif
 
                 Divider()
 
