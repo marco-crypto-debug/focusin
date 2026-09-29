@@ -66,6 +66,12 @@ final class ScreenBroadcaster: NSObject {
     private var canonicalFormat: PeerConnection.AudioFormatInfo?
     private let audioTargetFramesMs = 80
 
+    // —— 音訊診斷日誌（alpha 除錯用）——
+    private var didLogAudioFormat = false
+    private var lastAudioLogAt: TimeInterval = 0
+    private var audioChunkCount = 0
+    private var audioByteCount: UInt64 = 0
+
     private func flushPendingAudio() {
         guard canonicalFormat != nil, pendingFrames > 0 else {
             pendingAudio = Data()
@@ -136,7 +142,7 @@ final class ScreenBroadcaster: NSObject {
                 self.stream = stream
                 DispatchQueue.main.async { startHandler() }
             } catch {
-                print("[Broadcaster] 屏幕捕獲失敗: \(error)")
+                DiagLog.log("屏幕捕獲失敗: \(error)")
                 await MainActor.run {
                     onStartError?("屏幕捕獲失敗：\(error.localizedDescription)\n請確認已授權「屏幕錄製」後重試。")
                 }
@@ -183,6 +189,12 @@ extension ScreenBroadcaster: SCStreamOutput {
             let isFloat = (asbd.mFormatFlags & kAudioFormatFlagIsFloat) != 0
             let isNonInterleaved = (asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved) != 0
 
+            // 診斷日誌：首次輸出 SCStream 實際送出的音訊格式（確認 48k/立體聲/浮點/是否非交錯）
+            if !didLogAudioFormat {
+                didLogAudioFormat = true
+                DiagLog.log("音訊採集格式: rate=\(asbd.mSampleRate) ch=\(asbd.mChannelsPerFrame) bits=\(asbd.mBitsPerChannel) float=\(isFloat) nonInterleaved=\(isNonInterleaved) framesPerBlock=\(frames)")
+            }
+
             // 統一重排成交錯（interleaved）格式再送出：
             // ScreenCaptureKit 送來的是非交錯緩衝（內部排列 [L 全部][R 全部]），
             // 若直接拼接多個緩衝再整段傳送，接收端無法分辨子緩衝邊界，
@@ -220,6 +232,15 @@ extension ScreenBroadcaster: SCStreamOutput {
             }
             pendingAudio.append(chunk)
             pendingFrames += frames
+            audioChunkCount += 1
+            audioByteCount += UInt64(chunk.count)
+            let now = Date().timeIntervalSinceReferenceDate
+            if now - lastAudioLogAt > 2 {
+                lastAudioLogAt = now
+                DiagLog.log("音訊送出中: \(audioChunkCount) 塊 / \(audioByteCount) 位元組（\(audioByteCount / 1024) KB）")
+                audioChunkCount = 0
+                audioByteCount = 0
+            }
 
             let targetFrames = Int(asbd.mSampleRate) * audioTargetFramesMs / 1000
             if pendingFrames >= targetFrames {

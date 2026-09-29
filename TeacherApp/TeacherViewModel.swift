@@ -20,6 +20,9 @@ final class TeacherViewModel: ObservableObject {
     private var audioConnections: [String: PeerConnection] = [:]
     private let broadcaster = ScreenBroadcaster()
     private var pingTimer: Timer?
+    /// alpha 除錯開關：以 `--autobroadcast` 啟動時，發現首台學生端即自動全選並開始廣播。
+    private let autoBroadcast = CommandLine.arguments.contains("--autobroadcast")
+    private var autoBroadcastAttempted = false
 
     init() {
         startDiscovery()
@@ -75,7 +78,16 @@ final class TeacherViewModel: ObservableObject {
     private func startDiscovery() {
         let browser = PeerBrowser()
         browser.onPeerFound = { [weak self] endpoint, name in
-            Task { @MainActor in self?.connect(to: endpoint, name: name) }
+            Task { @MainActor in
+                self?.connect(to: endpoint, name: name)
+                // alpha 除錯：--autobroadcast 模式下，發現學生端後自動全選並廣播一次
+                if let self, self.autoBroadcast, !self.autoBroadcastAttempted, !self.peers.isEmpty {
+                    self.autoBroadcastAttempted = true
+                    for i in self.peers.indices { self.peers[i].isSelected = true }
+                    self.appendLog("自動廣播模式已開啟（--autobroadcast）")
+                    self.startBroadcast()
+                }
+            }
         }
         browser.onPeerLost = { [weak self] endpoint in
             Task { @MainActor in self?.dropPeer(matching: endpoint) }

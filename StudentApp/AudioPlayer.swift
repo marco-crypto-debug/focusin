@@ -33,6 +33,11 @@ final class BroadcastAudioPlayer {
     /// 確保渲染執行緒讀取期間資料絕不被提前釋放。
     private var inFlight: [AVAudioPCMBuffer] = []
 
+    // —— 音訊診斷統計（alpha 除錯用）——
+    private var receivedCount = 0
+    private var droppedCount = 0
+    private var lastStatLogAt: TimeInterval = 0
+
     init() {
         engine.attach(player)
         engine.connect(player, to: engine.mainMixerNode, format: nil)
@@ -50,7 +55,7 @@ final class BroadcastAudioPlayer {
             lockedFormat = nil
         } catch {
             isRunning = false
-            print("[AudioPlayer] 引擎啟動失敗（可能是無音訊輸出裝置）: \(error)")
+            DiagLog.log("引擎啟動失敗（可能是無音訊輸出裝置）: \(error)")
         }
     }
 
@@ -77,27 +82,46 @@ final class BroadcastAudioPlayer {
         if lockedFormat == nil {
             guard format.sampleRate >= 8000, format.sampleRate <= 96000,
                   format.channels >= 1, format.channels <= 2,
-                  format.bits == 16 || format.bits == 32 else { return }
+                  format.bits == 16 || format.bits == 32 else {
+                droppedCount += 1
+                DiagLog.log("拒收畸形塊: rate=\(format.sampleRate) ch=\(format.channels) bits=\(format.bits)")
+                return
+            }
             lockedFormat = (format.sampleRate, format.channels, format.bits,
                             format.isFloat, format.interleaved)
+            DiagLog.log("鎖定格式: rate=\(format.sampleRate) ch=\(format.channels) bits=\(format.bits) float=\(format.isFloat) interleaved=\(format.interleaved)")
         } else {
             let locked = lockedFormat!
             guard format.sampleRate == locked.rate,
                   format.channels == locked.channels,
                   format.bits == locked.bits,
                   format.isFloat == locked.isFloat,
-                  format.interleaved == locked.interleaved else { return }
+                  format.interleaved == locked.interleaved else {
+                droppedCount += 1
+                DiagLog.log("丟棄格式不符塊: rate=\(format.sampleRate) ch=\(format.channels) bits=\(format.bits)")
+                return
+            }
         }
 
-        guard let buffer = makeBuffer(pcm: pcm, format: format) else { return }
+        guard let buffer = makeBuffer(pcm: pcm, format: format) else {
+            droppedCount += 1
+            return
+        }
 
         // 積壓超過上限 → 丟棄「新到的」這塊（保舊不丟舊）：
         // 已排程/已緩衝的音訊必須保持連續，丟中間的舊塊會製造時間斷層，
         // 聽起來像低頻馬達聲/風鳴；丟掉新到的只會讓延遲有界，播放本身不破音。
         if pending.count >= maxPendingChunks {
+            droppedCount += 1
             return
         }
         pending.append(buffer)
+        receivedCount += 1
+        let now = Date().timeIntervalSinceReferenceDate
+        if now - lastStatLogAt > 2 {
+            lastStatLogAt = now
+            DiagLog.log("接收=\(receivedCount) 塊 丟棄=\(droppedCount) 塊 在飛=\(inFlight.count) 待播=\(pending.count) 播放中=\(player.isPlaying)")
+        }
 
         if !isPrimed {
             // 預卷未滿：繼續累積，不要急著播放
