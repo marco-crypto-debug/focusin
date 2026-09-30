@@ -44,24 +44,25 @@ final class CommandListener: ObservableObject {
 
     /// 啟動時自動檢查 GitHub 新版本；偵測到更新時在狀態視窗提示。
     private func checkForUpdates() {
-        UpdateChecker.checkForUpdate { [weak self] info in
-            self?.updateAvailable = info
-            self?.appendLog("發現新版本（\(info.version)），可前往 GitHub 下載")
+        UpdateChecker.checkForUpdate { [weak self] info, _ in
+            guard let self, let info else { return }
+            self.updateAvailable = info
+            self.appendLog("發現新版本（\(info.version)），可前往 GitHub 下載")
         }
     }
 
     /// 手動重新檢查更新（UI 按鈕）。
     func checkForUpdatesManually() {
         appendLog("正在檢查更新…")
-        UpdateChecker.check { [weak self] info in
-            Task { @MainActor in
-                guard let self else { return }
-                if let info {
-                    self.updateAvailable = info
-                    self.appendLog("發現新版本（\(info.version)）")
-                } else {
-                    self.appendLog("已是最新版本（或無法連線 GitHub）")
-                }
+        UpdateChecker.checkForUpdate { [weak self] info, isLatest in
+            guard let self else { return }
+            if let info {
+                self.updateAvailable = info
+                self.appendLog("發現新版本（\(info.version)）")
+            } else if isLatest {
+                self.appendLog("已是最新版本（\(UpdateChecker.localDisplayVersion)）")
+            } else {
+                self.appendLog("檢查失敗（無法連線 GitHub）")
             }
         }
     }

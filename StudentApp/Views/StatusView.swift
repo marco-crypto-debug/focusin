@@ -122,7 +122,7 @@ struct StatusView: View {
 
             Spacer(minLength: 4)
             VStack(alignment: .trailing, spacing: 2) {
-                Text("如發現 Bug，請回報 IG：marco.tsk_smile")
+                Text("bug report IG:marco.tsk_smile")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Text("© 2026 Made by Marco TSK")

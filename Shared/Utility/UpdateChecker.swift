@@ -165,27 +165,37 @@ enum UpdateChecker {
         }.resume()
     }
 
-    /// 啟動時自動檢查。偵測到比本機更新 → 在主執行緒回呼通知。
-    static func checkForUpdate(notify: @escaping (UpdateInfo) -> Void) {
+    /// 檢查並與本機版本比較。
+    /// - completion(info, isLatest)：
+    ///   - `info != nil`：偵測到新版本（比本機新），info 為更新資訊。
+    ///   - `info == nil && isLatest == true`：已是最新版本。
+    ///   - `info == nil && isLatest == false`：檢查失敗（離線 / API 不可用 / 無 Release）。
+    /// 回呼一律在主執行緒。
+    static func checkForUpdate(completion: @escaping (_ info: UpdateInfo?, _ isLatest: Bool) -> Void) {
         check { info in
             guard let info else {
-                DiagLog.log("更新檢查失敗（無網路或 API 不可用）")
+                DispatchQueue.main.async {
+                    DiagLog.log("更新檢查失敗（無網路或 API 不可用）")
+                    completion(nil, false)
+                }
                 return
             }
-            DiagLog.log("更新檢查：遠端 \(info.version) vs 本機 \(localDisplayVersion)（\(normalize(info.version)) vs \(normalize(localDisplayVersion))）")
-            DispatchQueue.main.async {
-                if info.isRelease {
-                    // Release 路徑：規範化 tag 與本機顯示版本比較（v1.3 == 1.3）
-                    if normalize(localDisplayVersion) != normalize(info.version) { notify(info) }
+            let isNewer: Bool
+            if info.isRelease {
+                // Release 路徑：規範化 tag 與本機顯示版本比較（v1.3.3 == 1.3.3 → 已最新）
+                isNewer = normalize(localDisplayVersion) != normalize(info.version)
+            } else {
+                // commit 路徑：本機構建 SHA 與遠端最新 SHA 比較
+                if let local = localBuildSHA, !local.isEmpty {
+                    isNewer = local != info.version
                 } else {
-                    // commit 路徑：本機構建 SHA 與遠端最新 SHA 比較
-                    if let local = localBuildSHA, !local.isEmpty {
-                        if local != info.version { notify(info) }
-                    } else {
-                        // 舊版構建沒有 SHA：一律提示一次，方便升級
-                        notify(info)
-                    }
+                    // 舊版構建沒有 SHA：一律視為可更新，方便升級
+                    isNewer = true
                 }
+            }
+            DiagLog.log("更新檢查：遠端 \(info.version) vs 本機 \(localDisplayVersion)（\(normalize(info.version)) vs \(normalize(localDisplayVersion))）→ \(isNewer ? "有新版本" : "已是最新")")
+            DispatchQueue.main.async {
+                completion(isNewer ? info : nil, true)
             }
         }
     }

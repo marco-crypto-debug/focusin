@@ -87,7 +87,7 @@ struct KioskLockView: View {
 
             // 右下角版權標記
             VStack(alignment: .trailing, spacing: 2) {
-                Text("如發現 Bug，請回報 IG：marco.tsk_smile")
+                Text("bug report IG:marco.tsk_smile")
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.45))
                 Text("© 2026 Made by Marco TSK")
