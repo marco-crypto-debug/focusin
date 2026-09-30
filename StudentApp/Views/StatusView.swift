@@ -67,7 +67,7 @@ struct StatusView: View {
                         .foregroundStyle(.blue)
                     Spacer()
                     Button("前往 GitHub 下載") {
-                        if let url = URL(string: update.url) { NSWorkspace.shared.open(url) }
+                        if let url = URL(string: update.pageURL) { NSWorkspace.shared.open(url) }
                         listener.updateAvailable = nil
                     }
                     .controlSize(.small)
