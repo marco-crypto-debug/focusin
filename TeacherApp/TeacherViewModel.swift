@@ -18,6 +18,8 @@ final class TeacherViewModel: ObservableObject {
     private var connections: [String: PeerConnection] = [:]   // studentID -> command connection
     /// 廣播音訊專屬連線（studentID -> audio connection）：與畫面分開，避免被大畫面幀阻塞。
     private var audioConnections: [String: PeerConnection] = [:]
+    /// 重連狀態追蹤：studentID -> (endpoint, retryCount, timer)
+    private var reconnectionState: [String: (NWEndpoint, Int, Timer?)] = [:]
     private let broadcaster = ScreenBroadcaster()
     private var pingTimer: Timer?
     /// alpha 除錯開關：以 `--autobroadcast` 啟動時，發現首台學生端即自動全選並開始廣播。
@@ -45,6 +47,77 @@ final class TeacherViewModel: ObservableObject {
             connection.send(CommandMessage(type: .ping, payload: String(stamp)))
             _ = id
         }
+    }
+
+    // MARK: - 重連邏輯
+
+    /// 排程重連，使用指數退避（最多 30 秒間隔，最多重試 10 次）
+    private func scheduleReconnect(for peer: StudentPeer) {
+        let key = peer.id
+        let (endpoint, retryCount, existingTimer) = reconnectionState[key] ?? (peer.endpoint, 0, nil)
+        existingTimer?.invalidate()
+
+        // 若已連線上，不需重連
+        if connections[key] != nil {
+            reconnectionState.removeValue(forKey: key)
+            return
+        }
+
+        let nextRetry = min(retryCount + 1, 10)
+        let delay = min(pow(2.0, Double(nextRetry - 1)) * 2.0, 30.0) // 2, 4, 8, 16, 30, 30...
+
+        appendLog("排程重連 \(peer.name) （第 \(nextRetry) 次，\(Int(delay)) 秒後）")
+
+        let timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.attemptReconnect(id: key, endpoint: endpoint, retryCount: nextRetry)
+            }
+        }
+        reconnectionState[key] = (endpoint, nextRetry, timer)
+    }
+
+    private func attemptReconnect(id: String, endpoint: NWEndpoint, retryCount: Int) {
+        guard connections[id] == nil else {
+            reconnectionState.removeValue(forKey: id)
+            return
+        }
+
+        appendLog("嘗試重連 \(id)...")
+        let connection = PeerConnection(connectTo: endpoint)
+        connection.onCommand = { [weak self] message in
+            Task { @MainActor in self?.handle(message, from: id) }
+        }
+        connection.onConnectionLost = { [weak self] in
+            Task { @MainActor in
+                self?.handleConnectionLost(id: id, endpoint: endpoint)
+            }
+        }
+        connection.start()
+        connections[id] = connection
+
+        // 發送 hello 以重新建立握手
+        let deviceID = UUID().uuidString // 這裡簡單用新 ID；實際可存在 UserDefaults
+        connection.send(CommandMessage(type: .hello, senderID: deviceID, senderName: "TeacherApp"))
+    }
+
+    private func handleConnectionLost(id: String, endpoint: NWEndpoint) {
+        connections.removeValue(forKey: id)?.close()
+        audioConnections.removeValue(forKey: id)?.close()
+        // 保留 peer 在列表中（標記為離線），啟動重連
+        if let idx = peers.firstIndex(where: { $0.id == id }) {
+            peers[idx].isSelected = false // 重連前取消選中
+        }
+        scheduleReconnect(for: StudentPeer(id: id, name: "Reconnecting...", endpoint: endpoint, isSelected: false))
+    }
+
+    /// 成功重連時呼叫（收到 helloAck 或 hello 確認）
+    private func markReconnected(id: String, name: String) {
+        reconnectionState[id]?.2?.invalidate()
+        reconnectionState.removeValue(forKey: id)
+        if let idx = peers.firstIndex(where: { $0.id == id }) {
+            peers[idx].name = name
+        }
+        appendLog("\(name) 重連成功")
     }
 
     // MARK: - 自動更新
@@ -100,7 +173,28 @@ final class TeacherViewModel: ObservableObject {
     private func connect(to endpoint: NWEndpoint, name: String) {
         // 防止同一學生重複入列
         let endpointKey = endpoint.debugDescription
-        guard !peers.contains(where: { $0.endpoint.debugDescription == endpointKey }) else { return }
+        if let existingIdx = peers.firstIndex(where: { $0.endpoint.debugDescription == endpointKey }) {
+            // 已存在：可能是重連，更新連線
+            let existingID = peers[existingIdx].id
+            connections[existingID]?.close()
+            audioConnections[existingID]?.close()
+            reconnectionState[existingID]?.2?.invalidate()
+            reconnectionState.removeValue(forKey: existingID)
+
+            let connection = PeerConnection(connectTo: endpoint)
+            connection.onCommand = { [weak self] message in
+                Task { @MainActor in self?.handle(message, from: existingID) }
+            }
+            connection.onConnectionLost = { [weak self] in
+                Task { @MainActor in self?.handleConnectionLost(id: existingID, endpoint: endpoint) }
+            }
+            connection.start()
+            connections[existingID] = connection
+            // 發送 hello 重新握手
+            connection.send(CommandMessage(type: .hello, senderID: existingID, senderName: "TeacherApp"))
+            appendLog("重連中: \(peers[existingIdx].name)")
+            return
+        }
 
         let connection = PeerConnection(connectTo: endpoint)
         let id = UUID().uuidString
@@ -108,7 +202,7 @@ final class TeacherViewModel: ObservableObject {
             Task { @MainActor in self?.handle(message, from: id) }
         }
         connection.onConnectionLost = { [weak self] in
-            Task { @MainActor in self?.dropPeer(id: id) }
+            Task { @MainActor in self?.handleConnectionLost(id: id, endpoint: endpoint) }
         }
         connection.start()
         connections[id] = connection
@@ -123,6 +217,12 @@ final class TeacherViewModel: ObservableObject {
                 appendLog("學生上線: \(message.senderName)")
             }
             send(CommandMessage(type: .helloAck), to: [id])
+        case .helloAck:
+            // 收到 helloAck 表示重連成功
+            if let idx = peers.firstIndex(where: { $0.id == id }) {
+                let name = peers[idx].name
+                markReconnected(id: id, name: name)
+            }
         case .wipeResult:
             let name = peers.first(where: { $0.id == id })?.name ?? "學生"
             appendLog("\(name) 回報：\(message.payload ?? "")")
@@ -137,7 +237,10 @@ final class TeacherViewModel: ObservableObject {
     }
 
     private func dropPeer(matching endpoint: NWEndpoint) {
-        dropPeer(id: nil, endpointKey: endpoint.debugDescription)
+        // 找到對應的 peer ID 並觸發重連
+        if let peer = peers.first(where: { $0.endpoint.debugDescription == endpoint.debugDescription }) {
+            handleConnectionLost(id: peer.id, endpoint: endpoint)
+        }
     }
 
     private func dropPeer(id: String? = nil, endpointKey: String? = nil) {

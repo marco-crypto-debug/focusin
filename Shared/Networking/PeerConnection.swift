@@ -96,7 +96,9 @@ final class PeerConnection {
         let context = NWConnection.ContentContext(identifier: "frame", metadata: [metadata])
         connection.send(content: payload, contentContext: context, isComplete: true,
                         completion: .contentProcessed { [weak self] _ in
+            self?.sendLock.lock()
             self?.frameSendBusy = false
+            self?.sendLock.unlock()
         })
     }
 

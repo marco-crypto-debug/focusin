@@ -60,6 +60,7 @@ final class ScreenBroadcaster: NSObject {
     //    大幅減少訊息數量與學生端排程抖動（低延遲 + 更穩）——
     private var pendingAudio = Data()
     private var pendingFrames = 0
+    private let audioLock = NSLock()  // 保護 pendingAudio/pendingFrames/canonicalFormat
     /// 本次廣播的規範音訊格式（由首個音訊緩衝決定後鎖定）。
     /// 崩潰防護：後續緩衝若格式與首塊不同（取樣率/聲道數/位深等），直接丟棄，
     /// 避免學生端播放節點排入異構格式緩衝而在渲染執行緒崩潰。
@@ -73,14 +74,19 @@ final class ScreenBroadcaster: NSObject {
     private var audioByteCount: UInt64 = 0
 
     private func flushPendingAudio() {
+        audioLock.lock()
         guard canonicalFormat != nil, pendingFrames > 0 else {
             pendingAudio = Data()
             pendingFrames = 0
+            audioLock.unlock()
             return
         }
-        onAudio?(pendingAudio, canonicalFormat!)
+        let dataToSend = pendingAudio
+        let formatToSend = canonicalFormat!
         pendingAudio = Data()
         pendingFrames = 0
+        audioLock.unlock()
+        onAudio?(dataToSend, formatToSend)
     }
 
     /// 啟動廣播。
@@ -120,6 +126,10 @@ final class ScreenBroadcaster: NSObject {
                 config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(params.fps))
                 config.queueDepth = 4
                 config.showsCursor = false
+                // 明確設定捕獲解析度為最佳品質，避免 macOS 版本差異導致不一致
+                if #available(macOS 14.0, *) {
+                    config.captureResolution = .best
+                }
                 // 音訊：依教師端開關決定是否同步採集系統聲音。
                 // 取樣率用 48000Hz：與 macOS 內建輸出裝置的預設取樣率一致，
                 // 學生端播放時無需取樣率轉換（消除渲染執行緒 SRC 的潛在崩潰點）。
@@ -127,7 +137,6 @@ final class ScreenBroadcaster: NSObject {
                 config.sampleRate = 48000
                 config.channelCount = 2
                 config.excludesCurrentProcessAudio = false
-                // captureResolution 預設為 .automatic（macOS 14+ 才可明確設定，這裡保持預設）
 
                 let stream = SCStream(filter: filter, configuration: config, delegate: nil)
                 try stream.addStreamOutput(self,
@@ -152,7 +161,17 @@ final class ScreenBroadcaster: NSObject {
 
     func stop() {
         // 停止前先送出剩餘的聚合音訊，避免結尾被截斷
-        flushPendingAudio()
+        audioLock.lock()
+        if canonicalFormat != nil, pendingFrames > 0 {
+            let dataToSend = pendingAudio
+            let formatToSend = canonicalFormat!
+            pendingAudio = Data()
+            pendingFrames = 0
+            audioLock.unlock()
+            onAudio?(dataToSend, formatToSend)
+        } else {
+            audioLock.unlock()
+        }
         stream?.stopCapture { _ in }
         stream = nil
     }
@@ -222,18 +241,25 @@ extension ScreenBroadcaster: SCStreamOutput {
                 isFloat: isFloat,
                 interleaved: true   // 統一為交錯
             )
+
+            audioLock.lock()
             if canonicalFormat == nil {
                 canonicalFormat = info
             } else if canonicalFormat!.sampleRate != info.sampleRate
                         || canonicalFormat!.channels != info.channels
                         || canonicalFormat!.bits != info.bits
                         || canonicalFormat!.isFloat != info.isFloat {
+                audioLock.unlock()
                 return
             }
             pendingAudio.append(chunk)
             pendingFrames += frames
             audioChunkCount += 1
             audioByteCount += UInt64(chunk.count)
+            let targetFrames = Int(asbd.mSampleRate) * audioTargetFramesMs / 1000
+            let shouldFlush = pendingFrames >= targetFrames
+            audioLock.unlock()
+
             let now = Date().timeIntervalSinceReferenceDate
             if now - lastAudioLogAt > 2 {
                 lastAudioLogAt = now
@@ -242,8 +268,7 @@ extension ScreenBroadcaster: SCStreamOutput {
                 audioByteCount = 0
             }
 
-            let targetFrames = Int(asbd.mSampleRate) * audioTargetFramesMs / 1000
-            if pendingFrames >= targetFrames {
+            if shouldFlush {
                 flushPendingAudio()
             }
 #endif

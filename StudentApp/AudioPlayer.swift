@@ -144,7 +144,8 @@ final class BroadcastAudioPlayer {
         guard let audioFormat = AVAudioFormat(commonFormat: common,
                                               sampleRate: format.sampleRate,
                                               channels: format.channels,
-                                              interleaved: true) else { return nil }
+                                              interleaved: true),
+              audioFormat.isStandard else { return nil }
 
         let bytesPerSample = max(Int(format.bits) / 8, 1)
         let channelCount = max(Int(format.channels), 1)

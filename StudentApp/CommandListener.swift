@@ -35,6 +35,9 @@ final class CommandListener: ObservableObject {
         kiosk.onLockStateChanged = { [weak self] locked in
             Task { @MainActor in self?.isLocked = locked }
         }
+        kiosk.onLog = { [weak self] msg in
+            Task { @MainActor in self?.appendLog(msg) }
+        }
         startService()
         checkForUpdates()
     }
@@ -223,11 +226,24 @@ final class CommandListener: ObservableObject {
     }
 
     /// 透過 System Events 觸發關機/重新啟動（首次會彈出自動化授權；部分環境需管理員權限）。
+    /// 若 System Events 失敗，嘗試用 `shutdown` 指令（需 sudo，通常失敗），最後回報錯誤。
     private func runSystemEventScript(_ source: String) {
         var error: NSDictionary?
         NSAppleScript(source: source)?.executeAndReturnError(&error)
         if let error {
-            appendLog("系統命令執行失敗: \(error)")
+            appendLog("系統命令執行失敗 (AppleScript): \(error)")
+            // Fallback: 嘗試用 shutdown 指令（通常需要 sudo，這裡僅作最佳努力）
+            let fallbackScript: String
+            if source.contains("shut down") {
+                fallbackScript = "do shell script \"shutdown -h now\" with administrator privileges"
+            } else {
+                fallbackScript = "do shell script \"shutdown -r now\" with administrator privileges"
+            }
+            var fbError: NSDictionary?
+            NSAppleScript(source: fallbackScript)?.executeAndReturnError(&fbError)
+            if let fbError {
+                appendLog("系統命令執行失敗 (fallback): \(fbError)")
+            }
         }
     }
 

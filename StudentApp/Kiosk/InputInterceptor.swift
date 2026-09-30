@@ -107,8 +107,8 @@ final class InputInterceptor {
             // ⌘⇥（應用程式切換）、⌘⌥⎋（強制結束）、⌃←/⌃→（桌面切換）
             if flags.contains(.maskCommand) && key == CGKeyCode(kVK_Tab) { return nil }
             if flags == [.maskCommand, .maskAlternate] && key == CGKeyCode(kVK_Escape) { return nil }
-            if flags.contains(.maskControl)
-                && (key == CGKeyCode(kVK_LeftArrow) || key == CGKeyCode(kVK_RightArrow)) { return nil }
+            // 只攔截純 Control+左右鍵，避免過度攔截 Control+Shift/Option+左右鍵
+            if flags == [.maskControl] && (key == CGKeyCode(kVK_LeftArrow) || key == CGKeyCode(kVK_RightArrow)) { return nil }
 
             return nil  // 硬鎖：吞掉所有鍵盤事件
 

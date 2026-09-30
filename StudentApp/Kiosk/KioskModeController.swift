@@ -19,6 +19,8 @@ final class KioskModeController: ObservableObject {
 
     /// 鎖屏狀態變化通知（供 CommandListener 更新 UI）。
     var onLockStateChanged: ((Bool) -> Void)?
+    /// 日誌回呼（供 CommandListener 記錄事件）。
+    var onLog: ((String) -> Void)?
 
     private var lockWindows: [NSWindow] = []
     private var relockTimer: Timer?
@@ -32,14 +34,14 @@ final class KioskModeController: ObservableObject {
         }
     }
 
+    private func appendLog(_ text: String) {
+        onLog?(text)
+    }
+
     // MARK: - 鎖定 / 解鎖
 
     func enterKiosk() {
         guard !isLocked else { return }
-        isLocked = true
-        unlockRequested = false
-        broadcastImage = nil
-        unlockHint = nil
 
         // 1) 系統級：隱藏 Dock/選單列，停用快捷鍵與系統入口。
         //    較新的 macOS 上還可加 .disableScreenCapture/.disableSpotlight/
@@ -55,13 +57,20 @@ final class KioskModeController: ObservableObject {
         ]
         NSApp.activate(ignoringOtherApps: true)
 
-        // 2) 事件級：吞掉本機鍵盤/滑鼠輸入
-        if !interceptor.install() {
+        // 2) 事件級：吞掉本機鍵盤/滑鼠輸入（必須成功，否則不進入鎖定）
+        guard interceptor.install() else {
             isInputBlocked = false
+            NSApp.presentationOptions = []
             promptAccessibility()
-        } else {
-            isInputBlocked = true
+            appendLog("鎖定失敗：需要輔助功能權限")
+            return
         }
+        isInputBlocked = true
+
+        isLocked = true
+        unlockRequested = false
+        broadcastImage = nil
+        unlockHint = nil
 
         // 3) 全屏鎖窗覆蓋所有顯示器（並註冊自愈機制）
         showLockWindows()

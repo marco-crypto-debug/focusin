@@ -29,13 +29,24 @@ enum UpdateChecker {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
     }
 
+    /// GitHub API token（可選，用於提高 rate limit）。從 Info.plist 的 `GitHubAPIToken` 讀取。
+    static var githubToken: String? {
+        Bundle.main.infoDictionary?["GitHubAPIToken"] as? String
+    }
+
     /// 查詢遠端最新版本。網路失敗或無更新時 completion 收到 nil。
     static func check(completion: @escaping (UpdateInfo?) -> Void) {
         let session = URLSession.shared
 
         // 1) 最新 Release
         let releaseURL = URL(string: "https://api.github.com/repos/\(repo)/releases/latest")!
-        session.dataTask(with: releaseURL) { data, response, _ in
+        var releaseRequest = URLRequest(url: releaseURL)
+        if let token = githubToken {
+            releaseRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        releaseRequest.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+
+        session.dataTask(with: releaseRequest) { data, response, _ in
             if let data,
                let http = response as? HTTPURLResponse, http.statusCode == 200,
                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -46,7 +57,13 @@ enum UpdateChecker {
             }
             // 2) 退回 main 分支最新 commit SHA
             let commitURL = URL(string: "https://api.github.com/repos/\(repo)/commits/main")!
-            session.dataTask(with: commitURL) { data2, _, _ in
+            var commitRequest = URLRequest(url: commitURL)
+            if let token = githubToken {
+                commitRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            }
+            commitRequest.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+
+            session.dataTask(with: commitRequest) { data2, _, _ in
                 guard let data2,
                       let json = try? JSONSerialization.jsonObject(with: data2) as? [String: Any],
                       let sha = json["sha"] as? String else {
