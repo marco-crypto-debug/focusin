@@ -47,12 +47,30 @@ enum UpdateChecker {
         Bundle.main.infoDictionary?["GitHubAPIToken"] as? String
     }
 
-    /// 版本標記規範化：去首碼 `v`、去空白、轉小寫，供比較。
-    /// 例如 "v1.3" → "1.3"，本地 "1.3" → "1.3"，兩者相等 → 無更新。
+    /// 版本標記規範化：去首碼 `v`、去空白、轉小寫，供顯示/比較。
+    /// 例如 "v1.3" → "1.3"，本地 "1.3" → "1.3"。
     static func normalize(_ s: String) -> String {
         var t = s.trimmingCharacters(in: .whitespacesAndNewlines)
         if t.lowercased().hasPrefix("v") { t = String(t.dropFirst()) }
         return t.lowercased()
+    }
+
+    /// 語義化版本比較：`lhs` 是否比 `rhs` 舊（lhs < rhs）。
+    /// 只取數字段（"1.3.4-alpha" → [1,3,4]），尾綴（-alpha/-beta）忽略——
+    /// 版本分流已保證 alpha 只與 alpha 比較，故尾綴不影響判斷。
+    static func isOlder(_ lhs: String, than rhs: String) -> Bool {
+        func nums(_ s: String) -> [Int] {
+            s.split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) }
+        }
+        let a = nums(lhs)
+        let b = nums(rhs)
+        let count = max(a.count, b.count)
+        for i in 0..<count {
+            let x = i < a.count ? a[i] : 0
+            let y = i < b.count ? b[i] : 0
+            if x != y { return x < y }
+        }
+        return false   // 完全相同 → 不是更舊
     }
 
     /// 查詢遠端最新版本。網路失敗或無更新時 completion 收到 nil。
@@ -182,8 +200,9 @@ enum UpdateChecker {
             }
             let isNewer: Bool
             if info.isRelease {
-                // Release 路徑：規範化 tag 與本機顯示版本比較（v1.3.3 == 1.3.3 → 已最新）
-                isNewer = normalize(localDisplayVersion) != normalize(info.version)
+                // Release 路徑：語義化比較——本機比遠端舊 → 有新版本
+                // （1.3.3 vs v1.3.4 → 舊 → 提示；1.3.4 vs v1.3.3 → 新 → 不提示；相等 → 不提示）
+                isNewer = isOlder(localDisplayVersion, than: info.version)
             } else {
                 // commit 路徑：本機構建 SHA 與遠端最新 SHA 比較
                 if let local = localBuildSHA, !local.isEmpty {
