@@ -168,7 +168,11 @@ enum UpdateChecker {
     /// 啟動時自動檢查。偵測到比本機更新 → 在主執行緒回呼通知。
     static func checkForUpdate(notify: @escaping (UpdateInfo) -> Void) {
         check { info in
-            guard let info else { return }
+            guard let info else {
+                DiagLog.log("更新檢查失敗（無網路或 API 不可用）")
+                return
+            }
+            DiagLog.log("更新檢查：遠端 \(info.version) vs 本機 \(localDisplayVersion)（\(normalize(info.version)) vs \(normalize(localDisplayVersion))）")
             DispatchQueue.main.async {
                 if info.isRelease {
                     // Release 路徑：規範化 tag 與本機顯示版本比較（v1.3 == 1.3）
