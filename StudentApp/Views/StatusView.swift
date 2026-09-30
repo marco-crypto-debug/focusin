@@ -119,6 +119,12 @@ struct StatusView: View {
                 }
             }
             .frame(maxHeight: 120)
+
+            Spacer(minLength: 4)
+            Text("© 2026 Made by Marco TSK")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding()
     }

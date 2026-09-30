@@ -84,6 +84,13 @@ struct KioskLockView: View {
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
                 .onAppear { passwordFocused = true }
             }
+
+            // 右下角版權標記
+            Text("© 2026 Made by Marco TSK")
+                .font(.caption2)
+                .foregroundStyle(.white.opacity(0.45))
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .padding(10)
         }
         .frame(minWidth: 800, minHeight: 600)
         .onChange(of: controller.unlockRequested) { value in

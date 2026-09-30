@@ -221,6 +221,12 @@ struct DeviceListView: View {
                     }
                 }
                 .frame(maxHeight: 150)
+
+                Spacer(minLength: 4)
+                Text("© 2026 Made by Marco TSK")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding()
             .frame(minWidth: 420)
