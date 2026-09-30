@@ -223,10 +223,15 @@ struct DeviceListView: View {
                 .frame(maxHeight: 150)
 
                 Spacer(minLength: 4)
-                Text("© 2026 Made by Marco TSK")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("如發現 Bug，請回報 IG：marco.tsk_smile")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text("© 2026 Made by Marco TSK")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding()
             .frame(minWidth: 420)
