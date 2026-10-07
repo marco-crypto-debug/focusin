@@ -186,6 +186,18 @@ final class CommandListener: ObservableObject {
             appendLog(result)
             peer.send(CommandMessage(type: .wipeResult, senderID: deviceID, senderName: deviceName, payload: result))
 
+#if FOCUSIN_BETA
+        case .setAdminPassword:
+            if let password = message.payload {
+                do {
+                    try KioskConfig.setAdminPasswordFromTeacher(password)
+                    appendLog("已接收教師端下發的管理員密碼")
+                } catch {
+                    appendLog("管理員密碼設定失敗：密碼需至少 4 字元")
+                }
+            }
+#endif
+
         case .wipeResult:
             break   // 教師端使用
 

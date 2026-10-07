@@ -3,11 +3,12 @@ import AppKit
 import CryptoKit
 import Foundation
 
-/// Beta 版專屬：退出保護——無密碼無法退出 FocusIn。
+/// Beta 版專屬：**管理員密碼**（= 退出密碼）——無密碼無法退出 FocusIn。
 ///
-/// - 教師端：使用本模組自己的「退出密碼」（UserDefaults：quit.adminPasswordHash/Salt，
-///   只存加鹽 SHA-256 雜湊，絕不存明文）。
-/// - 學生端：直接複用 `KioskConfig` 的管理員密碼（呼叫方傳入 `verifier` 閉包）。
+/// 統一密碼架構（Beta）：
+/// - 教師端：在「管理員密碼」區塊設定/變更 → 存本模組（UserDefaults：quit.adminPasswordHash/Salt，
+///   只存加鹽 SHA-256 雜湊，絕不存明文），同時透過 `setAdminPassword` 命令下發所有已連線學生端。
+/// - 學生端：收到的密碼存入 `KioskConfig`——同一密碼用於學生端退出保護與緊急解鎖（⌘⇧U）。
 ///
 /// 攔截點：`applicationShouldTerminate`（覆蓋 ⌘Q、選單 Quit、Dock 右鍵 Quit、登出），
 /// 驗證失敗一律 `terminateCancel`。

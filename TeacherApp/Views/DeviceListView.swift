@@ -188,31 +188,32 @@ struct DeviceListView: View {
 #if FOCUSIN_BETA
                 Divider()
 
-                // 退出保護（Beta 專屬）：無密碼無法退出 FocusIn
+                // 管理員密碼（Beta 專屬）：一個密碼統一管理教師端退出、學生端退出與緊急解鎖
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 6) {
                         Image(systemName: "lock.shield.fill")
                             .foregroundStyle(.blue)
-                        Text("退出保護（Beta）").font(.subheadline.bold())
-                        Text(QuitGuard.hasPassword ? "已啟用" : "未設定密碼")
+                        Text("管理員密碼（Beta）").font(.subheadline.bold())
+                        Text(QuitGuard.hasPassword ? "已設定" : "未設定")
                             .font(.caption)
                             .foregroundStyle(QuitGuard.hasPassword ? .green : .orange)
                     }
-                    Text("無密碼無法退出 FocusIn（⌘Q / 選單 Quit 皆需驗證）。")
+                    Text("同一密碼同時用於：教師端退出（⌘Q）、學生端退出、學生端緊急解鎖。\n設定後會即時下發給**所有已連線**的學生端。")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     if QuitGuard.hasPassword {
                         SecureField("舊密碼", text: $oldQuitPass)
                             .textFieldStyle(.roundedBorder)
                     }
-                    SecureField(QuitGuard.hasPassword ? "新密碼（至少 4 字元）" : "退出密碼（至少 4 字元）", text: $newQuitPass)
+                    SecureField(QuitGuard.hasPassword ? "新密碼（至少 4 字元）" : "管理員密碼（至少 4 字元）", text: $newQuitPass)
                         .textFieldStyle(.roundedBorder)
                     HStack(spacing: 10) {
-                        Button(QuitGuard.hasPassword ? "變更退出密碼" : "設定退出密碼") {
+                        Button(QuitGuard.hasPassword ? "變更並下發" : "設定並下發") {
                             quitPassError = ""
                             do {
                                 try QuitGuard.setPassword(newQuitPass,
                                                           oldPassword: QuitGuard.hasPassword ? oldQuitPass : nil)
+                                viewModel.sendSetAdminPassword(newQuitPass)
                                 newQuitPass = ""
                                 oldQuitPass = ""
                             } catch {

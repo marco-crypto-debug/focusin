@@ -35,6 +35,17 @@ enum KioskConfig {
         return hash(password, salt: salt) == storedHash
     }
 
+#if FOCUSIN_BETA
+    /// Beta 專屬：教師端下發的管理員密碼——直接覆蓋（教師端為權威來源，不驗舊密碼）。
+    /// 同一密碼同時用於：學生端退出保護、緊急解鎖（⌘⇧U）。
+    static func setAdminPasswordFromTeacher(_ password: String) throws {
+        guard password.count >= 4 else { throw KioskError.weakPassword }
+        let salt = Data((0..<16).map { _ in UInt8.random(in: .min ... .max) })
+        UserDefaults.standard.set(salt.hexString, forKey: saltKey)
+        UserDefaults.standard.set(hash(password, salt: salt), forKey: hashKey)
+    }
+#endif
+
     private static func hash(_ password: String, salt: Data) -> String {
         let digest = SHA256.hash(data: salt + Data(password.utf8))
         return digest.map { String(format: "%02x", $0) }.joined()

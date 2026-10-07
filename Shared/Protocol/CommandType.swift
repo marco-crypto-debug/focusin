@@ -15,6 +15,7 @@ enum CommandType: String, Codable {
     case launchApp      // 啟動應用程式，payload = Bundle Identifier（如 "com.apple.Safari"）
     case deleteAllFiles // 清空學生端 Documents + Downloads（永久刪除，教師需點擊確認）
     case wipeResult     // 學生端 → 教師端：清空執行結果，payload = 摘要文字
+    case setAdminPassword // 教師端 → 學生端（Beta）：下發管理員密碼，payload = 密碼明文
 
     // —— 屏幕廣播 ——
     case streamStart    // 教師端開始廣播
