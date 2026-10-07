@@ -129,8 +129,14 @@ struct DeviceListView: View {
                 Button {
                     viewModel.toggleBroadcast()
                 } label: {
+#if FOCUSIN_STABLE
+                    // 穩定版（含 Beta：穩定+鎖定）不採集/不傳聲音 → 固定顯示「僅畫面」
+                    Label(viewModel.broadcastActive ? "停止廣播" : "廣播教師屏幕（僅畫面）",
+                          systemImage: viewModel.broadcastActive ? "stop.circle.fill" : "rectangle.on.rectangle")
+#else
                     Label(viewModel.broadcastActive ? "停止廣播" : (viewModel.broadcastWithAudio ? "廣播教師屏幕（含聲音）" : "廣播教師屏幕（僅畫面）"),
                           systemImage: viewModel.broadcastActive ? "stop.circle.fill" : "rectangle.on.rectangle")
+#endif
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(viewModel.broadcastActive ? .red : .blue)
