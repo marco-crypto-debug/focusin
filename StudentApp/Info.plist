@@ -4,12 +4,12 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>zh_Hant</string>
+	<key>CFBundleDisplayName</key>
+	<string>FocusIn 學生端</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleDisplayName</key>
-	<string>FocusIn 學生端</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -21,10 +21,10 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>13.0</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
+	<string>14.0</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>學生端在教師下達關機/重新啟動指令時，需要向「系統事件」傳送 Apple Events 以執行操作。</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>

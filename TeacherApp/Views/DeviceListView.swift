@@ -21,9 +21,9 @@ struct DeviceListView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("學生裝置").font(.headline)
                 Toggle("全部學生", isOn: $allSelected)
-                    .onChange(of: allSelected) { value in
+                    .onChange(of: allSelected) {
                         for i in viewModel.peers.indices {
-                            viewModel.peers[i].isSelected = value
+                            viewModel.peers[i].isSelected = allSelected
                         }
                     }
                 List {
