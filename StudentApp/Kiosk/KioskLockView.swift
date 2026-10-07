@@ -98,8 +98,8 @@ struct KioskLockView: View {
             .padding(10)
         }
         .frame(minWidth: 800, minHeight: 600)
-        .onChange(of: controller.unlockRequested) { value in
-            if value { passwordFocused = true }
+        .onChange(of: controller.unlockRequested) {
+            if controller.unlockRequested { passwordFocused = true }
         }
     }
 
