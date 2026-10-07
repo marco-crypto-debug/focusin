@@ -9,6 +9,11 @@ struct DeviceListView: View {
     @State private var autoStartError = ""
     @State private var showingWipeConfirm = false
     @State private var wipeConfirmText = ""
+#if FOCUSIN_BETA
+    @State private var newQuitPass = ""
+    @State private var oldQuitPass = ""
+    @State private var quitPassError = ""
+#endif
 
     var body: some View {
         HSplitView {
@@ -179,6 +184,51 @@ struct DeviceListView: View {
                             .foregroundStyle(.red)
                     }
                 }
+
+#if FOCUSIN_BETA
+                Divider()
+
+                // 退出保護（Beta 專屬）：無密碼無法退出 FocusIn
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "lock.shield.fill")
+                            .foregroundStyle(.blue)
+                        Text("退出保護（Beta）").font(.subheadline.bold())
+                        Text(QuitGuard.hasPassword ? "已啟用" : "未設定密碼")
+                            .font(.caption)
+                            .foregroundStyle(QuitGuard.hasPassword ? .green : .orange)
+                    }
+                    Text("無密碼無法退出 FocusIn（⌘Q / 選單 Quit 皆需驗證）。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if QuitGuard.hasPassword {
+                        SecureField("舊密碼", text: $oldQuitPass)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    SecureField(QuitGuard.hasPassword ? "新密碼（至少 4 字元）" : "退出密碼（至少 4 字元）", text: $newQuitPass)
+                        .textFieldStyle(.roundedBorder)
+                    HStack(spacing: 10) {
+                        Button(QuitGuard.hasPassword ? "變更退出密碼" : "設定退出密碼") {
+                            quitPassError = ""
+                            do {
+                                try QuitGuard.setPassword(newQuitPass,
+                                                          oldPassword: QuitGuard.hasPassword ? oldQuitPass : nil)
+                                newQuitPass = ""
+                                oldQuitPass = ""
+                            } catch {
+                                quitPassError = error.localizedDescription
+                            }
+                        }
+                        .disabled(newQuitPass.count < 4)
+                        .controlSize(.small)
+                    }
+                    if !quitPassError.isEmpty {
+                        Text(quitPassError)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+                }
+#endif
 
                 Divider()
 

@@ -3,8 +3,9 @@ import Foundation
 /// 自動更新檢查：App 啟動時查詢 GitHub（marco-crypto-debug/focusin）是否有新版本。
 ///
 /// 版本分流：
-/// - 穩定版（bundle id 不含 `.alpha`）：查 `releases/latest`，與本機顯示版本（如 1.3）比較。
+/// - 穩定版（bundle id 不含 `.alpha`/`.beta`）：查 `releases/latest`，與本機顯示版本（如 1.3）比較。
 /// - Alpha（bundle id 含 `.alpha`）：查 `releases` 列表，取最新含 `alpha` 的 tag 比較。
+/// - Beta（bundle id 含 `.beta`）：查 `releases` 列表，取最新含 `beta` 的 tag 比較。
 ///
 /// 抗 rate limit：GitHub API 未認證僅 60 次/小時/IP，教室網絡極易超限；
 /// API 失敗時穩定版自動退回「網頁重定向」解析最新 tag（不吃 API 配額），alpha 則靜默。
@@ -25,6 +26,11 @@ enum UpdateChecker {
     /// 本機是否 alpha 測試版（bundle id 含 `.alpha`）。
     static var isAlpha: Bool {
         Bundle.main.bundleIdentifier?.contains(".alpha") == true
+    }
+
+    /// 本機是否 beta 測試版（bundle id 含 `.beta`）。
+    static var isBeta: Bool {
+        Bundle.main.bundleIdentifier?.contains(".beta") == true
     }
 
     /// 本機是否教師端（bundle id 含 `teacher`）。
@@ -77,6 +83,8 @@ enum UpdateChecker {
     static func check(completion: @escaping (UpdateInfo?) -> Void) {
         if isAlpha {
             checkAlphaRelease(completion: completion)
+        } else if isBeta {
+            checkBetaRelease(completion: completion)
         } else {
             checkLatestRelease(completion: completion)
         }
@@ -119,7 +127,7 @@ enum UpdateChecker {
         }.resume()
     }
 
-    // MARK: - Alpha：releases 列表取最新 alpha tag
+    // MARK: - Alpha/Beta：releases 列表取最新對應 tag
 
     private static func checkAlphaRelease(completion: @escaping (UpdateInfo?) -> Void) {
         fetchJSON("releases?per_page=10") { json in
@@ -127,6 +135,19 @@ enum UpdateChecker {
             for release in array {
                 guard let tag = release["tag_name"] as? String,
                       tag.lowercased().contains("alpha") else { continue }
+                completion(makeInfo(from: release, tag: tag))
+                return
+            }
+            completion(nil)
+        }
+    }
+
+    private static func checkBetaRelease(completion: @escaping (UpdateInfo?) -> Void) {
+        fetchJSON("releases?per_page=20") { json in
+            guard let array = json as? [[String: Any]] else { completion(nil); return }
+            for release in array {
+                guard let tag = release["tag_name"] as? String,
+                      tag.lowercased().contains("beta") else { continue }
                 completion(makeInfo(from: release, tag: tag))
                 return
             }
@@ -149,7 +170,8 @@ enum UpdateChecker {
         for asset in assets {
             guard let name = asset["name"] as? String, name.lowercased().hasSuffix(".dmg") else { continue }
             let lower = name.lowercased()
-            if lower.contains("alpha") == isAlpha && lower.contains("teacher") == isTeacher,
+            if lower.contains("alpha") == isAlpha && lower.contains("beta") == isBeta
+                && lower.contains("teacher") == isTeacher,
                let url = asset["browser_download_url"] as? String {
                 return url
             }
@@ -159,7 +181,10 @@ enum UpdateChecker {
 
     /// 無 assets 資料時（fallback 路徑），依 tag 猜測 DMG 直鏈（GitHub release 資產 URL 規則）。
     private static func assetURL(forTag tag: String) -> String? {
-        let prefix = isAlpha ? "FocusIn-Alpha-" : "FocusIn-"
+        let prefix: String
+        if isAlpha { prefix = "FocusIn-Alpha-" }
+        else if isBeta { prefix = "FocusIn-Beta-" }
+        else { prefix = "FocusIn-" }
         let role = isTeacher ? "Teacher" : "Student"
         return "https://github.com/\(repo)/releases/download/\(tag)/\(prefix)\(role).dmg"
     }
