@@ -1,13 +1,14 @@
 # FocusIn — macOS 課堂管理（教師端 / 學生端）
 
-FocusIn 是面向 iMac 機房的區域網課堂管理方案：教師端（TeacherApp）自動發現學生端、即時廣播教師屏幕**與聲音**、下發鎖屏/解鎖/關機/重新啟動/啟動應用程式指令；學生端（StudentApp）提供 Kiosk 全屏鎖定、輸入攔截與本地緊急解鎖，並可設定登入時自動啟動。
+FocusIn 是面向 iMac 機房的區域網課堂管理方案：教師端（TeacherApp）自動發現學生端、即時廣播教師屏幕（正式版為高畫質畫面，Alpha 版另含聲音）、下發鎖屏/解鎖/關機/重新啟動/啟動應用程式/清空文件指令；學生端（StudentApp）提供 Kiosk 全屏鎖定、輸入攔截、退出保護與本地緊急解鎖，並可設定登入時自動啟動。
 
-技術棧：Swift / SwiftUI（macOS 13+）、Network.framework（WebSocket + Bonjour/mDNS）、ScreenCaptureKit。
+技術棧：Swift / SwiftUI（macOS 14+）、Network.framework（WebSocket + Bonjour/mDNS）、ScreenCaptureKit。
 
 ## 版本劃分
 
-- **release（穩定版）**：`release/` 下的 `FocusIn.dmg`（含 `TeacherApp.app` + `StudentApp.app`）。教師端/學生端均為**僅傳畫面**的精簡版——程式碼層面不採集、不傳輸、不播放聲音，徹底避開音訊渲染鏈路；鎖屏/解鎖、關機/重啟、啟動應用程式、**清空文件（Documents + Downloads，需輸 DELETE 二次確認）**、自動更新、登入自動啟動全部保留。課堂環境請使用此版。
-- **alpha（含聲音測試版）**：`release/alpha/` 下的 `FocusIn-Alpha.dmg`（含 `TeacherApp-Alpha.app` + `StudentApp-Alpha.app`）。教師端與學生端含**聲音廣播**（48kHz 立體聲，專屬音訊通道 + 抖動緩衝 + 雙端格式鎖 + 交錯緩衝播放）。此版用於測試/回報音訊問題，不代表穩定交付。教師端另有「傳送聲音」開關可臨時只傳畫面。
+- **stable（正式版）**：`release/stable/` 下的 `FocusIn-Teacher.dmg` + `FocusIn-Student.dmg`。**僅傳畫面**（程式碼層面不採集、不傳輸、不播放聲音，徹底避開音訊渲染鏈路）；含 Kiosk 全屏鎖定、輸入攔截、**退出保護（管理員密碼，未設密碼無法退出 ⌘Q）**、**統一管理員密碼（教師端設定即下發所有學生端，同時用於教師端退出、學生端退出、緊急解鎖 ⌘⇧U）**、**廣播畫面銳化**、鎖屏/解鎖、關機/重啟、啟動應用程式、**清空文件（Documents + Downloads，需輸 DELETE 二次確認）**、自動更新、登入自動啟動。課堂環境請使用此版。
+- **alpha（含聲音測試版）**：`release/alpha/` 下的 `FocusIn-Alpha-Teacher.dmg` + `FocusIn-Alpha-Student.dmg`。教師端與學生端含**聲音廣播**（48kHz 立體聲，專屬音訊通道 + 抖動緩衝 + 雙端格式鎖 + 交錯緩衝播放）。此版用於測試/回報音訊問題，不代表穩定交付。教師端另有「傳送聲音」開關可臨時只傳畫面。
+- **beta（已併入 stable，GitHub 保留歷史）**：原「穩定+鎖定」測試渠道已於 v1.3.9 併入正式版（退出保護、統一管理員密碼、廣播銳化），不再維護新版本；歷史 Release 與 Tag 保留於 GitHub（`v1.3.x-beta`）。
 
 ## 架構
 
