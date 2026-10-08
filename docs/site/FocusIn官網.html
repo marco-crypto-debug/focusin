@@ -240,25 +240,62 @@ section.view.active{display:block}
 .cur-btn:hover{color:var(--ink)}
 .cur-btn.on{background:var(--brand);color:#fff}
 .sec-head+.cur-switch,.sec-head .cur-switch{margin-top:18px}
-/* ===== Payment modal ===== */
+/* ===== Payment checkout (Tutti style) ===== */
 .pay-overlay{position:fixed;inset:0;background:rgba(20,18,16,.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
 .pay-overlay[hidden]{display:none}
-.pay-modal{background:#fff;border-radius:var(--radius-2l);max-width:430px;width:100%;padding:32px 30px;position:relative;box-shadow:0 24px 70px rgba(20,18,16,.25);text-align:center}
-.pay-close{position:absolute;top:14px;right:16px;border:0;background:transparent;font-size:22px;line-height:1;color:var(--ink-subtle);cursor:pointer;padding:6px 10px}
+.checkout{background:#fff;border-radius:var(--radius-2l);max-width:960px;width:100%;max-height:92vh;overflow:auto;position:relative;box-shadow:0 24px 70px rgba(20,18,16,.3)}
+.pay-close{position:absolute;top:14px;right:16px;border:0;background:transparent;font-size:22px;line-height:1;color:var(--ink-subtle);cursor:pointer;padding:6px 10px;z-index:3}
 .pay-close:hover{color:var(--ink)}
-.pay-modal h3{font-family:var(--font-display);font-weight:600;font-size:1.55rem;margin-bottom:4px}
-.pay-badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--brand);border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);background:color-mix(in srgb,var(--brand) 8%,transparent);border-radius:999px;padding:4px 12px;margin-bottom:18px}
-.pay-summary{display:flex;align-items:baseline;justify-content:center;gap:8px;padding:18px 0 6px}
-.pay-summary .plan{font-size:14.5px;color:var(--ink-subtle)}
-.pay-summary strong{font-family:var(--font-display);font-weight:600;font-size:2.3rem;letter-spacing:-.02em}
-.pay-summary strong .mo{font-family:var(--font-sans);font-size:.95rem;color:var(--ink-subtle);font-weight:500}
-.pay-bill{font-size:12.5px;color:var(--ink-subtle);margin-bottom:16px}
-.pay-methods{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
-.pay-methods .lbl{font-size:12px;color:var(--ink-subtle);margin-right:4px}
-.pay-methods svg{height:22px;width:auto}
-.pay-modal .btn-lg{width:100%;padding:14px;font-size:15px}
-.pay-fine{font-size:11.5px;color:var(--ink-subtle);margin-top:12px}
-.pay-coming{font-size:12px;color:var(--brand);font-weight:600;margin-top:14px;padding:10px 12px;background:color-mix(in srgb,var(--brand) 7%,transparent);border-radius:10px}
+.co-grid{display:grid;grid-template-columns:1.05fr 1fr}
+.co-left{padding:34px 34px 30px;border-right:1px solid var(--line)}
+.co-right{padding:34px 34px 30px}
+.co-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.co-title-row h3{font-family:var(--font-display);font-weight:600;font-size:1.6rem}
+.co-usd{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--brand);border:1px solid color-mix(in srgb,var(--brand) 40%,transparent);background:color-mix(in srgb,var(--brand) 8%,transparent);border-radius:999px;padding:5px 12px}
+.co-price{font-family:var(--font-display);font-weight:600;font-size:2.5rem;letter-spacing:-.02em;margin:8px 0 6px}
+.co-price .co-tax{font-family:var(--font-sans);font-size:.9rem;color:var(--ink-subtle);font-weight:500;letter-spacing:0}
+.co-desc{font-size:.92rem;color:var(--ink-muted);line-height:1.6;margin-bottom:20px}
+.co-includes{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.co-inc-lbl{font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:.03em}
+.co-tags{display:flex;gap:8px;flex-wrap:wrap}
+.co-tags span{font-size:12px;font-weight:600;color:var(--ink);border:1px solid var(--line-strong);border-radius:999px;padding:4px 11px;background:var(--paper)}
+.co-discount{margin-bottom:22px}
+.co-discount>span{display:block;font-size:13.5px;color:var(--ink-subtle);margin-bottom:8px}
+.co-discount-row{display:flex;gap:8px}
+.co-discount-row input{flex:1;border:1px solid var(--line-strong);border-radius:9px;padding:10px 12px;font-size:13.5px;font-family:var(--font-sans);outline:none;background:var(--paper)}
+.co-discount-row input:focus{border-color:var(--brand)}
+.co-discount-row button{border:1px solid var(--line-strong);background:#fff;border-radius:9px;padding:10px 16px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
+.co-discount-row button:hover{border-color:var(--brand);color:var(--brand)}
+.co-totals{border-top:1px solid var(--line);padding-top:14px}
+.co-totals>div{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-subtle);padding:4px 0}
+.co-totals .co-total{font-size:16px;font-weight:700;color:var(--ink);border-top:1px dashed var(--line);margin-top:6px;padding-top:10px}
+.co-right h4{font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin-bottom:18px}
+.co-lbl{display:block;font-size:12.5px;font-weight:600;color:var(--ink);margin:14px 0 6px}
+.co-right input[type="text"],.co-right input[type="email"],.co-right input:not([type]),.co-right select{width:100%;border:1px solid var(--line-strong);border-radius:9px;padding:11px 13px;font-size:14px;font-family:var(--font-sans);outline:none;background:var(--paper);color:var(--ink);-webkit-appearance:none;appearance:none}
+.co-right input:focus,.co-right select:focus{border-color:var(--brand)}
+.co-row2{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+.co-manual{display:inline-block;font-size:12.5px;color:var(--brand);text-decoration:none;margin-top:8px}
+.co-manual:hover{text-decoration:underline}
+.co-check{display:flex;align-items:center;gap:8px;margin:18px 0 22px;font-size:13.5px;color:var(--ink);cursor:pointer}
+.co-check input{width:16px;height:16px;accent-color:var(--brand)}
+.co-right .btn-lg{width:100%;padding:14px;font-size:15px}
+.co-fine{font-size:11px;color:var(--ink-subtle);line-height:1.5;margin-top:16px;text-align:center}
+.co-links{display:flex;justify-content:center;gap:18px;margin-top:10px;font-size:12px}
+.co-links span{color:var(--ink-subtle);font-weight:700}
+.co-links a{color:var(--ink-subtle);text-decoration:none}
+.co-links a:hover{color:var(--brand);text-decoration:underline}
+.co-err{display:none;color:#d33;font-size:12.5px;margin-top:8px}
+.co-err.show{display:block}
+@media(max-width:760px){.co-grid{grid-template-columns:1fr}.co-left{border-right:0;border-bottom:1px solid var(--line)}}
+/* ===== Legal (Privacy / Terms) ===== */
+.legal{max-width:760px;margin:40px auto 0;background:#fff;border:1px solid var(--line);border-radius:var(--radius-2l);padding:38px 40px}
+.legal h3{font-family:var(--font-display);font-weight:600;font-size:1.25rem;margin:26px 0 8px}
+.legal h3:first-child{margin-top:0}
+.legal p,.legal li{font-size:14px;color:var(--ink-muted);line-height:1.75}
+.legal ul{margin:8px 0 0 20px}
+.legal a{color:var(--brand)}
+.legal .updated{font-size:12.5px;color:var(--ink-subtle);margin-top:6px}
+@media(max-width:760px){.legal{padding:26px 22px}}
 /* ===== License ===== */
 .license{max-width:640px;margin:46px auto 0;background:#fff;border:1px solid var(--line);border-radius:var(--radius-2l);padding:34px 32px;text-align:center}
 .license h3{font-family:var(--font-display);font-weight:600;font-size:1.5rem;margin-bottom:6px}
@@ -593,16 +630,11 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
         <h2 data-i18n="price.title">Simple pricing, no surprises.</h2>
         <p data-i18n="price.sub">Buy on this page and get an instant License Key. Enter it in the app to unlock Pro. 7-day free trial included.</p>
       </div>
-      <div class="cur-switch" id="cur-switch" role="tablist" aria-label="Currency">
-        <button class="cur-btn" data-cur="USD">USD $</button>
-        <button class="cur-btn on" data-cur="HKD">HKD HK$</button>
-        <button class="cur-btn" data-cur="CNY">CNY ¥</button>
-      </div>
       <div class="price-grid">
         <div class="pcard">
           <h3 data-i18n="price.freeName">Free</h3>
           <p class="desc" data-i18n="price.freeDesc">Everything you need to broadcast</p>
-          <div class="price"><span id="free-price">HK$0</span><span class="per" data-i18n="price.freePer">· Free forever</span></div>
+          <div class="price">$0<span class="per" data-i18n="price.freePer">· Free forever</span></div>
           <div class="trial">—</div>
           <ul>
             <li><span class="ck">✓</span><span data-i18n="price.f1">Real-time screen broadcast (HD)</span></li>
@@ -617,7 +649,7 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
           <span class="pop-tag" data-i18n="price.popular">Popular</span>
           <h3 data-i18n="price.proName">Pro</h3>
           <p class="desc" data-i18n="price.proDesc">Unlock everything</p>
-          <div class="price"><span id="pro-price">HK$100</span><span class="per" data-i18n="price.monthly">/ month</span></div>
+          <div class="price"><span id="pro-price">$12.99</span><span class="per" data-i18n="price.monthly">/ month</span></div>
           <div class="trial" data-i18n="price.trial">7-day free trial · cancel anytime</div>
           <ul>
             <li><span class="ck">✓</span><span data-i18n="price.p1">Everything in Free</span></li>
@@ -642,31 +674,78 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
           <a class="btn btn-ghost" href="https://instagram.com/marco.tsk_smile" target="_blank" rel="noopener" data-i18n="price.schoolBtn">Contact</a>
         </div>
       </div>
-      <p class="price-note" data-i18n="price.note">Pro is $10 / HK$100 / ¥100 per month, 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.</p>
+      <p class="price-note" data-i18n="price.note">Pro is $12.99 USD per month, 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.</p>
 
-      <!-- ===== 付款模態窗 ===== -->
+      <!-- ===== 付款結帳頁（Tutti 風格） ===== -->
       <div class="pay-overlay" id="pay-overlay" hidden>
-        <div class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+        <div class="checkout" role="dialog" aria-modal="true" aria-labelledby="pay-title">
           <button class="pay-close" id="pay-close" aria-label="Close">×</button>
-          <h3 id="pay-title" data-i18n="pay.title">FocusIn Pro</h3>
-          <span class="pay-badge" data-i18n="pay.badge">Monthly subscription</span>
-          <div class="pay-summary">
-            <span class="plan" data-i18n="pay.plan">Pro plan · billed monthly</span>
+          <div class="co-grid">
+            <div class="co-left">
+              <div class="co-title-row">
+                <h3 id="pay-title" data-i18n="co.title">FocusIn Pro</h3>
+                <span class="co-usd" data-i18n="co.usd">Pay in USD</span>
+              </div>
+              <div class="co-price"><span id="pay-amount">$12.99</span> <span class="co-tax" data-i18n="co.tax">(sales tax incl.)</span></div>
+              <p class="co-desc" data-i18n="co.desc">Unlock FocusIn Pro for the complete classroom experience: audio broadcast, focus lock, remote commands, file cleanup and more.</p>
+              <div class="co-includes">
+                <span class="co-inc-lbl" data-i18n="co.includes">Includes</span>
+                <div class="co-tags">
+                  <span data-i18n="co.tagKey">License Key</span>
+                  <span data-i18n="co.tagPro">All Pro features</span>
+                  <span data-i18n="co.tagSupport">Priority support</span>
+                </div>
+              </div>
+              <div class="co-discount">
+                <span data-i18n="co.discount">Have a discount code?</span>
+                <div class="co-discount-row">
+                  <input id="co-code" placeholder="DISCOUNT" aria-label="Discount code">
+                  <button id="co-apply" data-i18n="co.apply">Apply</button>
+                </div>
+              </div>
+              <div class="co-totals">
+                <div><span data-i18n="co.subtotal">Subtotal</span><span>$12.99</span></div>
+                <div><span data-i18n="co.taxLabel">Sales Tax</span><span>$0.00</span></div>
+                <div class="co-total"><span data-i18n="co.total">Total</span><span id="co-total">$12.99</span></div>
+              </div>
+            </div>
+            <div class="co-right">
+              <h4 data-i18n="co.contact">Contact Information</h4>
+              <label class="co-lbl" data-i18n="co.fullName">Full Name *</label>
+              <input id="co-name" placeholder="eg. John Doe" aria-label="Full name">
+              <div class="co-row2">
+                <div>
+                  <label class="co-lbl" data-i18n="co.email">Email *</label>
+                  <input id="co-email" type="email" placeholder="eg. john.doe@example.com" aria-label="Email">
+                </div>
+                <div>
+                  <label class="co-lbl" data-i18n="co.phone">Phone (optional)</label>
+                  <input id="co-phone" placeholder="+852" aria-label="Phone">
+                </div>
+              </div>
+              <label class="co-lbl" data-i18n="co.billAddr">Billing address *</label>
+              <select id="co-country" aria-label="Country">
+                <option>Hong Kong</option>
+                <option>United States</option>
+                <option>Taiwan</option>
+                <option>China</option>
+                <option>Macau</option>
+                <option>Singapore</option>
+                <option>United Kingdom</option>
+                <option>Other</option>
+              </select>
+              <input id="co-address" placeholder="Address Line" aria-label="Address">
+              <a class="co-manual" href="#" id="co-manual" data-i18n="co.manual">Enter address manually</a>
+              <label class="co-check"><input type="checkbox" id="co-business"> <span data-i18n="co.business">Purchasing as a business</span></label>
+              <button class="btn btn-brand btn-lg" id="co-continue" data-i18n="co.continue">Continue to Payment</button>
+              <p class="co-fine" data-i18n="co.fine">This order process is conducted by our online reseller &amp; Merchant of Record, dodopayments.com, who also handles order-related inquiries and returns.</p>
+              <div class="co-links">
+                <span data-i18n="co.mor">Dodo Payments</span>
+                <a href="#privacy" data-route="privacy" data-i18n="co.privacy">Privacy</a>
+                <a href="#terms" data-route="terms" data-i18n="co.terms">Terms</a>
+              </div>
+            </div>
           </div>
-          <div class="pay-summary" style="padding-top:0">
-            <strong><span id="pay-amount">HK$100</span><span class="mo" data-i18n="pay.mo">/ month</span></strong>
-          </div>
-          <div class="pay-bill" data-i18n="pay.billNote">7-day free trial · cancel anytime · taxes included</div>
-          <div class="pay-methods">
-            <span class="lbl" data-i18n="pay.methods">We accept</span>
-            <svg viewBox="0 0 24 24" aria-label="Visa"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#fff" stroke="#d8d4cf"/><text x="12" y="16.5" font-size="7.5" font-weight="700" text-anchor="middle" fill="#1a1f71" font-family="Arial, sans-serif">VISA</text></svg>
-            <svg viewBox="0 0 24 24" aria-label="Mastercard"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#fff" stroke="#d8d4cf"/><circle cx="9.6" cy="12" r="4.4" fill="#eb001b"/><circle cx="14.4" cy="12" r="4.4" fill="#f79e1b" opacity=".92"/></svg>
-            <svg viewBox="0 0 24 24" aria-label="Apple Pay"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#0d0d0d"/><text x="12" y="16" font-size="7" font-weight="700" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif"> Pay</text></svg>
-            <svg viewBox="0 0 24 24" aria-label="PayPal"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#fff" stroke="#d8d4cf"/><text x="12" y="16" font-size="7" font-weight="700" text-anchor="middle" fill="#003087" font-family="Arial, sans-serif">PayPal</text></svg>
-          </div>
-          <button class="btn btn-brand btn-lg" id="pay-go" data-i18n="pay.go">Proceed to Payment</button>
-          <p class="pay-fine" data-i18n="pay.fine">Payment is processed securely by our payment provider.</p>
-          <p class="pay-coming" data-i18n="pay.coming">Payments go live soon — meanwhile, generate a free trial Key below.</p>
         </div>
       </div>
 
@@ -801,6 +880,75 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
   </div>
 </section>
 
+<!-- ===== 視圖：隱私政策 ===== -->
+<section id="view-privacy" class="view">
+  <div class="sec" style="padding-top:70px">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Legal</span>
+        <h2 data-i18n="privacy.title">Privacy Policy</h2>
+        <p class="updated" data-i18n="privacy.updated">Last updated: October 2026</p>
+      </div>
+      <div class="legal">
+        <h3 data-i18n="privacy.h1">1. Information we collect</h3>
+        <p data-i18n="privacy.p1">FocusIn is designed to work entirely over your local Wi-Fi. We collect the minimum needed to run the service:</p>
+        <ul>
+          <li data-i18n="privacy.li1">App usage and diagnostics: crash logs and error reports that you choose to send, to improve stability.</li>
+          <li data-i18n="privacy.li2">Email address and purchase details, only if you buy a Pro license or create a License Key on our website.</li>
+          <li data-i18n="privacy.li3">Device display names, only for showing which devices are online during a broadcast session. This data stays on your local network.</li>
+        </ul>
+        <h3 data-i18n="privacy.h2">2. What we never collect</h3>
+        <p data-i18n="privacy.p2">We never collect or store your screen content, audio streams, keystrokes, file contents, or anything displayed through FocusIn. All broadcasts flow directly between devices on your network and are never routed through our servers.</p>
+        <h3 data-i18n="privacy.h3">3. How we use your information</h3>
+        <p data-i18n="privacy.p3">We use collected information solely to operate the product, deliver license keys, handle support requests, and improve FocusIn. We do not sell your personal information.</p>
+        <h3 data-i18n="privacy.h4">4. Third-party services</h3>
+        <p data-i18n="privacy.p4">Our website is hosted on Cloudflare Pages and the app is distributed via GitHub Releases and Homebrew. Payments, when live, are processed by our Merchant of Record (currently planned: Dodo Payments). Each provider processes data under its own privacy policy.</p>
+        <h3 data-i18n="privacy.h5">5. Children's privacy</h3>
+        <p data-i18n="privacy.p5">FocusIn is commonly used in schools. We do not knowingly collect personal information from children under 13. School administrators are responsible for consent where required by local law.</p>
+        <h3 data-i18n="privacy.h6">6. Data retention &amp; deletion</h3>
+        <p data-i18n="privacy.p6">Diagnostic data is kept only as long as needed to resolve issues. You may request deletion of any data we hold by contacting us at the address below.</p>
+        <h3 data-i18n="privacy.h7">7. Contact</h3>
+        <p data-i18n="privacy.p7">Questions about this policy? Message us on Instagram: <a href="https://instagram.com/marco.tsk_smile" target="_blank" rel="noopener">@marco.tsk_smile</a>, or open an issue on our GitHub repository.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 視圖：服務條款 ===== -->
+<section id="view-terms" class="view">
+  <div class="sec" style="padding-top:70px">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Legal</span>
+        <h2 data-i18n="terms.title">Terms of Service</h2>
+        <p class="updated" data-i18n="terms.updated">Last updated: October 2026</p>
+      </div>
+      <div class="legal">
+        <h3 data-i18n="terms.h1">1. Acceptance</h3>
+        <p data-i18n="terms.p1">By downloading, installing or using FocusIn (\"the Software\"), you agree to these Terms. If you are using the Software on behalf of a school or organization, you confirm you have authority to bind that organization.</p>
+        <h3 data-i18n="terms.h2">2. License to use</h3>
+        <p data-i18n="terms.p2">The Software is provided under a free tier and a paid Pro subscription. The free tier grants a personal, non-exclusive, non-transferable license to use the Software for its intended purpose. A paid Pro subscription grants the same license for all features included in Pro during the subscription period.</p>
+        <h3 data-i18n="terms.h3">3. Pro subscription &amp; billing</h3>
+        <p data-i18n="terms.p3">Pro is billed monthly at US$12.99 (or your local equivalent), with a 7-day free trial. Subscriptions renew automatically until cancelled. You may cancel anytime; access continues until the end of the paid period. Payments are processed by our Merchant of Record, who handles billing inquiries and refunds.</p>
+        <h3 data-i18n="terms.h4">4. License Keys</h3>
+        <p data-i18n="terms.p4">A License Key unlocks Pro features in the app. Keys are personal to the purchaser; sharing, reselling or distributing keys is prohibited. Misuse may result in revocation without refund.</p>
+        <h3 data-i18n="terms.h5">5. Acceptable use</h3>
+        <p data-i18n="terms.p5">You agree not to use the Software to: violate any law or school policy; intercept or tamper with others' data without authorization; or distribute malware. The Software is a legitimate classroom and screen-sharing tool, and must be used with the consent of the device owner.</p>
+        <h3 data-i18n="terms.h6">6. No warranty</h3>
+        <p data-i18n="terms.p6">The Software is provided \"as is\" without warranty of any kind. We do not guarantee uninterrupted or error-free operation.</p>
+        <h3 data-i18n="terms.h7">7. Limitation of liability</h3>
+        <p data-i18n="terms.p7">To the maximum extent permitted by law, the developers shall not be liable for indirect, incidental or consequential damages, including loss of data, arising from use of the Software.</p>
+        <h3 data-i18n="terms.h8">8. Changes</h3>
+        <p data-i18n="terms.p8">We may update these Terms from time to time. Continued use of the Software after changes constitutes acceptance of the revised Terms.</p>
+        <h3 data-i18n="terms.h9">9. Governing law</h3>
+        <p data-i18n="terms.p9">These Terms are governed by the laws of the Hong Kong Special Administrative Region.</p>
+        <h3 data-i18n="terms.h10">10. Contact</h3>
+        <p data-i18n="terms.p10">Questions? Message us on Instagram: <a href="https://instagram.com/marco.tsk_smile" target="_blank" rel="noopener">@marco.tsk_smile</a>, or open an issue on GitHub.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <footer class="footer">
   <div class="wrap">
     <div class="top">
@@ -823,6 +971,8 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
         <h5 data-i18n="footer.resources">Resources</h5>
         <a href="https://github.com/marco-crypto-debug/focusin" target="_blank" rel="noopener">GitHub</a>
         <a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">Releases</a>
+        <a href="#privacy" data-route="privacy" data-i18n="footer.privacy">Privacy</a>
+        <a href="#terms" data-route="terms" data-i18n="footer.terms">Terms</a>
       </div>
       <div>
         <h5 data-i18n="footer.contact">Contact</h5>
@@ -845,7 +995,7 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
 /* ===================== 三語字典（英文為主） ===================== */
 var I18N = {
 "en": {
-  "nav.features":"Features","nav.pricing":"Pricing","nav.download":"Download","nav.faq":"FAQ","nav.downloadCta":"Download",
+  "nav.features":"Features","nav.pricing":"Pricing","nav.download":"Download","nav.faq":"FAQ","nav.privacy":"Privacy","nav.terms":"Terms","nav.downloadCta":"Download",
   "home.badge":"v1.4.0 · macOS 14+",
   "home.h1":"Share <em class=\"em\">one screen</em>, to every Mac.",
   "home.sub":"FocusIn turns your Mac into a live broadcast source. Stream your display to any number of Macs on the same Wi-Fi in real time — far beyond AirPlay, which only mirrors to one device at a time.",
@@ -889,13 +1039,15 @@ var I18N = {
   "price.p1":"Everything in Free","price.p2":"Audio broadcast (48kHz stereo)","price.p3":"Early access to new features","price.p4":"Priority support","price.p5":"Monthly License Key, unlock all Pro",
   "price.proBtn":"Buy Pro","price.schoolName":"School","price.schoolDesc":"Whole-school deployment","price.custom":"Custom","price.schoolPer":"Volume pricing · contact us",
   "price.s1":"Everything in Pro","price.s2":"Unlimited teachers","price.s3":"Multi-room management","price.s4":"Priority support","price.schoolBtn":"Contact",
-  "price.note":"Pro is US$10 / HK$100 / ¥100 per month, with a 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.",
-  "pay.title":"FocusIn Pro","pay.badge":"Monthly subscription","pay.plan":"Pro plan · billed monthly","pay.mo":"/ month","pay.billNote":"7-day free trial · cancel anytime · taxes included","pay.methods":"We accept","pay.go":"Proceed to Payment","pay.fine":"Payment is processed securely by our payment provider.","pay.coming":"Payments go live soon — meanwhile, generate a free trial Key below.","pay.close":"Close",
+  "price.note":"Pro is $12.99 USD per month, with a 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.",
+  "co.title":"FocusIn Pro","co.usd":"Pay in USD","co.tax":"(sales tax incl.)","co.desc":"Unlock FocusIn Pro for the complete classroom experience: audio broadcast, focus lock, remote commands, file cleanup and more.","co.includes":"Includes","co.tagKey":"License Key","co.tagPro":"All Pro features","co.tagSupport":"Priority support","co.discount":"Have a discount code?","co.apply":"Apply","co.subtotal":"Subtotal","co.taxLabel":"Sales Tax","co.total":"Total","co.contact":"Contact Information","co.fullName":"Full Name *","co.email":"Email *","co.phone":"Phone (optional)","co.billAddr":"Billing address *","co.manual":"Enter address manually","co.business":"Purchasing as a business","co.continue":"Continue to Payment","co.fine":"This order process is conducted by our online reseller & Merchant of Record, dodopayments.com, who also handles order-related inquiries and returns.","co.mor":"Dodo Payments","co.privacy":"Privacy","co.terms":"Terms","co.required":"Please fill in your full name and a valid email.","co.coming":"Payments go live soon - meanwhile, generate a free trial Key below.","co.noCode":"No active discount codes yet.","co.noManual":"Address auto-filled from your country selection.",
   "key.title":"Get your Pro License Key","key.sub":"Enter your email to generate a License Key instantly. Paste it into the \"Upgrade to Pro\" section in FocusIn.",
   "key.emailPlaceholder":"you@example.com","key.genBtn":"Generate License Key","key.err":"Please enter a valid email address.",
   "key.resultLabel":"Your Pro License Key (save it)","key.copy":"Copy Key","key.how":"How to use:",
   "key.step1":"Download and open FocusIn (Teacher or Student)","key.step2":"Enter this Key in \"Upgrade to Pro\"","key.step3":"Pro features unlock instantly",
   "key.trialHint":"Tip: you can try Pro free for 7 days in the app",
+  "privacy.title":"Privacy Policy","privacy.updated":"Last updated: October 2026","privacy.h1":"1. Information we collect","privacy.p1":"FocusIn is designed to work entirely over your local Wi-Fi. We collect the minimum needed to run the service:","privacy.li1":"App usage and diagnostics: crash logs and error reports that you choose to send, to improve stability.","privacy.li2":"Email address and purchase details, only if you buy a Pro license or create a License Key on our website.","privacy.li3":"Device display names, only for showing which devices are online during a broadcast session. This data stays on your local network.","privacy.h2":"2. What we never collect","privacy.p2":"We never collect or store your screen content, audio streams, keystrokes, file contents, or anything displayed through FocusIn. All broadcasts flow directly between devices on your network and are never routed through our servers.","privacy.h3":"3. How we use your information","privacy.p3":"We use collected information solely to operate the product, deliver license keys, handle support requests, and improve FocusIn. We do not sell your personal information.","privacy.h4":"4. Third-party services","privacy.p4":"Our website is hosted on Cloudflare Pages and the app is distributed via GitHub Releases and Homebrew. Payments, when live, are processed by our Merchant of Record (currently planned: Dodo Payments). Each provider processes data under its own privacy policy.","privacy.h5":"5. Children's privacy","privacy.p5":"FocusIn is commonly used in schools. We do not knowingly collect personal information from children under 13. School administrators are responsible for consent where required by local law.","privacy.h6":"6. Data retention & deletion","privacy.p6":"Diagnostic data is kept only as long as needed to resolve issues. You may request deletion of any data we hold by contacting us at the address below.","privacy.h7":"7. Contact","privacy.p7":"Questions about this policy? Message us on Instagram: @marco.tsk_smile, or open an issue on our GitHub repository.",
+  "terms.title":"Terms of Service","terms.updated":"Last updated: October 2026","terms.h1":"1. Acceptance","terms.p1":"By downloading, installing or using FocusIn (\"the Software\"), you agree to these Terms. If you are using the Software on behalf of a school or organization, you confirm you have authority to bind that organization.","terms.h2":"2. License to use","terms.p2":"The Software is provided under a free tier and a paid Pro subscription. The free tier grants a personal, non-exclusive, non-transferable license to use the Software for its intended purpose. A paid Pro subscription grants the same license for all features included in Pro during the subscription period.","terms.h3":"3. Pro subscription & billing","terms.p3":"Pro is billed monthly at US$12.99 (or your local equivalent), with a 7-day free trial. Subscriptions renew automatically until cancelled. You may cancel anytime; access continues until the end of the paid period. Payments are processed by our Merchant of Record, who handles billing inquiries and refunds.","terms.h4":"4. License Keys","terms.p4":"A License Key unlocks Pro features in the app. Keys are personal to the purchaser; sharing, reselling or distributing keys is prohibited. Misuse may result in revocation without refund.","terms.h5":"5. Acceptable use","terms.p5":"You agree not to use the Software to: violate any law or school policy; intercept or tamper with others' data without authorization; or distribute malware. The Software is a legitimate classroom and screen-sharing tool, and must be used with the consent of the device owner.","terms.h6":"6. No warranty","terms.p6":"The Software is provided \"as is\" without warranty of any kind. We do not guarantee uninterrupted or error-free operation.","terms.h7":"7. Limitation of liability","terms.p7":"To the maximum extent permitted by law, the developers shall not be liable for indirect, incidental or consequential damages, including loss of data, arising from use of the Software.","terms.h8":"8. Changes","terms.p8":"We may update these Terms from time to time. Continued use of the Software after changes constitutes acceptance of the revised Terms.","terms.h9":"9. Governing law","terms.p9":"These Terms are governed by the laws of the Hong Kong Special Administrative Region.","terms.h10":"10. Contact","terms.p10":"Questions? Message us on Instagram: @marco.tsk_smile, or open an issue on GitHub.",
   "dl.eyebrow":"Download","dl.title":"Get started with FocusIn.","dl.sub":"Two ways to install: grab the DMGs directly, or use Homebrew.",
   "dl.teacher":"FocusIn Teacher","dl.teacherVer":"Stable v1.4.0 · macOS 14+","dl.teacherDesc":"The broadcast source. Discover devices, stream your screen, send commands.","dl.teacherDmg":"FocusIn-Teacher.dmg",
   "dl.student":"FocusIn Student","dl.studentVer":"Stable v1.4.0 · macOS 14+","dl.studentDesc":"The receiving screen. Show the broadcast, follow remote commands, stay in sync.","dl.studentDmg":"FocusIn-Student.dmg",
@@ -909,12 +1061,12 @@ var I18N = {
   "faq.q5":"Where do I enter my Pro Key?","faq.a5":"In the \"Upgrade to Pro\" section of the Teacher or Student app. Keys are generated on this site's Pricing page. No key yet? Enjoy the 7-day free trial.",
   "faq.q6":"Can I use FocusIn outside a classroom?","faq.a6":"Absolutely. It's a general-purpose screen broadcaster: demos, presentations, code reviews, events — anywhere you need one screen visible on many Macs at once.",
   "faq.c1t":"Bug reports","faq.c1d":"Screenshot + version + device model","faq.c2t":"GitHub","faq.c2d":"Releases, issues and changelog","faq.c3t":"License","faq.c3d":"All rights reserved",
-  "footer.tag":"One screen, every Mac. — built for macOS.","footer.product":"Product","footer.install":"Install","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"Resources","footer.contact":"Contact","footer.rights":"All rights reserved",
+  "footer.tag":"One screen, every Mac. — built for macOS.","footer.product":"Product","footer.install":"Install","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"Resources","footer.contact":"Contact","footer.rights":"All rights reserved","footer.privacy":"Privacy","footer.terms":"Terms",
   "toast.copied":"License Key copied to clipboard","toast.start":"Broadcasting to all devices","toast.stop":"Broadcast stopped","toast.quality":"Quality switched to",
   "demo.broadcastTitle":"Broadcasting live to N devices","demo.broadcastTitle1":"Broadcasting live to 1 device"
 },
 "zh-Hant": {
-  "nav.features":"功能","nav.pricing":"定價","nav.download":"下載","nav.faq":"常見問題","nav.downloadCta":"下載",
+  "nav.features":"功能","nav.pricing":"定價","nav.download":"下載","nav.faq":"常見問題","nav.privacy":"隱私政策","nav.terms":"服務條款","nav.downloadCta":"下載",
   "home.badge":"v1.4.0 · macOS 14 或以上",
   "home.h1":"一個畫面，<em class=\"em\">同時送達</em>每一部 Mac。",
   "home.sub":"FocusIn 把你的 Mac 變成即時廣播源。在同一 Wi-Fi 下，把屏幕即時串流到任意數量的 Mac —— 遠超 AirPlay（一次只能鏡像到一台裝置）。",
@@ -958,13 +1110,15 @@ var I18N = {
   "price.p1":"免費版全部功能","price.p2":"聲音廣播（48kHz 立體聲）","price.p3":"新功能優先體驗","price.p4":"優先支援","price.p5":"月訂閱 License Key，解鎖全部 Pro",
   "price.proBtn":"立即購買 Pro","price.schoolName":"學校版","price.schoolDesc":"整校部署","price.custom":"客製報價","price.schoolPer":"大量授權優惠 · 聯絡我們",
   "price.s1":"Pro 版全部功能","price.s2":"不限教師數量","price.s3":"多機房管理","price.s4":"優先支援","price.schoolBtn":"聯絡購買",
-  "price.note":"Pro 版每月 US$10／HK$100／¥100，含 7 天免費試用。付款金流即將上線；目前 License Key 由本頁即時產生，供測試使用。",
-  "pay.title":"FocusIn Pro","pay.badge":"月訂閱方案","pay.plan":"Pro 方案 · 每月扣款","pay.mo":"/ 月","pay.billNote":"7 天免費試用 · 隨時取消 · 含稅","pay.methods":"支援付款方式","pay.go":"前往付款","pay.fine":"付款由我們的付款服務商安全處理。","pay.coming":"付款功能即將上線 —— 目前可先免費產生試用 Key。","pay.close":"關閉",
+  "price.note":"Pro 版每月 US$12.99，含 7 天免費試用。付款金流即將上線；目前 License Key 由本頁即時產生，供測試使用。",
+  "co.title":"FocusIn Pro","co.title":"FocusIn Pro","co.usd":"以美元付款","co.tax":"（含銷售稅）","co.desc":"解鎖 FocusIn Pro，獲得完整課堂體驗：聲音廣播、全屏鎖定、遠端指令、清空文件等等。","co.includes":"包含","co.tagKey":"License Key","co.tagPro":"全部 Pro 功能","co.tagSupport":"優先支援","co.discount":"有折扣碼嗎？","co.apply":"套用","co.subtotal":"小計","co.taxLabel":"銷售稅","co.total":"總計","co.contact":"聯絡資訊","co.fullName":"全名 *","co.email":"電子郵件 *","co.phone":"電話（選填）","co.billAddr":"帳單地址 *","co.manual":"手動輸入地址","co.business":"以公司名義購買","co.continue":"繼續付款","co.fine":"本訂單由我們的線上經銷商兼記錄商家 dodopayments.com 處理，訂單查詢與退貨亦由其負責。","co.mor":"Dodo Payments","co.privacy":"隱私政策","co.terms":"服務條款","co.required":"請填寫全名與有效的電子郵件地址。","co.coming":"付款功能即將上線 —— 目前可先免費產生試用 Key。","co.noCode":"目前沒有生效的折扣碼。","co.noManual":"地址會依你選擇的國家自動填入。",
   "key.title":"取得 Pro License Key","key.sub":"輸入你的電子郵件，立即產生一組 License Key。在 FocusIn 教師端／學生端「升級 Pro」輸入即可解鎖。",
   "key.emailPlaceholder":"you@example.com","key.genBtn":"產生 License Key","key.err":"請輸入有效的電子郵件地址。",
   "key.resultLabel":"你的 Pro License Key（請複製保存）","key.copy":"複製 Key","key.how":"如何使用：",
   "key.step1":"下載並開啟 FocusIn（教師端或學生端）","key.step2":"在「升級 Pro」輸入此 Key","key.step3":"即時解鎖全部 Pro 功能",
   "key.trialHint":"提示：可在 App 內先免費試用 7 天",
+  "privacy.title":"隱私政策","privacy.updated":"最後更新：2026 年 10 月","privacy.h1":"1. 我們收集的資料","privacy.p1":"FocusIn 設計為完全在你的區域 Wi-Fi 內運作。我們只收集營運服務所需的最少量資料：","privacy.li1":"應用程式用量與診斷：你選擇傳送的崩潰紀錄與錯誤回報，用於改善穩定性。","privacy.li2":"電子郵件與購買資料：僅當你購買 Pro 授權或在我們網站建立 License Key 時。","privacy.li3":"裝置顯示名稱：僅用於顯示廣播期間哪些裝置在線。此資料只會留在你的區域網路內。","privacy.h2":"2. 我們絕不收集的內容","privacy.p2":"我們絕不收集或儲存你的屏幕內容、音訊串流、鍵盤輸入、檔案內容，或任何經 FocusIn 顯示的內容。所有廣播直接在你的網路內裝置間傳輸，絕不經由我們的伺服器。","privacy.h3":"3. 我們如何使用你的資料","privacy.p3":"我們僅將收集的資料用於營運產品、發送授權金鑰、處理支援請求與改善 FocusIn。我們不會出售你的個人資料。","privacy.h4":"4. 第三方服務","privacy.p4":"我們的網站由 Cloudflare Pages 托管，應用程式透過 GitHub Releases 與 Homebrew 發布。付款上線後由我們的記錄商家處理（目前規劃：Dodo Payments）。各服務商依其隱私政策處理資料。","privacy.h5":"5. 兒童隱私","privacy.p5":"FocusIn 常用於學校。我們不會在知情下收集 13 歲以下兒童的個人資料。學校管理人員須依當地法律取得所需同意。","privacy.h6":"6. 資料保留與刪除","privacy.p6":"診斷資料僅保留至解決問題所需。你可隨時聯絡我們要求刪除我們持有的任何資料。","privacy.h7":"7. 聯絡方式","privacy.p7":"對本政策有疑問？Instagram 私訊：@marco.tsk_smile，或在我們的 GitHub 倉庫開 issue。",
+  "terms.title":"服務條款","terms.updated":"最後更新：2026 年 10 月","terms.h1":"1. 接受條款","terms.p1":"下載、安裝或使用 FocusIn（「本軟體」）即表示你同意本條款。若你代表學校或機構使用本軟體，即確認你有權約束該機構。","terms.h2":"2. 使用授權","terms.p2":"本軟體提供免費版與付費 Pro 訂閱。免費版授予個人、非獨佔、不可轉讓之授權，供其預期用途使用。付費 Pro 訂閱在訂閱期間授予相同授權，涵蓋 Pro 全部功能。","terms.h3":"3. Pro 訂閱與收費","terms.p3":"Pro 每月 US$12.99（或當地等值），含 7 天免費試用。訂閱將自動續期直至取消。你可隨時取消；於已付費期間內持續使用。付款由我們的記錄商家處理，其負責帳單查詢與退款。","terms.h4":"4. License Key","terms.p4":"License Key 用於在 App 內解鎖 Pro 功能。金鑰僅限購買者本人使用；禁止分享、轉售或散布金鑰。濫用可能導致金鑰被撤銷且不予退款。","terms.h5":"5. 可接受的使用","terms.p5":"你同意不以本軟體從事：違反任何法律或學校政策；未經授權攔截或竄改他人資料；或散布惡意軟體。本軟體為合法的課堂與屏幕共享工具，須經裝置擁有者同意後使用。","terms.h6":"6. 無保證","terms.p6":"本軟體按「現狀」提供，不附任何保證。我們不保證不中斷或無錯誤運作。","terms.h7":"7. 責任限制","terms.p7":"在法律允許的最大範圍內，開發者不對因使用本軟體而產生的間接、附帶或衍生損害（包括資料損失）負責。","terms.h8":"8. 條款變更","terms.p8":"我們可能不時更新本條款。變更後繼續使用本軟體即構成接受修訂條款。","terms.h9":"9. 管轄法律","terms.p9":"本條款受中華人民共和國香港特別行政區法律管轄。","terms.h10":"10. 聯絡方式","terms.p10":"有疑問？Instagram 私訊：@marco.tsk_smile，或在 GitHub 開 issue。",
   "dl.eyebrow":"下載","dl.title":"開始使用 FocusIn。","dl.sub":"兩種安裝方式：直接下載 DMG，或使用 Homebrew。",
   "dl.teacher":"FocusIn 教師端","dl.teacherVer":"正式版 v1.4.0 · macOS 14 或以上","dl.teacherDesc":"廣播源：發現裝置、串流屏幕、下發指令。","dl.teacherDmg":"FocusIn-Teacher.dmg",
   "dl.student":"FocusIn 學生端","dl.studentVer":"正式版 v1.4.0 · macOS 14 或以上","dl.studentDesc":"接收端：顯示廣播、跟隨遠端指令、保持同步。","dl.studentDmg":"FocusIn-Student.dmg",
@@ -978,12 +1132,12 @@ var I18N = {
   "faq.q5":"Pro Key 在哪裡輸入？","faq.a5":"在教師端或學生端的「升級 Pro」輸入。Key 由本網站定價頁產生；還沒有 Key？可先免費試用 7 天。",
   "faq.q6":"FocusIn 只能用在教室嗎？","faq.a6":"當然不是。它是通用屏幕廣播工具：示範、簡報、程式碼審查、活動 —— 任何需要「一個畫面同時給多部 Mac 看」的場合。",
   "faq.c1t":"問題回報","faq.c1d":"截圖 + 版本 + 設備型號","faq.c2t":"GitHub","faq.c2d":"Releases、Issues、更新紀錄","faq.c3t":"授權","faq.c3d":"版權所有",
-  "footer.tag":"一個畫面，每一部 Mac。— 為 macOS 打造。","footer.product":"產品","footer.install":"安裝","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"資源","footer.contact":"聯絡","footer.rights":"版權所有",
+  "footer.tag":"一個畫面，每一部 Mac。— 為 macOS 打造。","footer.product":"產品","footer.install":"安裝","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"資源","footer.contact":"聯絡","footer.rights":"版權所有","footer.privacy":"隱私政策","footer.terms":"服務條款",
   "toast.copied":"License Key 已複製到剪貼簿","toast.start":"正在廣播至所有裝置","toast.stop":"已停止廣播","toast.quality":"畫質已切換至",
   "demo.broadcastTitle":"正在向 N 台裝置廣播","demo.broadcastTitle1":"正在向 1 台裝置廣播"
 },
 "zh-Hans": {
-  "nav.features":"功能","nav.pricing":"定价","nav.download":"下载","nav.faq":"常见问题","nav.downloadCta":"下载",
+  "nav.features":"功能","nav.pricing":"定价","nav.download":"下载","nav.faq":"常见问题","nav.privacy":"隐私政策","nav.terms":"服务条款","nav.downloadCta":"下载",
   "home.badge":"v1.4.0 · macOS 14 或以上",
   "home.h1":"一个画面，<em class=\"em\">同时送达</em>每一部 Mac。",
   "home.sub":"FocusIn 把你的 Mac 变成即时广播源。在同一 Wi-Fi 下，把屏幕即时串流到任意数量的 Mac —— 远超 AirPlay（一次只能镜像到一台设备）。",
@@ -1027,13 +1181,15 @@ var I18N = {
   "price.p1":"免费版全部功能","price.p2":"声音广播（48kHz 立体声）","price.p3":"新功能优先体验","price.p4":"优先支持","price.p5":"月订阅 License Key，解锁全部 Pro",
   "price.proBtn":"立即购买 Pro","price.schoolName":"学校版","price.schoolDesc":"整校部署","price.custom":"定制报价","price.schoolPer":"批量授权优惠 · 联系我们",
   "price.s1":"Pro 版全部功能","price.s2":"不限教师数量","price.s3":"多机房管理","price.s4":"优先支持","price.schoolBtn":"联系购买",
-  "price.note":"Pro 版每月 US$10／HK$100／¥100，含 7 天免费试用。付款金流即将上线；目前 License Key 由本页即时生成，供测试使用。",
-  "pay.title":"FocusIn Pro","pay.badge":"月订阅方案","pay.plan":"Pro 方案 · 每月扣款","pay.mo":"/ 月","pay.billNote":"7 天免费试用 · 随时取消 · 含税","pay.methods":"支持的付款方式","pay.go":"前往付款","pay.fine":"付款由我们的支付服务商安全处理。","pay.coming":"付款功能即将上线 —— 目前可先免费生成试用 Key。","pay.close":"关闭",
+  "price.note":"Pro 版每月 US$12.99，含 7 天免费试用。付款金流即将上线；目前 License Key 由本页即时生成，供测试使用。",
+  "co.usd":"以美元付款","co.tax":"（含销售税）","co.desc":"解锁 FocusIn Pro，获得完整课堂体验：声音广播、全屏锁定、远程指令、清空文件等等。","co.includes":"包含","co.tagKey":"License Key","co.tagPro":"全部 Pro 功能","co.tagSupport":"优先支持","co.discount":"有折扣码吗？","co.apply":"应用","co.subtotal":"小计","co.taxLabel":"销售税","co.total":"总计","co.contact":"联系信息","co.fullName":"全名 *","co.email":"电子邮件 *","co.phone":"电话（选填）","co.billAddr":"账单地址 *","co.manual":"手动输入地址","co.business":"以公司名义购买","co.continue":"继续付款","co.fine":"本订单由我们的在线经销商兼记录商家 dodopayments.com 处理，订单查询与退货亦由其负责。","co.mor":"Dodo Payments","co.privacy":"隐私政策","co.terms":"服务条款","co.required":"请填写全名与有效的电子邮件地址。","co.coming":"付款功能即将上线 —— 目前可先免费生成试用 Key。","co.noCode":"目前没有生效的折扣码。","co.noManual":"地址会根据你选择的国家自动填入。",
   "key.title":"获取 Pro License Key","key.sub":"输入你的电子邮件，立即生成一组 License Key。在 FocusIn 教师端／学生端「升级 Pro」输入即可解锁。",
   "key.emailPlaceholder":"you@example.com","key.genBtn":"生成 License Key","key.err":"请输入有效的电子邮件地址。",
   "key.resultLabel":"你的 Pro License Key（请复制保存）","key.copy":"复制 Key","key.how":"如何使用：",
   "key.step1":"下载并打开 FocusIn（教师端或学生端）","key.step2":"在「升级 Pro」输入此 Key","key.step3":"即时解锁全部 Pro 功能",
   "key.trialHint":"提示：可在 App 内先免费试用 7 天",
+  "privacy.title":"隐私政策","privacy.updated":"最后更新：2026 年 10 月","privacy.h1":"1. 我们收集的信息","privacy.p1":"FocusIn 设计为完全在你的本地 Wi-Fi 内运作。我们只收集运营服务所需的最少量信息：","privacy.li1":"应用使用与诊断：你选择发送的崩溃日志与错误报告，用于改善稳定性。","privacy.li2":"电子邮件与购买信息：仅当你购买 Pro 授权或在我们网站生成 License Key 时。","privacy.li3":"设备显示名称：仅用于显示广播期间哪些设备在线。此数据只留在你的局域网内。","privacy.h2":"2. 我们绝不收集的内容","privacy.p2":"我们绝不收集或存储你的屏幕内容、音频流、键盘输入、文件内容，或任何经 FocusIn 显示的内容。所有广播直接在你的网络内设备间传输，绝不经过我们的服务器。","privacy.h3":"3. 我们如何使用你的信息","privacy.p3":"我们仅将收集的信息用于运营产品、发放授权密钥、处理支持请求与改善 FocusIn。我们不会出售你的个人信息。","privacy.h4":"4. 第三方服务","privacy.p4":"我们的网站由 Cloudflare Pages 托管，应用通过 GitHub Releases 与 Homebrew 发布。付款上线后由我们的记录商家处理（目前计划：Dodo Payments）。各服务商依其隐私政策处理数据。","privacy.h5":"5. 儿童隐私","privacy.p5":"FocusIn 常用于学校。我们不会在知情下收集 13 岁以下儿童的个人信息。学校管理人员须按当地法律取得所需同意。","privacy.h6":"6. 数据保留与删除","privacy.p6":"诊断数据仅保留至解决问题所需。你可随时联系我们要求删除我们持有的任何数据。","privacy.h7":"7. 联系方式","privacy.p7":"对本政策有疑问？Instagram 私信：@marco.tsk_smile，或在我们的 GitHub 仓库开 issue。",
+  "terms.title":"服务条款","terms.updated":"最后更新：2026 年 10 月","terms.h1":"1. 接受条款","terms.p1":"下载、安装或使用 FocusIn（“本软件”）即表示你同意本条款。若你代表学校或机构使用本软件，即确认你有权约束该机构。","terms.h2":"2. 使用授权","terms.p2":"本软件提供免费版与付费 Pro 订阅。免费版授予个人、非独占、不可转让之授权，供其预期用途使用。付费 Pro 订阅在订阅期间授予相同授权，涵盖 Pro 全部功能。","terms.h3":"3. Pro 订阅与收费","terms.p3":"Pro 每月 US$12.99（或当地等值），含 7 天免费试用。订阅将自动续期直至取消。你可随时取消；在已付费期间内持续使用。付款由我们的记录商家处理，其负责账单查询与退款。","terms.h4":"4. License Key","terms.p4":"License Key 用于在 App 内解锁 Pro 功能。密钥仅限购买者本人使用；禁止分享、转售或散布密钥。滥用可能导致密钥被撤销且不予退款。","terms.h5":"5. 可接受的使用","terms.p5":"你同意不以本软件从事：违反任何法律或学校政策；未经授权拦截或篡改他人数据；或散布恶意软件。本软件为合法的课堂与屏幕共享工具，须经设备所有者同意后使用。","terms.h6":"6. 无保证","terms.p6":"本软件按“现状”提供，不附任何保证。我们不保证不中断或无错误运作。","terms.h7":"7. 责任限制","terms.p7":"在法律允许的最大范围内，开发者不对因使用本软件而产生的间接、附带或衍生损害（包括数据丢失）负责。","terms.h8":"8. 条款变更","terms.p8":"我们可能不时更新本条款。变更后继续使用本软件即构成接受修订条款。","terms.h9":"9. 管辖法律","terms.p9":"本条款受中华人民共和国香港特别行政区法律管辖。","terms.h10":"10. 联系方式","terms.p10":"有疑问？Instagram 私信：@marco.tsk_smile，或在 GitHub 开 issue。",
   "dl.eyebrow":"下载","dl.title":"开始使用 FocusIn。","dl.sub":"两种安装方式：直接下载 DMG，或使用 Homebrew。",
   "dl.teacher":"FocusIn 教师端","dl.teacherVer":"正式版 v1.4.0 · macOS 14 或以上","dl.teacherDesc":"广播源：发现设备、串流屏幕、下发指令。","dl.teacherDmg":"FocusIn-Teacher.dmg",
   "dl.student":"FocusIn 学生端","dl.studentVer":"正式版 v1.4.0 · macOS 14 或以上","dl.studentDesc":"接收端：显示广播、跟随远程指令、保持同步。","dl.studentDmg":"FocusIn-Student.dmg",
@@ -1047,7 +1203,7 @@ var I18N = {
   "faq.q5":"Pro Key 在哪里输入？","faq.a5":"在教师端或学生端的「升级 Pro」输入。Key 由本网站定价页生成；还没有 Key？可先免费试用 7 天。",
   "faq.q6":"FocusIn 只能用在教室吗？","faq.a6":"当然不是。它是通用屏幕广播工具：示范、演示、代码审查、活动 —— 任何需要「一个画面同时给多部 Mac 看」的场合。",
   "faq.c1t":"问题反馈","faq.c1d":"截图 + 版本 + 设备型号","faq.c2t":"GitHub","faq.c2d":"Releases、Issues、更新记录","faq.c3t":"授权","faq.c3d":"版权所有",
-  "footer.tag":"一个画面，每一部 Mac。— 为 macOS 打造。","footer.product":"产品","footer.install":"安装","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"资源","footer.contact":"联系","footer.rights":"版权所有",
+  "footer.tag":"一个画面，每一部 Mac。— 为 macOS 打造。","footer.product":"产品","footer.install":"安装","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"资源","footer.contact":"联系","footer.rights":"版权所有","footer.privacy":"隐私政策","footer.terms":"服务条款",
   "toast.copied":"License Key 已复制到剪贴板","toast.start":"正在广播至所有设备","toast.stop":"已停止广播","toast.quality":"画质已切换至",
   "demo.broadcastTitle":"正在向 N 台设备广播","demo.broadcastTitle1":"正在向 1 台设备广播"
 }
@@ -1188,8 +1344,8 @@ function showToast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2600);
 }
-var routes = ["home","features","pricing","download","faq"];
-var sections = {home:"view-home", features:"view-features", pricing:"view-pricing", download:"view-download", faq:"view-faq"};
+var routes = ["home","features","pricing","download","faq","privacy","terms"];
+var sections = {home:"view-home", features:"view-features", pricing:"view-pricing", download:"view-download", faq:"view-faq", privacy:"view-privacy", terms:"view-terms"};
 function currentRoute(){
   var h = location.hash.replace(/^#\/?/, "");
   return routes.indexOf(h) >= 0 ? h : "home";
@@ -1359,27 +1515,14 @@ function initLicense(){
 }
 
 /* ===================== 定價 / 付款 ===================== */
-var CURRENCY = "HKD";
-var PRICE_MAP = { USD:"$10", HKD:"HK$100", CNY:"¥100" };
+var PRO_PRICE = "$12.99";
 function updatePrices(){
-  var v = PRICE_MAP[CURRENCY] || PRICE_MAP.HKD;
-  var p = document.getElementById("pro-price"); if (p) p.textContent = v;
-  var a = document.getElementById("pay-amount"); if (a) a.textContent = v;
-  document.querySelectorAll("#cur-switch .cur-btn").forEach(function(b){
-    b.classList.toggle("on", b.getAttribute("data-cur") === CURRENCY);
-  });
+  var p = document.getElementById("pro-price"); if (p) p.textContent = PRO_PRICE;
+  var a = document.getElementById("pay-amount"); if (a) a.textContent = PRO_PRICE;
+  var t = document.getElementById("co-total"); if (t) t.textContent = PRO_PRICE;
 }
 function initPricing(){
-  try { CURRENCY = localStorage.getItem("focusin-cur") || "HKD"; } catch(e){}
-  if (!PRICE_MAP[CURRENCY]) CURRENCY = "HKD";
   updatePrices();
-  document.querySelectorAll("#cur-switch .cur-btn").forEach(function(b){
-    b.addEventListener("click", function(){
-      CURRENCY = b.getAttribute("data-cur");
-      try { localStorage.setItem("focusin-cur", CURRENCY); } catch(e){}
-      updatePrices();
-    });
-  });
   var overlay = document.getElementById("pay-overlay");
   var buy = document.getElementById("buy-pro-btn");
   var close = document.getElementById("pay-close");
@@ -1389,13 +1532,25 @@ function initPricing(){
     overlay.addEventListener("click", function(e){ if (e.target === overlay) overlay.hidden = true; });
     document.addEventListener("keydown", function(e){ if (e.key === "Escape") overlay.hidden = true; });
   }
-  var go = document.getElementById("pay-go");
+  var go = document.getElementById("co-continue");
   if (go){
     go.addEventListener("click", function(){
+      var name = (document.getElementById("co-name").value || "").trim();
+      var email = (document.getElementById("co-email").value || "").trim();
+      var ok = name.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!ok){ showToast(t("co.required")); return; }
       overlay.hidden = true;
-      showToast(t("pay.coming"));
+      showToast(t("co.coming"));
       setTimeout(function(){ var b = document.getElementById("license-box"); if (b) b.scrollIntoView({behavior:"smooth"}); }, 350);
     });
+  }
+  var apply = document.getElementById("co-apply");
+  if (apply){
+    apply.addEventListener("click", function(){ showToast(t("co.noCode")); });
+  }
+  var manual = document.getElementById("co-manual");
+  if (manual){
+    manual.addEventListener("click", function(e){ e.preventDefault(); showToast(t("co.noManual")); });
   }
 }
 
