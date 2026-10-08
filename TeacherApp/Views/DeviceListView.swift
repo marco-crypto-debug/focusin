@@ -13,6 +13,32 @@ struct DeviceListView: View {
     @State private var newQuitPass = ""
     @State private var oldQuitPass = ""
     @State private var quitPassError = ""
+#else
+    @State private var licenseKeyInput = ""
+    @State private var licenseMsg = ""
+    @State private var licenseMsgIsError = false
+    private var licenseStatus: LicenseStatus { LicenseManager.shared.status }
+#endif
+
+#if !FOCUSIN_STABLE
+    /// 啟用 Pro License（驗證 + 持久化 + 顯示結果）。
+    private func activateLicense() {
+        let result = LicenseManager.shared.activate(key: licenseKeyInput)
+        switch result {
+        case .pro(let d):
+            licenseMsg = "✓ Pro 已啟用，有效至 \(LicenseManager.formatMonthFirst(d))"
+            licenseMsgIsError = false
+        case .expired:
+            licenseMsg = "✗ 此 Key 已過期（每月 1 號繳費制），請續費後取得新 Key。"
+            licenseMsgIsError = true
+        case .invalid(let reason):
+            licenseMsg = "✗ Key 無效：\(reason)"
+            licenseMsgIsError = true
+        case .free:
+            licenseMsg = ""
+        }
+        licenseKeyInput = ""
+    }
 #endif
 
     var body: some View {
@@ -161,8 +187,82 @@ struct DeviceListView: View {
 
                 // 聲音廣播開關：若個別學生機音訊鏈路有相容問題，可關閉聲音僅傳畫面
 #if !FOCUSIN_STABLE
-                Toggle("傳送聲音（關閉時僅傳畫面）", isOn: $viewModel.broadcastWithAudio)
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("傳送聲音（關閉時僅傳畫面）", isOn: Binding(
+                        get: { viewModel.broadcastWithAudio && LicenseManager.shared.isProActive },
+                        set: { on in
+                            guard LicenseManager.shared.isProActive else {
+                                licenseMsg = "聲音廣播為 Pro 功能，請先啟用 FocusIn Pro。"
+                                licenseMsgIsError = true
+                                viewModel.broadcastWithAudio = false
+                                return
+                            }
+                            viewModel.broadcastWithAudio = on
+                        }
+                    ))
                     .font(.subheadline)
+                    .disabled(!LicenseManager.shared.isProActive)
+                    if !LicenseManager.shared.isProActive {
+                        Text("聲音廣播為 Pro 功能（US$12.99 / 月）。輸入 License Key 解鎖。")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Divider()
+
+                // —— FocusIn Pro ——
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: licenseStatus.isProActive ? "checkmark.seal.fill" : "seal")
+                            .foregroundStyle(licenseStatus.isProActive ? .green : .secondary)
+                        Text("FocusIn Pro").font(.subheadline.bold())
+                        Spacer()
+                        switch licenseStatus {
+                        case .pro:
+                            Text("已解鎖").font(.caption).foregroundStyle(.green)
+                        case .expired:
+                            Text("已過期").font(.caption).foregroundStyle(.orange)
+                        case .free:
+                            Text("免費版").font(.caption).foregroundStyle(.secondary)
+                        case .invalid:
+                            Text("Key 無效").font(.caption).foregroundStyle(.red)
+                        }
+                    }
+                    if let exp = LicenseManager.shared.expiryString {
+                        Text("Pro 有效至 \(exp)（每月 1 號到期）")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else if case .expired = licenseStatus {
+                        Text("Pro 已過期，聲音廣播已停用。請續費後輸入新 Key。")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                    TextField("貼上 License Key（FI-PRO-…）", text: $licenseKeyInput)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.caption)
+                    HStack(spacing: 10) {
+                        Button("啟用 Pro") { activateLicense() }
+                            .disabled(licenseKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .controlSize(.small)
+                        if !LicenseManager.shared.storedKey.isEmpty {
+                            Button("移除本機授權") { LicenseManager.shared.deactivate(); licenseMsg = "已移除本機授權。"; licenseMsgIsError = false }
+                                .controlSize(.small)
+                        }
+                        Spacer()
+                        Button("前往官網購買") {
+                            if let url = URL(string: "https://focusin.pages.dev/#pricing") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }
+                        .controlSize(.small)
+                    }
+                    if !licenseMsg.isEmpty {
+                        Text(licenseMsg)
+                            .font(.caption)
+                            .foregroundStyle(licenseMsgIsError ? .red : .green)
+                    }
+                }
 #endif
 
                 Divider()

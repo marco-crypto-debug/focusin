@@ -9,3 +9,9 @@ xcuserdata/
 release/
 
 .build-module-cache/
+tools/license-keys/
+node_modules/
+package.json
+package-lock.json
+docs/site/_shots/
+docs/site/_backup/

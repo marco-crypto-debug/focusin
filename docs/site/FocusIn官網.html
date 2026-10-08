@@ -1308,30 +1308,58 @@ function hmacSHA256Hex(key, msg){
   return sha256Hex(opad + sha256Raw(ipad + msg));
 }
 
-/* ===================== License Key 產生（與 App 端一致） ===================== */
-var LICENSE_SECRET = "focusin-pro-2026-secret";
-function randomHex(n){
-  var out = "";
-  for (var i = 0; i < n; i++) out += "0123456789abcdef".charAt(Math.floor(Math.random() * 16));
-  return out;
+/* ===================== License Key 產生（Ed25519 真實驗證，與 App 端一致） ===================== */
+// ⚠ 測試階段：簽發私鑰 seed 內嵌於本頁（可被公眾看到，僅供 Beta 測試）。
+//   正式發行前必須移至 Cloudflare Worker 等安全服務端簽發，否則任何人可自行生成 Key。
+var LICENSE_SEED_B64 = "u6zrereJWCJYrzJhvQAbmH5wqcf1/3ufU74ZFdWOXMk=";
+var LICENSE_PUB_B64  = "+kWy/MC8XKsOOh2zMJMMChjz4mmFfCD4QC7oDY0RNcY=";
+
+function b64ToBytes(b64){
+  var bin = atob(b64), u = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return u;
 }
-function generateLicenseKey(){
-  var raw = "FOCUSIN-PRO:" + randomHex(12);
-  var checksum = hmacSHA256Hex(LICENSE_SECRET, raw).slice(0, 8);
-  var code = raw.slice(12) + checksum;
-  var groups = [];
-  for (var i = 0; i < 5; i++) groups.push(code.slice(i*4, i*4+4));
-  return "FI-PRO-" + groups.join("-");
+function b64urlToBytes(s){
+  var b = s.replace(/-/g, "+").replace(/_/g, "/");
+  while (b.length % 4) b += "=";
+  return b64ToBytes(b);
 }
+function bytesToB64url(u8){
+  var bin = "";
+  for (var i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function nextMonthFirst(){
+  var d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + 1);
+  var m = ("0" + (d.getMonth() + 1)).slice(-2);
+  return d.getFullYear() + "-" + m + "-01";
+}
+// 簽發：FI-PRO-<b64url(payload)>.<b64url(ed25519 簽名)>（到期日 = 下個月 1 號，每月 1 號繳費制）
+function generateLicenseKey(email){
+  if (typeof nacl === "undefined") return "";
+  var seed = b64ToBytes(LICENSE_SEED_B64);
+  var pub  = b64ToBytes(LICENSE_PUB_B64);
+  var sk = new Uint8Array(64); sk.set(seed, 0); sk.set(pub, 32);
+  var payload = JSON.stringify({ e: email, p: "pro", x: nextMonthFirst() });
+  var pBytes = new Uint8Array(payload.length);
+  for (var i = 0; i < payload.length; i++) pBytes[i] = payload.charCodeAt(i);
+  var sig = nacl.sign.detached(pBytes, sk);
+  return "FI-PRO-" + bytesToB64url(pBytes) + "." + bytesToB64url(sig);
+}
+// 驗證（與 App 端 LicenseManager 相同：Ed25519 公鑰驗簽）
 function verifyLicenseKey(key){
   if (!key) return false;
-  var s = key.trim().toUpperCase().replace(/\s+/g, "");
-  if (s.indexOf("FI-PRO-") !== 0) return false;
-  var code = s.slice(7).replace(/-/g, "");
-  if (!/^[0-9A-F]{20}$/.test(code)) return false;
-  var raw = "FOCUSIN-PRO:" + code.slice(0, 12).toLowerCase();
-  var checksum = hmacSHA256Hex(LICENSE_SECRET, raw).slice(0, 8).toUpperCase();
-  return checksum === code.slice(12);
+  var parts = key.trim().split(".");
+  if (parts.length !== 2) return false;
+  var p64 = parts[0].indexOf("FI-PRO-") === 0 ? parts[0].slice(7) : parts[0];
+  try {
+    var payload = b64urlToBytes(p64);
+    var sig = b64urlToBytes(parts[1]);
+    var pub = b64ToBytes(LICENSE_PUB_B64);
+    return nacl.sign.detached.verify(payload, sig, pub);
+  } catch (e) { return false; }
 }
 window.verifyLicenseKey = verifyLicenseKey;
 
@@ -1501,7 +1529,9 @@ function initLicense(){
       return;
     }
     err.classList.remove("show");
-    document.getElementById("license-key-text").textContent = generateLicenseKey();
+    var k = generateLicenseKey(email);
+    if (!k){ err.textContent = "Key service unavailable, please retry later."; err.classList.add("show"); return; }
+    document.getElementById("license-key-text").textContent = k;
     res.classList.add("show");
   });
   document.getElementById("license-copy").addEventListener("click", function(){

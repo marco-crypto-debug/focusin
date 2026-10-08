@@ -330,7 +330,12 @@ final class TeacherViewModel: ObservableObject {
         // 穩定版：不傳聲音，只傳畫面
         broadcaster.withAudio = false
 #else
-        broadcaster.withAudio = broadcastWithAudio
+        // 聲音廣播為 Pro 功能：非 Pro 時自動降級為僅畫面
+        if broadcastWithAudio && !LicenseManager.shared.isProActive {
+            broadcastWithAudio = false
+            appendLog("聲音廣播需要 FocusIn Pro，已自動切換為僅畫面")
+        }
+        broadcaster.withAudio = broadcastWithAudio && LicenseManager.shared.isProActive
 #endif
         // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
         let targets = selectedIDs.compactMap { connections[$0] }

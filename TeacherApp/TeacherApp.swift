@@ -7,6 +7,12 @@ struct TeacherApp: App {
     @NSApplicationDelegateAdaptor(QuitGuardAppDelegate.self) private var quitGuard
 #endif
 
+    init() {
+        // Pro License：啟動時檢查到期（每月 1 號自動停用）+ 每 6 小時重查
+        LicenseManager.shared.checkExpiry()
+        LicenseManager.shared.startAutoCheck()
+    }
+
     var body: some Scene {
         WindowGroup {
             DeviceListView()
