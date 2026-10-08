@@ -9,7 +9,7 @@ struct DeviceListView: View {
     @State private var autoStartError = ""
     @State private var showingWipeConfirm = false
     @State private var wipeConfirmText = ""
-#if FOCUSIN_BETA
+#if FOCUSIN_STABLE
     @State private var newQuitPass = ""
     @State private var oldQuitPass = ""
     @State private var quitPassError = ""
@@ -191,15 +191,15 @@ struct DeviceListView: View {
                     }
                 }
 
-#if FOCUSIN_BETA
+#if FOCUSIN_STABLE
                 Divider()
 
-                // 管理員密碼（Beta 專屬）：一個密碼統一管理教師端退出、學生端退出與緊急解鎖
+                // 管理員密碼：一個密碼統一管理教師端退出、學生端退出與緊急解鎖
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 6) {
                         Image(systemName: "lock.shield.fill")
                             .foregroundStyle(.blue)
-                        Text("管理員密碼（Beta）").font(.subheadline.bold())
+                        Text("管理員密碼").font(.subheadline.bold())
                         Text(QuitGuard.hasPassword ? "已設定" : "未設定")
                             .font(.caption)
                             .foregroundStyle(QuitGuard.hasPassword ? .green : .orange)

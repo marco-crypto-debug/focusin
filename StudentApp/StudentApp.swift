@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct StudentApp: App {
     @StateObject private var listener = CommandListener()
-#if FOCUSIN_BETA
+#if FOCUSIN_STABLE
     @NSApplicationDelegateAdaptor(QuitGuardAppDelegate.self) private var quitGuard
 #endif
 
@@ -16,12 +16,12 @@ struct StudentApp: App {
     }
 }
 
-#if FOCUSIN_BETA
-/// Beta 版專屬：退出保護——退出（⌘Q / 選單 / Dock）時必須輸入管理員密碼。
+#if FOCUSIN_STABLE
+/// 正式版（含原 Beta 功能）：退出保護——退出（⌘Q / 選單 / Dock）時必須輸入管理員密碼。
 final class QuitGuardAppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let allow = QuitGuard.shouldAllowQuit(
-            appName: "FocusIn 學生端（Beta）",
+            appName: "FocusIn 學生端",
             hasConfigured: KioskConfig.hasAdminPassword,
             verifier: KioskConfig.verify,
             notConfiguredHint: "尚未設定管理員密碼。\n請先在「狀態視窗」設定管理員密碼，才能退出。"

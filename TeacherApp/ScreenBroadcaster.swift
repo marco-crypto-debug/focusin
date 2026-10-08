@@ -284,8 +284,8 @@ extension ScreenBroadcaster: SCStreamOutput {
         defer { isEncodingFrame = false }
 
         let image = CIImage(cvPixelBuffer: pixelBuffer)
-#if FOCUSIN_BETA
-        // Beta 專屬：廣播畫面輕銳化（CISharpenLuminance 只提升亮度銳度，不改變色彩/飽和度）
+#if FOCUSIN_STABLE
+        // 正式版（含原 Beta 功能）：廣播畫面輕銳化（CISharpenLuminance 只提升亮度銳度，不改變色彩/飽和度）
         let processed = image.applyingFilter("CISharpenLuminance",
                                              parameters: [kCIInputSharpnessKey: 0.8])
 #else

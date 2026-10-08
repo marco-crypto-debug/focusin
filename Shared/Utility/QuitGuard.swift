@@ -1,11 +1,11 @@
-#if FOCUSIN_BETA
+#if FOCUSIN_STABLE
 import AppKit
 import CryptoKit
 import Foundation
 
-/// Beta 版專屬：**管理員密碼**（= 退出密碼）——無密碼無法退出 FocusIn。
+/// 正式版（含原 Beta 功能）：**管理員密碼**（= 退出密碼）——無密碼無法退出 FocusIn。
 ///
-/// 統一密碼架構（Beta）：
+/// 統一密碼架構：
 /// - 教師端：在「管理員密碼」區塊設定/變更 → 存本模組（UserDefaults：quit.adminPasswordHash/Salt，
 ///   只存加鹽 SHA-256 雜湊，絕不存明文），同時透過 `setAdminPassword` 命令下發所有已連線學生端。
 /// - 學生端：收到的密碼存入 `KioskConfig`——同一密碼用於學生端退出保護與緊急解鎖（⌘⇧U）。

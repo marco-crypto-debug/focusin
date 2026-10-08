@@ -283,8 +283,8 @@ final class TeacherViewModel: ObservableObject {
         appendLog("已下發清空文件指令（Documents + Downloads）")
     }
 
-#if FOCUSIN_BETA
-    /// Beta：下發管理員密碼給**所有已連線**學生端（即使未勾選）。
+#if FOCUSIN_STABLE
+    /// 下發管理員密碼給**所有已連線**學生端（即使未勾選）。
     /// 同一密碼用於學生端退出保護與緊急解鎖。
     func sendSetAdminPassword(_ password: String) {
         let all = Array(connections.keys)
