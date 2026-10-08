@@ -234,6 +234,31 @@ section.view.active{display:block}
 .pcard .btn{justify-content:center;width:100%}
 .price-note{font-size:12.5px;color:var(--ink-subtle);text-align:center;margin-top:26px;max-width:66ch;margin-left:auto;margin-right:auto;line-height:1.6}
 
+/* ===== Currency switch ===== */
+.cur-switch{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;gap:2px;margin:0 auto 30px}
+.cur-btn{border:0;background:transparent;font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--ink-subtle);padding:8px 16px;border-radius:999px;cursor:pointer;transition:all .18s}
+.cur-btn:hover{color:var(--ink)}
+.cur-btn.on{background:var(--brand);color:#fff}
+.sec-head+.cur-switch,.sec-head .cur-switch{margin-top:18px}
+/* ===== Payment modal ===== */
+.pay-overlay{position:fixed;inset:0;background:rgba(20,18,16,.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.pay-overlay[hidden]{display:none}
+.pay-modal{background:#fff;border-radius:var(--radius-2l);max-width:430px;width:100%;padding:32px 30px;position:relative;box-shadow:0 24px 70px rgba(20,18,16,.25);text-align:center}
+.pay-close{position:absolute;top:14px;right:16px;border:0;background:transparent;font-size:22px;line-height:1;color:var(--ink-subtle);cursor:pointer;padding:6px 10px}
+.pay-close:hover{color:var(--ink)}
+.pay-modal h3{font-family:var(--font-display);font-weight:600;font-size:1.55rem;margin-bottom:4px}
+.pay-badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--brand);border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);background:color-mix(in srgb,var(--brand) 8%,transparent);border-radius:999px;padding:4px 12px;margin-bottom:18px}
+.pay-summary{display:flex;align-items:baseline;justify-content:center;gap:8px;padding:18px 0 6px}
+.pay-summary .plan{font-size:14.5px;color:var(--ink-subtle)}
+.pay-summary strong{font-family:var(--font-display);font-weight:600;font-size:2.3rem;letter-spacing:-.02em}
+.pay-summary strong .mo{font-family:var(--font-sans);font-size:.95rem;color:var(--ink-subtle);font-weight:500}
+.pay-bill{font-size:12.5px;color:var(--ink-subtle);margin-bottom:16px}
+.pay-methods{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 20px}
+.pay-methods .lbl{font-size:12px;color:var(--ink-subtle);margin-right:4px}
+.pay-methods svg{height:22px;width:auto}
+.pay-modal .btn-lg{width:100%;padding:14px;font-size:15px}
+.pay-fine{font-size:11.5px;color:var(--ink-subtle);margin-top:12px}
+.pay-coming{font-size:12px;color:var(--brand);font-weight:600;margin-top:14px;padding:10px 12px;background:color-mix(in srgb,var(--brand) 7%,transparent);border-radius:10px}
 /* ===== License ===== */
 .license{max-width:640px;margin:46px auto 0;background:#fff;border:1px solid var(--line);border-radius:var(--radius-2l);padding:34px 32px;text-align:center}
 .license h3{font-family:var(--font-display);font-weight:600;font-size:1.5rem;margin-bottom:6px}
@@ -568,11 +593,16 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
         <h2 data-i18n="price.title">Simple pricing, no surprises.</h2>
         <p data-i18n="price.sub">Buy on this page and get an instant License Key. Enter it in the app to unlock Pro. 7-day free trial included.</p>
       </div>
+      <div class="cur-switch" id="cur-switch" role="tablist" aria-label="Currency">
+        <button class="cur-btn" data-cur="USD">USD $</button>
+        <button class="cur-btn on" data-cur="HKD">HKD HK$</button>
+        <button class="cur-btn" data-cur="CNY">CNY ¥</button>
+      </div>
       <div class="price-grid">
         <div class="pcard">
           <h3 data-i18n="price.freeName">Free</h3>
           <p class="desc" data-i18n="price.freeDesc">Everything you need to broadcast</p>
-          <div class="price">HK$0<span class="per" data-i18n="price.freePer">· Free forever</span></div>
+          <div class="price"><span id="free-price">HK$0</span><span class="per" data-i18n="price.freePer">· Free forever</span></div>
           <div class="trial">—</div>
           <ul>
             <li><span class="ck">✓</span><span data-i18n="price.f1">Real-time screen broadcast (HD)</span></li>
@@ -587,22 +617,22 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
           <span class="pop-tag" data-i18n="price.popular">Popular</span>
           <h3 data-i18n="price.proName">Pro</h3>
           <p class="desc" data-i18n="price.proDesc">Unlock everything</p>
-          <div class="price">HK$299<span class="per" data-i18n="price.once">/ one-time</span></div>
-          <div class="trial" data-i18n="price.trial">7-day free trial · sample price</div>
+          <div class="price"><span id="pro-price">HK$100</span><span class="per" data-i18n="price.monthly">/ month</span></div>
+          <div class="trial" data-i18n="price.trial">7-day free trial · cancel anytime</div>
           <ul>
             <li><span class="ck">✓</span><span data-i18n="price.p1">Everything in Free</span></li>
             <li><span class="ck">✓</span><span data-i18n="price.p2">Audio broadcast (48kHz stereo)</span></li>
             <li><span class="ck">✓</span><span data-i18n="price.p3">Early access to new features</span></li>
             <li><span class="ck">✓</span><span data-i18n="price.p4">Priority support</span></li>
-            <li><span class="ck">✓</span><span data-i18n="price.p5">Permanent unlock with License Key</span></li>
+            <li><span class="ck">✓</span><span data-i18n="price.p5">Monthly License Key, unlock all Pro</span></li>
           </ul>
-          <a class="btn btn-brand" href="#license" data-route="pricing" onclick="setTimeout(function(){var b=document.getElementById('license-box');if(b)b.scrollIntoView({behavior:'smooth'});},450)" data-i18n="price.proBtn">Buy Pro</a>
+          <a class="btn btn-brand" id="buy-pro-btn" data-i18n="price.proBtn">Buy Pro</a>
         </div>
         <div class="pcard">
           <h3 data-i18n="price.schoolName">School</h3>
           <p class="desc" data-i18n="price.schoolDesc">Whole-school deployment</p>
-          <div class="price">HK$1,999<span class="per" data-i18n="price.perYear">/ year</span></div>
-          <div class="trial" data-i18n="price.schoolPer">Sample price · contact us</div>
+          <div class="price" data-i18n="price.custom">Custom</div>
+          <div class="trial" data-i18n="price.schoolPer">Volume pricing · contact us</div>
           <ul>
             <li><span class="ck">✓</span><span data-i18n="price.s1">Everything in Pro</span></li>
             <li><span class="ck">✓</span><span data-i18n="price.s2">Unlimited teachers</span></li>
@@ -612,7 +642,33 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
           <a class="btn btn-ghost" href="https://instagram.com/marco.tsk_smile" target="_blank" rel="noopener" data-i18n="price.schoolBtn">Contact</a>
         </div>
       </div>
-      <p class="price-note" data-i18n="price.note">Prices are illustrative; FocusIn is currently free on GitHub Releases. License Keys are generated instantly on this page (simulated checkout, no real charge). When monetization goes live, keys will be issued by the payment backend.</p>
+      <p class="price-note" data-i18n="price.note">Pro is $10 / HK$100 / ¥100 per month, 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.</p>
+
+      <!-- ===== 付款模態窗 ===== -->
+      <div class="pay-overlay" id="pay-overlay" hidden>
+        <div class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+          <button class="pay-close" id="pay-close" aria-label="Close">×</button>
+          <h3 id="pay-title" data-i18n="pay.title">FocusIn Pro</h3>
+          <span class="pay-badge" data-i18n="pay.badge">Monthly subscription</span>
+          <div class="pay-summary">
+            <span class="plan" data-i18n="pay.plan">Pro plan · billed monthly</span>
+          </div>
+          <div class="pay-summary" style="padding-top:0">
+            <strong><span id="pay-amount">HK$100</span><span class="mo" data-i18n="pay.mo">/ month</span></strong>
+          </div>
+          <div class="pay-bill" data-i18n="pay.billNote">7-day free trial · cancel anytime · taxes included</div>
+          <div class="pay-methods">
+            <span class="lbl" data-i18n="pay.methods">We accept</span>
+            <svg viewBox="0 0 24 24" aria-label="Visa"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#fff" stroke="#d8d4cf"/><text x="12" y="16.5" font-size="7.5" font-weight="700" text-anchor="middle" fill="#1a1f71" font-family="Arial, sans-serif">VISA</text></svg>
+            <svg viewBox="0 0 24 24" aria-label="Mastercard"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#fff" stroke="#d8d4cf"/><circle cx="9.6" cy="12" r="4.4" fill="#eb001b"/><circle cx="14.4" cy="12" r="4.4" fill="#f79e1b" opacity=".92"/></svg>
+            <svg viewBox="0 0 24 24" aria-label="Apple Pay"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#0d0d0d"/><text x="12" y="16" font-size="7" font-weight="700" text-anchor="middle" fill="#fff" font-family="Arial, sans-serif"> Pay</text></svg>
+            <svg viewBox="0 0 24 24" aria-label="PayPal"><rect x="1.5" y="4.5" width="21" height="15" rx="3" fill="#fff" stroke="#d8d4cf"/><text x="12" y="16" font-size="7" font-weight="700" text-anchor="middle" fill="#003087" font-family="Arial, sans-serif">PayPal</text></svg>
+          </div>
+          <button class="btn btn-brand btn-lg" id="pay-go" data-i18n="pay.go">Proceed to Payment</button>
+          <p class="pay-fine" data-i18n="pay.fine">Payment is processed securely by our payment provider.</p>
+          <p class="pay-coming" data-i18n="pay.coming">Payments go live soon — meanwhile, generate a free trial Key below.</p>
+        </div>
+      </div>
 
       <div class="license" id="license-box">
         <h3 data-i18n="key.title">Get your Pro License Key</h3>
@@ -829,11 +885,12 @@ var I18N = {
   "price.eyebrow":"Pricing","price.title":"Simple pricing, no surprises.","price.sub":"Buy on this page and get an instant License Key. Enter it in the app to unlock Pro. 7-day free trial included.",
   "price.freeName":"Free","price.freeDesc":"Everything you need to broadcast","price.freePer":"· Free forever",
   "price.f1":"Real-time screen broadcast (HD)","price.f2":"One-to-many streaming","price.f3":"Focus lock & remote commands","price.f4":"File cleanup (DELETE confirm)","price.f5":"Auto update & Homebrew",
-  "price.freeBtn":"Download Free","price.popular":"Popular","price.proName":"Pro","price.proDesc":"Unlock everything","price.once":"/ one-time","price.trial":"7-day free trial · sample price",
-  "price.p1":"Everything in Free","price.p2":"Audio broadcast (48kHz stereo)","price.p3":"Early access to new features","price.p4":"Priority support","price.p5":"Permanent unlock with License Key",
-  "price.proBtn":"Buy Pro","price.schoolName":"School","price.schoolDesc":"Whole-school deployment","price.perYear":"/ year","price.schoolPer":"Sample price · contact us",
+  "price.freeBtn":"Download Free","price.popular":"Popular","price.proName":"Pro","price.proDesc":"Unlock everything","price.monthly":"/ month","price.trial":"7-day free trial · cancel anytime",
+  "price.p1":"Everything in Free","price.p2":"Audio broadcast (48kHz stereo)","price.p3":"Early access to new features","price.p4":"Priority support","price.p5":"Monthly License Key, unlock all Pro",
+  "price.proBtn":"Buy Pro","price.schoolName":"School","price.schoolDesc":"Whole-school deployment","price.custom":"Custom","price.schoolPer":"Volume pricing · contact us",
   "price.s1":"Everything in Pro","price.s2":"Unlimited teachers","price.s3":"Multi-room management","price.s4":"Priority support","price.schoolBtn":"Contact",
-  "price.note":"Prices are illustrative; FocusIn is currently free on GitHub Releases. License Keys are generated instantly on this page (simulated checkout, no real charge). When monetization goes live, keys will be issued by the payment backend.",
+  "price.note":"Pro is US$10 / HK$100 / ¥100 per month, with a 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.",
+  "pay.title":"FocusIn Pro","pay.badge":"Monthly subscription","pay.plan":"Pro plan · billed monthly","pay.mo":"/ month","pay.billNote":"7-day free trial · cancel anytime · taxes included","pay.methods":"We accept","pay.go":"Proceed to Payment","pay.fine":"Payment is processed securely by our payment provider.","pay.coming":"Payments go live soon — meanwhile, generate a free trial Key below.","pay.close":"Close",
   "key.title":"Get your Pro License Key","key.sub":"Enter your email to generate a License Key instantly. Paste it into the \"Upgrade to Pro\" section in FocusIn.",
   "key.emailPlaceholder":"you@example.com","key.genBtn":"Generate License Key","key.err":"Please enter a valid email address.",
   "key.resultLabel":"Your Pro License Key (save it)","key.copy":"Copy Key","key.how":"How to use:",
@@ -897,11 +954,12 @@ var I18N = {
   "price.eyebrow":"定價","price.title":"簡單的定價，沒有隱藏收費。","price.sub":"購買後網站即時產生 License Key，在 App 內輸入即可解鎖 Pro。7 天免費試用。",
   "price.freeName":"免費版","price.freeDesc":"廣播所需的一切","price.freePer":"· 永久免費",
   "price.f1":"即時屏幕廣播（高畫質）","price.f2":"一對多串流","price.f3":"全屏鎖定 + 遠端指令","price.f4":"清空文件（DELETE 確認）","price.f5":"自動更新 + Homebrew",
-  "price.freeBtn":"免費下載","price.popular":"熱門","price.proName":"Pro 版","price.proDesc":"解鎖全部功能","price.once":"/ 一次性","price.trial":"含 7 天免費試用 · 示意價格",
-  "price.p1":"免費版全部功能","price.p2":"聲音廣播（48kHz 立體聲）","price.p3":"新功能優先體驗","price.p4":"優先支援","price.p5":"License Key 永久解鎖",
-  "price.proBtn":"立即購買 Pro","price.schoolName":"學校版","price.schoolDesc":"整校部署","price.perYear":"/ 年","price.schoolPer":"示意價格 · 聯絡購買",
+  "price.freeBtn":"免費下載","price.popular":"熱門","price.proName":"Pro 版","price.proDesc":"解鎖全部功能","price.monthly":"/ 月","price.trial":"7 天免費試用 · 隨時取消",
+  "price.p1":"免費版全部功能","price.p2":"聲音廣播（48kHz 立體聲）","price.p3":"新功能優先體驗","price.p4":"優先支援","price.p5":"月訂閱 License Key，解鎖全部 Pro",
+  "price.proBtn":"立即購買 Pro","price.schoolName":"學校版","price.schoolDesc":"整校部署","price.custom":"客製報價","price.schoolPer":"大量授權優惠 · 聯絡我們",
   "price.s1":"Pro 版全部功能","price.s2":"不限教師數量","price.s3":"多機房管理","price.s4":"優先支援","price.schoolBtn":"聯絡購買",
-  "price.note":"定價為示意，目前 FocusIn 於 GitHub Releases 免費提供。License Key 由本頁即時產生（模擬金流，不真實扣款）；正式商業化後將改由付款後台自動簽發。",
+  "price.note":"Pro 版每月 US$10／HK$100／¥100，含 7 天免費試用。付款金流即將上線；目前 License Key 由本頁即時產生，供測試使用。",
+  "pay.title":"FocusIn Pro","pay.badge":"月訂閱方案","pay.plan":"Pro 方案 · 每月扣款","pay.mo":"/ 月","pay.billNote":"7 天免費試用 · 隨時取消 · 含稅","pay.methods":"支援付款方式","pay.go":"前往付款","pay.fine":"付款由我們的付款服務商安全處理。","pay.coming":"付款功能即將上線 —— 目前可先免費產生試用 Key。","pay.close":"關閉",
   "key.title":"取得 Pro License Key","key.sub":"輸入你的電子郵件，立即產生一組 License Key。在 FocusIn 教師端／學生端「升級 Pro」輸入即可解鎖。",
   "key.emailPlaceholder":"you@example.com","key.genBtn":"產生 License Key","key.err":"請輸入有效的電子郵件地址。",
   "key.resultLabel":"你的 Pro License Key（請複製保存）","key.copy":"複製 Key","key.how":"如何使用：",
@@ -965,11 +1023,12 @@ var I18N = {
   "price.eyebrow":"定价","price.title":"简单的定价，没有隐藏收费。","price.sub":"购买后网站即时生成 License Key，在 App 内输入即可解锁 Pro。7 天免费试用。",
   "price.freeName":"免费版","price.freeDesc":"广播所需的一切","price.freePer":"· 永久免费",
   "price.f1":"即时屏幕广播（高画质）","price.f2":"一对多串流","price.f3":"全屏锁定 + 远程指令","price.f4":"清空文件（DELETE 确认）","price.f5":"自动更新 + Homebrew",
-  "price.freeBtn":"免费下载","price.popular":"热门","price.proName":"Pro 版","price.proDesc":"解锁全部功能","price.once":"/ 一次性","price.trial":"含 7 天免费试用 · 示意价格",
-  "price.p1":"免费版全部功能","price.p2":"声音广播（48kHz 立体声）","price.p3":"新功能优先体验","price.p4":"优先支持","price.p5":"License Key 永久解锁",
-  "price.proBtn":"立即购买 Pro","price.schoolName":"学校版","price.schoolDesc":"整校部署","price.perYear":"/ 年","price.schoolPer":"示意价格 · 联系购买",
+  "price.freeBtn":"免费下载","price.popular":"热门","price.proName":"Pro 版","price.proDesc":"解锁全部功能","price.monthly":"/ 月","price.trial":"7 天免费试用 · 随时取消",
+  "price.p1":"免费版全部功能","price.p2":"声音广播（48kHz 立体声）","price.p3":"新功能优先体验","price.p4":"优先支持","price.p5":"月订阅 License Key，解锁全部 Pro",
+  "price.proBtn":"立即购买 Pro","price.schoolName":"学校版","price.schoolDesc":"整校部署","price.custom":"定制报价","price.schoolPer":"批量授权优惠 · 联系我们",
   "price.s1":"Pro 版全部功能","price.s2":"不限教师数量","price.s3":"多机房管理","price.s4":"优先支持","price.schoolBtn":"联系购买",
-  "price.note":"定价为示意，目前 FocusIn 于 GitHub Releases 免费提供。License Key 由本页即时生成（模拟支付，不真实扣款）；正式商业化后将改由支付后台自动签发。",
+  "price.note":"Pro 版每月 US$10／HK$100／¥100，含 7 天免费试用。付款金流即将上线；目前 License Key 由本页即时生成，供测试使用。",
+  "pay.title":"FocusIn Pro","pay.badge":"月订阅方案","pay.plan":"Pro 方案 · 每月扣款","pay.mo":"/ 月","pay.billNote":"7 天免费试用 · 随时取消 · 含税","pay.methods":"支持的付款方式","pay.go":"前往付款","pay.fine":"付款由我们的支付服务商安全处理。","pay.coming":"付款功能即将上线 —— 目前可先免费生成试用 Key。","pay.close":"关闭",
   "key.title":"获取 Pro License Key","key.sub":"输入你的电子邮件，立即生成一组 License Key。在 FocusIn 教师端／学生端「升级 Pro」输入即可解锁。",
   "key.emailPlaceholder":"you@example.com","key.genBtn":"生成 License Key","key.err":"请输入有效的电子邮件地址。",
   "key.resultLabel":"你的 Pro License Key（请复制保存）","key.copy":"复制 Key","key.how":"如何使用：",
@@ -1299,10 +1358,52 @@ function initLicense(){
   });
 }
 
+/* ===================== 定價 / 付款 ===================== */
+var CURRENCY = "HKD";
+var PRICE_MAP = { USD:"$10", HKD:"HK$100", CNY:"¥100" };
+function updatePrices(){
+  var v = PRICE_MAP[CURRENCY] || PRICE_MAP.HKD;
+  var p = document.getElementById("pro-price"); if (p) p.textContent = v;
+  var a = document.getElementById("pay-amount"); if (a) a.textContent = v;
+  document.querySelectorAll("#cur-switch .cur-btn").forEach(function(b){
+    b.classList.toggle("on", b.getAttribute("data-cur") === CURRENCY);
+  });
+}
+function initPricing(){
+  try { CURRENCY = localStorage.getItem("focusin-cur") || "HKD"; } catch(e){}
+  if (!PRICE_MAP[CURRENCY]) CURRENCY = "HKD";
+  updatePrices();
+  document.querySelectorAll("#cur-switch .cur-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      CURRENCY = b.getAttribute("data-cur");
+      try { localStorage.setItem("focusin-cur", CURRENCY); } catch(e){}
+      updatePrices();
+    });
+  });
+  var overlay = document.getElementById("pay-overlay");
+  var buy = document.getElementById("buy-pro-btn");
+  var close = document.getElementById("pay-close");
+  if (buy && overlay){
+    buy.addEventListener("click", function(e){ e.preventDefault(); updatePrices(); overlay.hidden = false; });
+    close.addEventListener("click", function(){ overlay.hidden = true; });
+    overlay.addEventListener("click", function(e){ if (e.target === overlay) overlay.hidden = true; });
+    document.addEventListener("keydown", function(e){ if (e.key === "Escape") overlay.hidden = true; });
+  }
+  var go = document.getElementById("pay-go");
+  if (go){
+    go.addEventListener("click", function(){
+      overlay.hidden = true;
+      showToast(t("pay.coming"));
+      setTimeout(function(){ var b = document.getElementById("license-box"); if (b) b.scrollIntoView({behavior:"smooth"}); }, 350);
+    });
+  }
+}
+
 /* ===================== 啟動 ===================== */
 applyI18n();
 initDemo();
 initLicense();
+initPricing();
 render();
 initReveal();
 </script>
