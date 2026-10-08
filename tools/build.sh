@@ -18,7 +18,7 @@ ROOT="/Users/marco/Documents/FocusIn"
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 TARGET="arm64-apple-macos14.0"
 BUILD_SHA="$(git -C "$ROOT" rev-parse --short HEAD)"
-VERSION_BASE="1.4.0"
+VERSION_BASE="1.4.1"
 
 SHARED_SRC=(
   "$ROOT/Shared/Networking/PeerConnection.swift"
@@ -29,6 +29,9 @@ SHARED_SRC=(
   "$ROOT/Shared/Utility/DiagLog.swift"
   "$ROOT/Shared/Utility/LicenseManager.swift"
   "$ROOT/Shared/Utility/LoginStartManager.swift"
+  "$ROOT/Shared/Utility/MenuBarManager.swift"
+  "$ROOT/Shared/Utility/FocusInAppState.swift"
+  "$ROOT/Shared/Utility/FocusInTheme.swift"
   "$ROOT/Shared/Utility/QuitGuard.swift"
   "$ROOT/Shared/Utility/UpdateChecker.swift"
 )
