@@ -162,6 +162,15 @@ Kiosk 由三層組成，任一被攻破仍有兜底：
 - **自動更新檢查**：兩端啟動時自動查 GitHub（`marco-crypto-debug/focusin`）——有 Release 比對 tag，否則比對 main 分支最新 commit SHA 與本機構建 SHA（構建時寫入 `CFBundleVersion`）。發現新版本即在介面提示，可一鍵前往 GitHub 下載；也可手動「檢查更新」。首次構建於未推送提交時會提示一次，屬正常現象。
 - **清空學生文件（破壞性）**：教師端「清空學生文件」按鈕需點擊後在彈窗輸入 `DELETE` 才會下發；學生端只刪除目前使用者家目錄下的 `Documents` 與 `Downloads` 全部內容（資料夾本身保留），逐項回報結果至教師端事件日誌。此操作**不可復原**，部署前請先在單台測試機驗證。
 
+## 簽名與 Gatekeeper 攔截
+
+FocusIn 目前以 **自簽證書**（`FocusIn Signing (Marco TSK)`）簽名。未付費加入 Apple Developer Program 前無法做正式的 Developer ID 公證，macOS 對未公證 App 一律攔截（「無法驗證開發者 / 已損壞」），屬正常現象。
+
+- **構建機**：執行 `bash tools/sign-focusin.sh`，自動創建證書（首次）→ 簽名 `release/staging-rel` 下所有 App → 導出公鑰 `tools/focusin-signing.cer`。
+- **學生機**：把 `tools/install-cert.sh` 與 `focusin-signing.cer` 放到同一資料夾執行一次（需管理員密碼），安裝證書 + 移除 quarantine + 加入 Gatekeeper 白名單，之後所有版本都能直接打開。
+- 快速繞過單次攔截：右鍵 App → 開啟 → 再按「開啟」；或 `xattr -dr com.apple.quarantine /Applications/FocusIn\ Teacher.app`。
+- 付費加入 Apple Developer Program 後，可改用正式 **Developer ID 簽名 + `notarytool` 公證**，用戶下載即開、零攔截；屆時替換 `tools/sign-focusin.sh` 內的簽名命令即可。
+
 ## 已知限制
 
 - 屏幕錄製權限若未授權或遭撤銷，教師端廣播會在介面顯示紅色提示與「開啟屏幕錄製設定」按鈕引導開啟；權限恢復後重新點擊「廣播教師屏幕」即可。
