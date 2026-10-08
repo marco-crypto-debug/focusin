@@ -1,0 +1,5 @@
+# FocusIn 官網 — Cloudflare Pages 構建設定
+# 讓默認部署命令 (npx wrangler deploy) 知道專案名與輸出目錄
+name = "focusin"
+compatibility_date = "2026-01-01"
+pages_build_output_dir = "public"
