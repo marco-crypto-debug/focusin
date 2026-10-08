@@ -6,7 +6,7 @@
 <title>FocusIn — macOS 課堂管理</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314110e'/%3E%3Ctext x='16' y='22' font-size='15' font-weight='700' fill='%23fff' text-anchor='middle' font-family='Arial'%3EF%3C/text%3E%3C/svg%3E">
 <style>
-/* ===== FocusIn 官網 — Tutti 風格（暖紙 × 墨黑 × 互動面板） ===== */
+/* ===== FocusIn 官網 — Tutti 風格 × 三語 × License ===== */
 :root{
   --paper:#fafaf8; --paper2:#f1eee9; --paper3:#e9e5de;
   --ink:#14110e; --ink2:#6e675f; --ink3:#9a9288;
@@ -27,30 +27,35 @@ section.active{display:block}
 
 /* ===== 導航 ===== */
 .nav{position:sticky;top:0;z-index:100;background:rgba(250,250,248,.86);backdrop-filter:saturate(160%) blur(18px);-webkit-backdrop-filter:saturate(160%) blur(18px);border-bottom:1px solid var(--line)}
-.nav-in{max-width:1060px;margin:0 auto;padding:0 24px;height:var(--nav-h);display:flex;align-items:center;gap:26px}
+.nav-in{max-width:1060px;margin:0 auto;padding:0 24px;height:var(--nav-h);display:flex;align-items:center;gap:22px}
 .nav-logo{font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
 .nav-logo:hover{text-decoration:none}
 .nav-logo .logo-ic{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#fa243c,#7c3aed 55%,#4285f4);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800}
-.nav-links{display:flex;gap:24px;flex:1}
+.nav-links{display:flex;gap:22px;flex:1}
 .nav-links a{font-size:13px;color:var(--ink2)}
 .nav-links a:hover{color:var(--ink)}
+.lang-switch{display:flex;align-items:center;gap:4px;background:var(--paper2);border:1px solid var(--line);border-radius:980px;padding:3px}
+.lang-switch button{border:none;background:transparent;font-size:12px;color:var(--ink2);padding:4px 10px;border-radius:980px;cursor:pointer;font-family:inherit;transition:all .14s ease}
+.lang-switch button.on{background:var(--ink);color:#fff}
 .nav-cta{background:var(--ink);color:#fff!important;font-size:13px;padding:6px 16px;border-radius:980px;font-weight:500}
 .nav-cta:hover{background:#000;text-decoration:none}
 
 /* ===== Hero ===== */
 .hero{padding:96px 0 40px;text-align:center}
 .hero h1{font-size:clamp(2.75rem,7vw,5.25rem);font-weight:700;letter-spacing:-.035em;line-height:1.06;text-wrap:balance;max-width:860px;margin:0 auto}
-.hero p.sub{font-size:clamp(17px,2.2vw,22px);color:var(--ink2);max-width:600px;margin:20px auto 0;line-height:1.55;text-wrap:balance}
+.hero p.sub{font-size:clamp(17px,2.2vw,22px);color:var(--ink2);max-width:620px;margin:20px auto 0;line-height:1.55;text-wrap:balance}
 .hero-cta{display:flex;gap:12px;justify-content:center;margin-top:34px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:8px;font-size:15px;padding:11px 22px;border-radius:980px;transition:all .16s ease;border:1px solid transparent}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:15px;padding:11px 22px;border-radius:980px;transition:all .16s ease;border:1px solid transparent;cursor:pointer;font-family:inherit}
 .btn-dark{background:var(--ink);color:#fff}
 .btn-dark:hover{background:#000;text-decoration:none;transform:translateY(-1px)}
 .btn-line{border-color:var(--line2);color:var(--ink)}
 .btn-line:hover{border-color:var(--ink);text-decoration:none}
+.btn-pro{background:linear-gradient(120deg,#7c3aed,#fa243c);color:#fff}
+.btn-pro:hover{filter:brightness(1.08);text-decoration:none;transform:translateY(-1px)}
 .hero-meta{display:flex;gap:16px;justify-content:center;align-items:center;margin-top:18px;font-size:12px;color:var(--ink3);flex-wrap:wrap}
 .hero-meta .dot{width:4px;height:4px;border-radius:50%;background:var(--line2)}
 
-/* ===== 互動 Demo 面板（教師端 app 模擬） ===== */
+/* ===== 互動 Demo ===== */
 .demo-wrap{margin:64px auto 0;max-width:920px;position:relative}
 .demo-bar{display:flex;align-items:center;justify-content:space-between;padding:0 6px 12px;font-size:12px;color:var(--ink3)}
 .demo-bar .demo-hint{display:flex;align-items:center;gap:7px}
@@ -61,7 +66,6 @@ section.active{display:block}
 .demo-titlebar .tb-dot{width:11px;height:11px;border-radius:50%}
 .demo-titlebar .tb-name{font-size:13px;font-weight:600;margin-left:6px}
 .demo-body{display:grid;grid-template-columns:300px 1fr;min-height:420px}
-/* 學生列表 */
 .demo-students{border-right:1px solid var(--line);padding:14px}
 .demo-sec-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.06em;padding:4px 6px 8px}
 .student{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;transition:background .14s ease;border:1.5px solid transparent}
@@ -75,7 +79,6 @@ section.active{display:block}
 .student .st-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:980px;flex-shrink:0}
 .st-b-on{background:#e6f7ec;color:#1d8a4e}
 .st-b-lock{background:#fde9ec;color:var(--red)}
-/* 控制區 */
 .demo-controls{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
 .ctl-card{border:1px solid var(--line);border-radius:16px;padding:14px 16px}
 .ctl-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
@@ -114,8 +117,9 @@ section.active{display:block}
 .feat-name .f-ic svg{width:14px;height:14px;stroke:#fff}
 .feat-desc{font-size:13px;color:var(--ink2);line-height:1.55}
 .feat .f-tag{display:inline-block;font-size:10.5px;font-weight:600;color:var(--purple);background:#f3edff;border-radius:980px;padding:2px 9px;margin-top:10px}
+.feat .f-pro{color:#b4231f;background:#fdecec}
 
-/* ===== 情境（FocusIn in class） ===== */
+/* ===== 情境 ===== */
 .story{display:grid;gap:14px}
 .story-row{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;background:#fff;border:1px solid var(--line);border-radius:var(--card-r);overflow:hidden}
 .story-row.reverse{grid-template-columns:1fr 1.1fr}
@@ -127,7 +131,6 @@ section.active{display:block}
 .mini-panel{width:100%;max-width:340px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:14px;text-align:left}
 .mini-panel .mp-head{font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.06em;margin-bottom:10px}
 .mini-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:10px;font-size:12.5px;border:1.5px solid transparent}
-.mini-row.sel{background:#f4f1ec;border-color:var(--line2)}
 .mini-row .m-ic{width:24px;height:24px;border-radius:7px;background:#f1eee9;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink2)}
 .mini-row.locked .m-ic{background:var(--ink);color:#fff}
 .mini-row .m-name{flex:1;font-weight:600}
@@ -135,11 +138,10 @@ section.active{display:block}
 .m-b-on{background:#e6f7ec;color:#1d8a4e}
 .m-b-lock{background:#fde9ec;color:var(--red)}
 .mini-actions{display:flex;gap:8px;margin-top:10px}
-.mini-actions .m-btn{flex:1;text-align:center;font-size:11.5px;font-weight:600;padding:8px;border-radius:10px;background:var(--ink);color:#fff;cursor:pointer;transition:opacity .14s}
-.mini-actions .m-btn:hover{opacity:.85}
+.mini-actions .m-btn{flex:1;text-align:center;font-size:11.5px;font-weight:600;padding:8px;border-radius:10px;background:var(--ink);color:#fff}
 .mini-actions .m-btn.gray{background:var(--paper3);color:var(--ink)}
 
-/* ===== 版本比較表 ===== */
+/* ===== 版本比較 ===== */
 .cmp{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow)}
 .cmp-row{display:grid;grid-template-columns:1fr 130px 130px;align-items:center;border-bottom:1px solid var(--line);padding:0 20px}
 .cmp-row:last-child{border-bottom:none}
@@ -147,7 +149,6 @@ section.active{display:block}
 .cmp-name{font-size:14px;padding:11px 0}
 .cmp-name.main{font-weight:700}
 .cmp-cell{text-align:center;font-size:13px;padding:11px 0}
-.cmp-cell.ver-name{font-weight:700}
 .cmp-yes{color:var(--green);font-weight:700}
 .cmp-no{color:var(--line2)}
 .cmp-head-ver{padding:18px 0;text-align:center}
@@ -169,8 +170,29 @@ section.active{display:block}
 .price ul{display:grid;gap:8px;margin-bottom:22px;flex:1}
 .price li{list-style:none;font-size:13px;display:flex;gap:8px;align-items:flex-start}
 .price li svg{width:14px;height:14px;stroke:var(--green);flex-shrink:0;margin-top:3px}
+.price li.locked{color:var(--ink3)}
+.price li.locked svg{stroke:var(--line2)}
 .price .btn{text-align:center;justify-content:center}
-.price-note{font-size:12px;color:var(--ink3);text-align:center;margin-top:20px;max-width:620px;margin-left:auto;margin-right:auto;line-height:1.6}
+.price-note{font-size:12px;color:var(--ink3);text-align:center;margin-top:20px;max-width:640px;margin-left:auto;margin-right:auto;line-height:1.6}
+
+/* ===== Key 生成 ===== */
+.license-box{max-width:680px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:36px 32px}
+.license-box h3{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.license-box .lb-sub{font-size:14px;color:var(--ink2);margin-bottom:22px}
+.lb-field{display:grid;gap:8px;margin-bottom:16px}
+.lb-field label{font-size:12px;font-weight:600;color:var(--ink2)}
+.lb-field input{font-size:15px;padding:11px 14px;border:1px solid var(--line2);border-radius:12px;background:var(--paper);font-family:inherit;color:var(--ink)}
+.lb-field input:focus{outline:2px solid var(--blue);border-color:transparent}
+.lb-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.lb-result{display:none;margin-top:20px;background:#f6f3ff;border:1px dashed var(--purple);border-radius:14px;padding:18px}
+.lb-result.show{display:block}
+.lb-result .lr-label{font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px}
+.key-box{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:18px;font-weight:700;letter-spacing:.04em;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;user-select:all;word-break:break-all;color:var(--ink)}
+.lb-copy{margin-top:10px}
+.lb-steps{font-size:12.5px;color:var(--ink2);line-height:1.7;margin-top:16px}
+.lb-steps b{color:var(--ink)}
+.lb-err{display:none;margin-top:12px;font-size:12.5px;color:var(--red);font-weight:600}
+.lb-err.show{display:block}
 
 /* ===== FAQ ===== */
 .faq{max-width:700px;margin:0 auto;display:grid;gap:10px}
@@ -223,17 +245,23 @@ section.active{display:block}
 </style>
 </head>
 <body>
+<span id="home"></span><span id="features"></span><span id="pricing"></span><span id="support"></span><span id="download"></span>
 
 <!-- ===== 導航 ===== -->
 <nav class="nav">
   <div class="nav-in">
     <a class="nav-logo" href="#home"><span class="logo-ic">F</span>FocusIn</a>
     <div class="nav-links">
-      <a href="#features">功能</a>
-      <a href="#pricing">定價</a>
-      <a href="#support">支援</a>
+      <a href="#features" data-i18n="nav.features">功能</a>
+      <a href="#pricing" data-i18n="nav.pricing">定價</a>
+      <a href="#support" data-i18n="nav.support">支援</a>
     </div>
-    <a class="nav-cta" href="#download" data-route="download">下載</a>
+    <div class="lang-switch" id="lang-switch">
+      <button data-lang="en">EN</button>
+      <button data-lang="zh-Hant" class="on">繁</button>
+      <button data-lang="zh-Hans">简</button>
+    </div>
+    <a class="nav-cta" href="#download" data-route="download" data-i18n="nav.download">下載</a>
   </div>
 </nav>
 
@@ -241,60 +269,60 @@ section.active{display:block}
 <section id="view-home" class="active">
   <div class="hero">
     <div class="wrap">
-      <h1>讓課堂，專注於學習。</h1>
-      <p class="sub">教師一鍵廣播屏幕、鎖定學生機、下發管理指令。同一 Wi-Fi 自動發現，低延遲高畫質，課堂管理像 Apple 產品一樣簡單。</p>
+      <h1 data-i18n="home.heroTitle">讓課堂，專注於學習。</h1>
+      <p class="sub" data-i18n="home.heroSub">教師一鍵廣播屏幕、鎖定學生機、下發管理指令。同一 Wi-Fi 自動發現，低延遲高畫質，課堂管理像 Apple 產品一樣簡單。</p>
       <div class="hero-cta">
-        <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">下載 FocusIn</a>
-        <a class="btn btn-line" href="#features" data-route="features">了解更多</a>
+        <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener" data-i18n="home.downloadBtn">下載 FocusIn</a>
+        <a class="btn btn-line" href="#features" data-route="features" data-i18n="home.learnMore">了解更多</a>
       </div>
       <div class="hero-meta">
-        <span>v1.3.9 · Latest</span><span class="dot"></span>
-        <span>macOS 14 或以上</span><span class="dot"></span>
-        <span>教師端與學生端各一份 DMG</span>
+        <span>v1.4.0 · Latest</span><span class="dot"></span>
+        <span data-i18n="home.metaOs">macOS 14 或以上</span><span class="dot"></span>
+        <span data-i18n="home.metaDmg">教師端與學生端各一份 DMG</span>
       </div>
 
       <!-- 互動 Demo：教師端面板 -->
       <div class="demo-wrap">
         <div class="demo-bar">
-          <span class="demo-hint"><span class="pulse"></span>可互動示範 — 點擊學生、切換畫質、試試指令</span>
-          <span>教師端介面模擬</span>
+          <span class="demo-hint"><span class="pulse"></span><span data-i18n="home.demoHint">可互動示範 — 點擊學生、切換畫質、試試指令</span></span>
+          <span data-i18n="home.demoLabel">教師端介面模擬</span>
         </div>
         <div class="demo">
           <div class="demo-titlebar">
             <span class="tb-dot" style="background:#ff5f57"></span>
             <span class="tb-dot" style="background:#febc2e"></span>
             <span class="tb-dot" style="background:#28c840"></span>
-            <span class="tb-name">FocusIn 教師端</span>
+            <span class="tb-name">FocusIn Teacher</span>
           </div>
           <div class="demo-body">
             <div class="demo-students">
-              <div class="demo-sec-head"><span>學生（6）</span><span id="demo-online-count" style="color:var(--green)">6 在線</span></div>
+              <div class="demo-sec-head"><span data-i18n="home.students">學生（6）</span><span id="demo-online-count" style="color:var(--green)">6 <span data-i18n="home.online">在線</span></span></div>
               <div id="demo-student-list"></div>
             </div>
             <div class="demo-controls">
               <div class="ctl-card">
                 <div class="ctl-head">
-                  <div class="t">屏幕廣播<small>ScreenCaptureKit 原生採集</small></div>
+                  <div class="t"><span data-i18n="home.broadcast">屏幕廣播</span><small>ScreenCaptureKit</small></div>
                   <div class="switch" id="demo-broadcast" role="switch" aria-checked="false" tabindex="0"></div>
                 </div>
                 <div class="q-options" id="demo-quality">
-                  <span class="q-opt" data-q="auto">自動</span>
-                  <span class="q-opt" data-q="low">低</span>
-                  <span class="q-opt" data-q="mid">中</span>
-                  <span class="q-opt on" data-q="high">高</span>
+                  <span class="q-opt" data-q="auto" data-i18n="home.qAuto">自動</span>
+                  <span class="q-opt" data-q="low" data-i18n="home.qLow">低</span>
+                  <span class="q-opt" data-q="mid" data-i18n="home.qMid">中</span>
+                  <span class="q-opt on" data-q="high" data-i18n="home.qHigh">高</span>
                 </div>
               </div>
               <div class="ctl-card">
-                <div class="ctl-head"><div class="t">課堂指令<small>發送至選中學生</small></div></div>
+                <div class="ctl-head"><div class="t"><span data-i18n="home.commands">課堂指令</span><small data-i18n="home.commandsSub">發送至選中學生</small></div></div>
                 <div class="cmd-row">
-                  <span class="cmd primary" data-cmd="lock">鎖定全部</span>
-                  <span class="cmd" data-cmd="unlock">解鎖</span>
-                  <span class="cmd" data-cmd="restart">重新啟動</span>
-                  <span class="cmd" data-cmd="shutdown">關機</span>
-                  <span class="cmd" data-cmd="launch">啟動 Safari</span>
-                  <span class="cmd danger" data-cmd="wipe">清空文件</span>
+                  <span class="cmd primary" data-cmd="lock" data-i18n="home.cmdLock">鎖定全部</span>
+                  <span class="cmd" data-cmd="unlock" data-i18n="home.cmdUnlock">解鎖</span>
+                  <span class="cmd" data-cmd="restart" data-i18n="home.cmdRestart">重新啟動</span>
+                  <span class="cmd" data-cmd="shutdown" data-i18n="home.cmdShutdown">關機</span>
+                  <span class="cmd" data-cmd="launch" data-i18n="home.cmdLaunch">啟動 Safari</span>
+                  <span class="cmd danger" data-cmd="wipe" data-i18n="home.cmdWipe">清空文件</span>
                 </div>
-                <div class="demo-status" id="demo-status">就緒 — 選中：無</div>
+                <div class="demo-status" id="demo-status"><span data-i18n="home.demoStatus">就緒 — 選中：無</span></div>
               </div>
             </div>
           </div>
@@ -307,35 +335,35 @@ section.active{display:block}
   <div class="sec">
     <div class="wrap">
       <div class="sec-head">
-        <h2>課堂需要的，一次到位。</h2>
-        <p>從屏幕廣播到遠端控制，FocusIn 把教師最常用的操作收進一個乾淨的視窗。</p>
+        <h2 data-i18n="home.featTitle">課堂需要的，一次到位。</h2>
+        <p data-i18n="home.featSub">從屏幕廣播到遠端控制，FocusIn 把教師最常用的操作收進一個乾淨的視窗。</p>
       </div>
       <div class="feat-grid">
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#4285f4,#29a9eb)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>屏幕廣播</div>
-          <div class="feat-desc">ScreenCaptureKit 原生採集，30fps 高畫質，低延遲二進位幀管線。Bonjour 自動發現同網段學生端。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#4285f4,#29a9eb)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span><span data-i18n="home.f1n">屏幕廣播</span></div>
+          <div class="feat-desc" data-i18n="home.f1d">ScreenCaptureKit 原生採集，30fps 高畫質，低延遲二進位幀管線。Bonjour 自動發現同網段學生端。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#7c3aed,#a855f7)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>Kiosk 全屏鎖定</div>
-          <div class="feat-desc">全屏覆蓋、攔截鼠標鍵盤與 ⌘Tab／⌘⌥Esc／Ctrl+方向鍵；鎖窗強制置頂，全屏 Space 也蓋得住。</div>
-          <span class="f-tag">正式版</span>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#7c3aed,#a855f7)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span data-i18n="home.f2n">Kiosk 全屏鎖定</span></div>
+          <div class="feat-desc" data-i18n="home.f2d">全屏覆蓋、攔截鼠標鍵盤與 ⌘Tab／⌘⌥Esc／Ctrl+方向鍵；鎖窗強制置頂，全屏 Space 也蓋得住。</div>
+          <span class="f-tag" data-i18n="home.stableTag">正式版</span>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#fa243c,#ff6363)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>遠端控制</div>
-          <div class="feat-desc">遠端關機、重新啟動、啟動指定 App（NSWorkspace），可選全部學生或個別學生。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#fa243c,#ff6363)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span><span data-i18n="home.f3n">遠端控制</span></div>
+          <div class="feat-desc" data-i18n="home.f3d">遠端關機、重新啟動、啟動指定 App（NSWorkspace），可選全部學生或個別學生。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span>清空文件</div>
-          <div class="feat-desc">遠端清空學生機 Documents 與 Downloads；教師需輸入 DELETE 二次確認，杜絕誤觸。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span><span data-i18n="home.f4n">清空文件</span></div>
+          <div class="feat-desc" data-i18n="home.f4d">遠端清空學生機 Documents 與 Downloads；教師需輸入 DELETE 二次確認，杜絕誤觸。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#29a9eb,#0ea5e9)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>自動更新</div>
-          <div class="feat-desc">啟動即檢查 GitHub Releases，正式版／Alpha 各自分流，語義化版本比較，新版本一鍵下載。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#29a9eb,#0ea5e9)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span><span data-i18n="home.f5n">自動更新</span></div>
+          <div class="feat-desc" data-i18n="home.f5d">啟動即檢查 GitHub Releases，發現新版本一鍵直接下載 DMG，無需跳轉網頁。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#14110e,#443731)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg></span>退出保護</div>
-          <div class="feat-desc">統一管理員密碼：教師端退出、學生端退出、緊急解鎖（⌘⇧U）共用同一密碼，未設定無法退出。</div>
-          <span class="f-tag">正式版</span>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#14110e,#443731)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg></span><span data-i18n="home.f6n">退出保護</span></div>
+          <div class="feat-desc" data-i18n="home.f6d">統一管理員密碼：教師端退出、學生端退出、緊急解鎖（⌘⇧U）共用同一密碼，未設定無法退出。</div>
+          <span class="f-tag" data-i18n="home.stableTag">正式版</span>
         </div>
       </div>
     </div>
@@ -345,54 +373,54 @@ section.active{display:block}
   <div class="sec sec-alt">
     <div class="wrap">
       <div class="sec-head">
-        <h2>FocusIn 在課堂</h2>
-        <p>三個最常見的場景，一個面板全部搞定。</p>
+        <h2 data-i18n="home.storyTitle">FocusIn 在課堂</h2>
+        <p data-i18n="home.storySub">三個最常見的場景，一個面板全部搞定。</p>
       </div>
       <div class="story">
         <div class="story-row">
           <div class="story-txt">
-            <div class="kicker">考試模式</div>
-            <h3>一鍵鎖定全場</h3>
-            <p>開始考試前選「全部學生」並鎖定，每台 iMac 立即全屏覆蓋、攔截輸入。學生只能看到教師指定的畫面；斷網時管理員可在本機按 ⌘⇧U 輸入管理員密碼緊急解鎖。</p>
+            <div class="kicker" data-i18n="home.s1k">考試模式</div>
+            <h3 data-i18n="home.s1t">一鍵鎖定全場</h3>
+            <p data-i18n="home.s1d">開始考試前選「全部學生」並鎖定，每台 iMac 立即全屏覆蓋、攔截輸入。斷網時管理員可在本機按 ⌘⇧U 輸入管理員密碼緊急解鎖。</p>
           </div>
           <div class="story-vis">
             <div class="mini-panel">
-              <div class="mp-head">課堂狀態</div>
-              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 01</span><span class="m-badge m-b-lock">已鎖定</span></div>
-              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 02</span><span class="m-badge m-b-lock">已鎖定</span></div>
-              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 03</span><span class="m-badge m-b-lock">已鎖定</span></div>
-              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 04</span><span class="m-badge m-b-lock">已鎖定</span></div>
+              <div class="mp-head" data-i18n="home.s1h">課堂狀態</div>
+              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 01</span><span class="m-badge m-b-lock" data-i18n="home.locked">已鎖定</span></div>
+              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 02</span><span class="m-badge m-b-lock" data-i18n="home.locked">已鎖定</span></div>
+              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 03</span><span class="m-badge m-b-lock" data-i18n="home.locked">已鎖定</span></div>
+              <div class="mini-row locked"><span class="m-ic">🔒</span><span class="m-name">iMac 04</span><span class="m-badge m-b-lock" data-i18n="home.locked">已鎖定</span></div>
             </div>
           </div>
         </div>
         <div class="story-row reverse">
           <div class="story-vis">
             <div class="mini-panel">
-              <div class="mp-head">屏幕廣播 · 高畫質 30fps</div>
-              <div class="mini-row sel"><span class="m-ic" style="background:#e8f0fe;color:#4285f4">▶</span><span class="m-name">全體學生</span><span class="m-badge m-b-on">廣播中</span></div>
-              <div class="mini-row"><span class="m-ic">✎</span><span class="m-name">畫質：高</span></div>
-              <div class="mini-row"><span class="m-ic">◉</span><span class="m-name">銳化：開啟</span></div>
-              <div class="mini-actions"><span class="m-btn">開始廣播</span><span class="m-btn gray">停止</span></div>
+              <div class="mp-head" data-i18n="home.s2h">屏幕廣播 · 高畫質 30fps</div>
+              <div class="mini-row sel"><span class="m-ic" style="background:#e8f0fe;color:#4285f4">▶</span><span class="m-name" data-i18n="home.s2all">全體學生</span><span class="m-badge m-b-on" data-i18n="home.s2live">廣播中</span></div>
+              <div class="mini-row"><span class="m-ic">✎</span><span class="m-name" data-i18n="home.s2q">畫質：高</span></div>
+              <div class="mini-row"><span class="m-ic">◉</span><span class="m-name" data-i18n="home.s2s">銳化：開啟</span></div>
+              <div class="mini-actions"><span class="m-btn" data-i18n="home.s2start">開始廣播</span><span class="m-btn gray" data-i18n="home.s2stop">停止</span></div>
             </div>
           </div>
           <div class="story-txt">
-            <div class="kicker">即時示範</div>
-            <h3>教師屏幕，即時送達</h3>
-            <p>示範操作時開啟廣播，學生機鎖窗即時顯示教師畫面。正式版內建 CISharpenLuminance 銳化，小字也清晰；畫質提供自動／低／中／高四檔，依網絡狀態調整。</p>
+            <div class="kicker" data-i18n="home.s2k">即時示範</div>
+            <h3 data-i18n="home.s2t">教師屏幕，即時送達</h3>
+            <p data-i18n="home.s2d">示範操作時開啟廣播，學生機鎖窗即時顯示教師畫面。正式版內建 CISharpenLuminance 銳化，小字也清晰；畫質提供自動／低／中／高四檔。</p>
           </div>
         </div>
         <div class="story-row">
           <div class="story-txt">
-            <div class="kicker">下課維護</div>
-            <h3>遠端收尾，一站完成</h3>
-            <p>下課後遠端關機或重新啟動所有學生機；需要清理時清空指定機台的 Documents 與 Downloads——輸入 DELETE 二次確認，避免誤操作。</p>
+            <div class="kicker" data-i18n="home.s3k">下課維護</div>
+            <h3 data-i18n="home.s3t">遠端收尾，一站完成</h3>
+            <p data-i18n="home.s3d">下課後遠端關機或重新啟動所有學生機；需要清理時清空指定機台的 Documents 與 Downloads——輸入 DELETE 二次確認，避免誤操作。</p>
           </div>
           <div class="story-vis">
             <div class="mini-panel">
-              <div class="mp-head">指令已送達 6 台裝置</div>
-              <div class="mini-row"><span class="m-ic" style="background:#fde9ec;color:#fa243c">⏻</span><span class="m-name">遠端關機</span><span class="m-badge m-b-on">完成</span></div>
-              <div class="mini-row"><span class="m-ic" style="background:#e6f7ec;color:#1d8a4e">✓</span><span class="m-name">清空文件</span><span class="m-badge m-b-on">完成</span></div>
-              <div class="mini-row"><span class="m-ic" style="background:#e8f0fe;color:#4285f4">↻</span><span class="m-name">啟動 Safari</span><span class="m-badge m-b-on">完成</span></div>
+              <div class="mp-head" data-i18n="home.s3h">指令已送達 6 台裝置</div>
+              <div class="mini-row"><span class="m-ic" style="background:#fde9ec;color:#fa243c">⏻</span><span class="m-name" data-i18n="home.s3shut">遠端關機</span><span class="m-badge m-b-on" data-i18n="home.done">完成</span></div>
+              <div class="mini-row"><span class="m-ic" style="background:#e6f7ec;color:#1d8a4e">✓</span><span class="m-name" data-i18n="home.s3wipe">清空文件</span><span class="m-badge m-b-on" data-i18n="home.done">完成</span></div>
+              <div class="mini-row"><span class="m-ic" style="background:#e8f0fe;color:#4285f4">↻</span><span class="m-name" data-i18n="home.s3launch">啟動 Safari</span><span class="m-badge m-b-on" data-i18n="home.done">完成</span></div>
             </div>
           </div>
         </div>
@@ -404,26 +432,26 @@ section.active{display:block}
   <div class="sec">
     <div class="wrap">
       <div class="sec-head">
-        <h2>選擇適合你的版本。</h2>
-        <p>課堂環境使用正式版；想測試聲音廣播再試 Alpha。</p>
+        <h2 data-i18n="home.cmpTitle">選擇適合你的版本。</h2>
+        <p data-i18n="home.cmpSub">課堂環境使用正式版；想測試聲音廣播再試 Alpha。</p>
       </div>
       <div class="cmp">
         <div class="cmp-row head">
-          <div class="cmp-name" style="font-weight:700">功能</div>
-          <div class="cmp-head-ver"><span class="v-pill">建議</span><div class="v-num">正式版 v1.3.9</div><div class="v-sub">Latest</div></div>
-          <div class="cmp-head-ver"><div class="v-num">Alpha v1.3.7</div><div class="v-sub">Pre-release</div></div>
+          <div class="cmp-name" style="font-weight:700" data-i18n="home.cmpFeature">功能</div>
+          <div class="cmp-head-ver"><span class="v-pill" data-i18n="home.recommended">建議</span><div class="v-num" data-i18n="home.stableVer">正式版 v1.4.0</div><div class="v-sub">Latest</div></div>
+          <div class="cmp-head-ver"><div class="v-num" data-i18n="home.alphaVer">Alpha v1.3.7</div><div class="v-sub">Pre-release</div></div>
         </div>
-        <div class="cmp-row"><div class="cmp-name">屏幕廣播（僅畫面）</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
-        <div class="cmp-row"><div class="cmp-name">聲音廣播（48kHz 立體聲）</div><div class="cmp-cell cmp-no">–</div><div class="cmp-cell cmp-yes">✓</div></div>
-        <div class="cmp-row"><div class="cmp-name">Kiosk 全屏鎖定＋輸入攔截</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
-        <div class="cmp-row"><div class="cmp-name">退出保護（統一管理員密碼）</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
-        <div class="cmp-row"><div class="cmp-name">緊急解鎖 ⌘⇧U</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
-        <div class="cmp-row"><div class="cmp-name">畫面銳化（CISharpenLuminance）</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-no">–</div></div>
-        <div class="cmp-row"><div class="cmp-name">遠端控制／清空文件</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
-        <div class="cmp-row"><div class="cmp-name">自動更新</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c1">屏幕廣播（僅畫面）</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c2">聲音廣播（48kHz 立體聲）</div><div class="cmp-cell cmp-no">–</div><div class="cmp-cell cmp-yes">✓</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c3">Kiosk 全屏鎖定＋輸入攔截</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c4">退出保護（統一管理員密碼）</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c5">緊急解鎖 ⌘⇧U</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c6">畫面銳化（CISharpenLuminance）</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-no">–</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c7">遠端控制／清空文件</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
+        <div class="cmp-row"><div class="cmp-name" data-i18n="home.c8">自動更新（直接下載）</div><div class="cmp-cell cmp-yes">✓</div><div class="cmp-cell cmp-yes">✓</div></div>
       </div>
       <div class="cmp-cta">
-        <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">前往 GitHub Releases</a>
+        <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener" data-i18n="home.cmpBtn">前往 GitHub Releases</a>
       </div>
     </div>
   </div>
@@ -434,47 +462,52 @@ section.active{display:block}
   <div class="sec">
     <div class="wrap">
       <div class="sec-head">
-        <h2>每一個細節，都是為了課堂。</h2>
-        <p>教師端與學生端的分工，讓教學專注、讓學生專心。</p>
+        <h2 data-i18n="feat.title">每一個細節，都是為了課堂。</h2>
+        <p data-i18n="feat.sub">教師端與學生端的分工，讓教學專注、讓學生專心。</p>
       </div>
       <div class="feat-grid">
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#4285f4,#29a9eb)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16M2 4h12a6 6 0 0 1 6 6v10H2"/><circle cx="6" cy="10" r="1.4"/><circle cx="6" cy="16" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="10" cy="16" r="1.4"/></svg></span>Bonjour 自動發現</div>
-          <div class="feat-desc">學生端啟動後透過 mDNS 廣播（_classroom-ctrl._tcp.），教師端自動列出在線裝置與延遲，無需手動配 IP。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#4285f4,#29a9eb)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16M2 4h12a6 6 0 0 1 6 6v10H2"/><circle cx="6" cy="10" r="1.4"/><circle cx="6" cy="16" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="10" cy="16" r="1.4"/></svg></span><span data-i18n="feat.f1n">Bonjour 自動發現</span></div>
+          <div class="feat-desc" data-i18n="feat.f1d">學生端啟動後透過 mDNS 廣播（_classroom-ctrl._tcp.），教師端自動列出在線裝置與延遲，無需手動配 IP。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#7c3aed,#a855f7)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>Kiosk 全屏鎖定</div>
-          <div class="feat-desc">鎖定後全屏覆蓋並攔截本機輸入：鼠標、鍵盤、⌘Tab、⌘⌥Esc、Ctrl+左右方向鍵；鎖窗自愈，接上新顯示器自動重建。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#7c3aed,#a855f7)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span data-i18n="feat.f2n">Kiosk 全屏鎖定</span></div>
+          <div class="feat-desc" data-i18n="feat.f2d">鎖定後全屏覆蓋並攔截本機輸入：鼠標、鍵盤、⌘Tab、⌘⌥Esc、Ctrl+左右方向鍵；鎖窗自愈，接上新顯示器自動重建。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#fa243c,#ff6363)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>退出保護</div>
-          <div class="feat-desc">統一密碼同時保護教師端退出、學生端退出與緊急解鎖；教師端設定後即時下發所有已連線學生端，未設密碼無法退出。</div>
-          <span class="f-tag">正式版</span>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#fa243c,#ff6363)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span data-i18n="feat.f3n">退出保護</span></div>
+          <div class="feat-desc" data-i18n="feat.f3d">統一密碼同時保護教師端退出、學生端退出與緊急解鎖；教師端設定後即時下發所有已連線學生端，未設密碼無法退出。</div>
+          <span class="f-tag" data-i18n="home.stableTag">正式版</span>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span>清空文件</div>
-          <div class="feat-desc">遠端清空學生機 Documents 與 Downloads；教師必須輸入 DELETE 二次確認，杜絕誤觸。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span><span data-i18n="feat.f4n">清空文件</span></div>
+          <div class="feat-desc" data-i18n="feat.f4d">遠端清空學生機 Documents 與 Downloads；教師必須輸入 DELETE 二次確認，杜絕誤觸。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#29a9eb,#0ea5e9)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>自動更新</div>
-          <div class="feat-desc">啟動即檢查 GitHub Releases，穩定／Alpha／Beta 各自分流，語義化版本比較，新版本一鍵下載。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#29a9eb,#0ea5e9)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg></span><span data-i18n="feat.f5n">自動更新（直接下載）</span></div>
+          <div class="feat-desc" data-i18n="feat.f5d">啟動即檢查 GitHub Releases，發現新版本一鍵直接下載 DMG 到本機，下載完成即提示安裝。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#14110e,#443731)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/></svg></span>登入自動啟動</div>
-          <div class="feat-desc">教師端／學生端可設定登入 macOS 時自動啟動，開機即就緒，不需手動開啟。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#14110e,#443731)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/></svg></span><span data-i18n="feat.f6n">登入自動啟動</span></div>
+          <div class="feat-desc" data-i18n="feat.f6d">教師端／學生端可設定登入 macOS 時自動啟動，開機即就緒，不需手動開啟。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#34c759,#30d158)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>權限指引</div>
-          <div class="feat-desc">教師端需「屏幕錄製」、學生端需「輔助功能」；未授權時 app 內直接提示開啟路徑，附詳細系統設定步驟。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#34c759,#30d158)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span data-i18n="feat.f7n">權限指引</span></div>
+          <div class="feat-desc" data-i18n="feat.f7d">教師端需「屏幕錄製」、學生端需「輔助功能」；未授權時 app 內直接提示開啟路徑，附詳細系統設定步驟。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#4285f4,#7c3aed)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg></span>緊急解鎖 ⌘⇧U</div>
-          <div class="feat-desc">網路異常時，管理員可在學生機本機按 ⌘⇧U，輸入與教師端相同的管理員密碼即可解鎖。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#4285f4,#7c3aed)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/></svg></span><span data-i18n="feat.f8n">緊急解鎖 ⌘⇧U</span></div>
+          <div class="feat-desc" data-i18n="feat.f8d">網路異常時，管理員可在學生機本機按 ⌘⇧U，輸入與教師端相同的管理員密碼即可解鎖。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#29a9eb,#34c759)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>屏幕廣播與銳化</div>
-          <div class="feat-desc">自動／低／中／高畫質切換；正式版廣播前套用 CISharpenLuminance，文字邊緣更銳利。</div>
-          <span class="f-tag">正式版</span>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#29a9eb,#34c759)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span><span data-i18n="feat.f9n">屏幕廣播與銳化</span></div>
+          <div class="feat-desc" data-i18n="feat.f9d">自動／低／中／高畫質切換；正式版廣播前套用 CISharpenLuminance，文字邊緣更銳利。</div>
+          <span class="f-tag" data-i18n="home.stableTag">正式版</span>
+        </div>
+        <div class="feat">
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#7c3aed,#fa243c)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5v14M12 12H2M5 9l-3 3 3 3M19 8l3 3-3 3"/></svg></span><span data-i18n="feat.f10n">聲音廣播（Pro）</span></div>
+          <div class="feat-desc" data-i18n="feat.f10d">48kHz 立體聲，專屬音訊通道 + 抖動緩衝；教師端可獨立開關聲音。Pro 專屬功能。</div>
+          <span class="f-tag f-pro" data-i18n="feat.proTag">Pro</span>
         </div>
       </div>
     </div>
@@ -483,17 +516,17 @@ section.active{display:block}
   <div class="sec sec-alt">
     <div class="wrap">
       <div class="sec-head">
-        <h2>鎖定，就要鎖得徹底。</h2>
-        <p>鎖定期間全屏覆蓋、攔截本機輸入，並隱藏選單列與 Dock。</p>
+        <h2 data-i18n="feat.lockTitle">鎖定，就要鎖得徹底。</h2>
+        <p data-i18n="feat.lockSub">鎖定期間全屏覆蓋、攔截本機輸入，並隱藏選單列與 Dock。</p>
       </div>
       <div class="feat-grid" style="grid-template-columns:repeat(2,1fr)">
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#fa243c,#7c3aed)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V7a4 4 0 0 1 8 0v4"/><rect x="5" y="11" width="14" height="9" rx="2"/></svg></span>攔截系統快捷鍵</div>
-          <div class="feat-desc">攔截 ⌘Tab（App 切換器）、⌘⌥Esc（強制結束）、Ctrl+左右方向鍵（Space／桌面切換），學生無法繞過鎖定。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#fa243c,#7c3aed)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V7a4 4 0 0 1 8 0v4"/><rect x="5" y="11" width="14" height="9" rx="2"/></svg></span><span data-i18n="feat.lock1n">攔截系統快捷鍵</span></div>
+          <div class="feat-desc" data-i18n="feat.lock1d">攔截 ⌘Tab（App 切換器）、⌘⌥Esc（強制結束）、Ctrl+左右方向鍵（Space／桌面切換），學生無法繞過鎖定。</div>
         </div>
         <div class="feat">
-          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#14110e,#443731)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span>鎖窗強制置頂</div>
-          <div class="feat-desc">鎖窗以 orderFrontRegardless 強制置頂，即使學生機正處於其他 App 全屏模式／全屏 Space，鎖窗也能蓋住整個屏幕；鎖定期間註冊系統通知，顯示器接上或喚醒時自動重建鎖窗。</div>
+          <div class="feat-name"><span class="f-ic" style="background:linear-gradient(135deg,#14110e,#443731)"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span><span data-i18n="feat.lock2n">鎖窗強制置頂</span></div>
+          <div class="feat-desc" data-i18n="feat.lock2d">鎖窗以 orderFrontRegardless 強制置頂，即使學生機正處於其他 App 全屏模式／全屏 Space，鎖窗也能蓋住整個屏幕；鎖定期間註冊系統通知，顯示器接上或喚醒時自動重建鎖窗。</div>
         </div>
       </div>
     </div>
@@ -505,51 +538,81 @@ section.active{display:block}
   <div class="sec">
     <div class="wrap">
       <div class="sec-head">
-        <h2>簡單的定價，沒有隱藏收費。</h2>
-        <p>以下為示意價格，正式開售前以 GitHub Releases 免費下載為主。</p>
+        <h2 data-i18n="price.title">簡單的定價，沒有隱藏收費。</h2>
+        <p data-i18n="price.sub">購買後網站即時產生 License Key，在 App 內輸入即可解鎖 Pro。7 天免費試用。</p>
       </div>
       <div class="price-grid">
         <div class="price">
-          <div class="p-name">課堂版</div>
-          <div class="p-desc">單一教室，一位教師</div>
-          <div class="p-price">免費</div>
-          <div class="p-per">永久免費</div>
+          <div class="p-name" data-i18n="price.freeName">免費版</div>
+          <div class="p-desc" data-i18n="price.freeDesc">課堂必備功能</div>
+          <div class="p-price">HK$0</div>
+          <div class="p-per" data-i18n="price.freePer">永久免費</div>
           <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>屏幕廣播（高畫質）</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Kiosk 鎖定與緊急解鎖</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>遠端控制與啟動 App</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>自動更新</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.f1">屏幕廣播（高畫質）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.f2">Kiosk 鎖定與緊急解鎖</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.f3">遠端控制與啟動 App</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.f4">清空文件（DELETE 確認）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.f5">自動更新（直接下載）</span></li>
+            <li class="locked"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V7a4 4 0 0 1 8 0v4"/><rect x="5" y="11" width="14" height="9" rx="2"/></svg><span data-i18n="price.f6">聲音廣播（Pro）</span></li>
           </ul>
-          <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">免費下載</a>
+          <a class="btn btn-line" href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener" data-i18n="price.freeBtn">免費下載</a>
         </div>
         <div class="price featured">
-          <span class="p-pill">熱門</span>
-          <div class="p-name">學校版</div>
-          <div class="p-desc">整校部署，多教師多機房</div>
-          <div class="p-price">HK$1,999<small>/年</small></div>
-          <div class="p-per">每校每年 · 示意價格</div>
+          <span class="p-pill" data-i18n="price.popular">熱門</span>
+          <div class="p-name" data-i18n="price.proName">Pro 版</div>
+          <div class="p-desc" data-i18n="price.proDesc">解鎖全部功能</div>
+          <div class="p-price">HK$299<small data-i18n="price.once">/一次性</small></div>
+          <div class="p-per" data-i18n="price.proPer">含 7 天免費試用 · 示意價格</div>
           <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>課堂版全部功能</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>管理員密碼與退出保護</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>廣播畫面銳化</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>優先支援</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.p1">免費版全部功能</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.p2">聲音廣播（48kHz 立體聲）</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.p3">優先接收新功能</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.p4">專屬支援</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.p5">License Key 永久解鎖</span></li>
           </ul>
-          <a class="btn btn-dark" href="#support" data-route="support">聯絡購買</a>
+          <a class="btn btn-pro" href="#license" data-route="pricing" onclick="setTimeout(function(){var b=document.getElementById('license-box');if(b)b.scrollIntoView({behavior:'smooth'});},450)" data-i18n="price.proBtn">立即購買 Pro</a>
         </div>
         <div class="price">
-          <div class="p-name">聲音測試版</div>
-          <div class="p-desc">Alpha 渠道，含聲音廣播</div>
-          <div class="p-price">免費</div>
-          <div class="p-per">測試用途</div>
+          <div class="p-name" data-i18n="price.schoolName">學校版</div>
+          <div class="p-desc" data-i18n="price.schoolDesc">整校部署，多教師多機房</div>
+          <div class="p-price">HK$1,999<small data-i18n="price.perYear">/年</small></div>
+          <div class="p-per" data-i18n="price.schoolPer">示意價格 · 聯絡購買</div>
           <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>聲音廣播（48kHz 立體聲）</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>傳送聲音開關</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>專屬音訊通道</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.s1">Pro 版全部功能</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.s2">不限教師數量</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.s3">多機房管理</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="price.s4">優先支援</span></li>
           </ul>
-          <a class="btn btn-line" href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">下載 Alpha</a>
+          <a class="btn btn-line" href="#support" data-route="support" data-i18n="price.schoolBtn">聯絡購買</a>
         </div>
       </div>
-      <p class="price-note">定價為示意，目前 FocusIn 於 GitHub Releases 免費提供。購買按鈕不會產生真實扣款，正式商業化前我們會另行公告。</p>
+      <p class="price-note" data-i18n="price.note">定價為示意，目前 FocusIn 於 GitHub Releases 免費提供。License Key 由本頁即時產生（模擬金流，不真實扣款）；正式商業化後將改由付款後台自動簽發。</p>
+
+      <!-- License Key 產生 -->
+      <div class="license-box" id="license-box">
+        <h3 data-i18n="key.title">取得 Pro License Key</h3>
+        <div class="lb-sub" data-i18n="key.sub">輸入你的電子郵件，立即產生一組 License Key。在 FocusIn 教師端／學生端「升級 Pro」輸入即可解鎖。</div>
+        <div class="lb-field">
+          <label for="license-email" data-i18n="key.emailLabel">電子郵件</label>
+          <input type="email" id="license-email" placeholder="you@school.edu" autocomplete="email">
+        </div>
+        <div class="lb-actions">
+          <button class="btn btn-pro" id="license-gen" data-i18n="key.genBtn">產生 License Key</button>
+          <span style="font-size:12px;color:var(--ink3)" data-i18n="key.trialHint">提示：可在 App 內先免費試用 7 天</span>
+        </div>
+        <div class="lb-err" id="license-err" data-i18n="key.err"></div>
+        <div class="lb-result" id="license-result">
+          <div class="lr-label" data-i18n="key.resultLabel">你的 Pro License Key（請複製保存）</div>
+          <div class="key-box" id="license-key-text"></div>
+          <button class="btn btn-dark lb-copy" id="license-copy" data-i18n="key.copy">複製 Key</button>
+          <div class="lb-steps">
+            <b data-i18n="key.how">如何使用：</b><br>
+            1. <span data-i18n="key.step1">下載並開啟 FocusIn（教師端或學生端）</span><br>
+            2. <span data-i18n="key.step2">在「升級 Pro」輸入此 Key</span><br>
+            3. <span data-i18n="key.step3">即時解鎖全部 Pro 功能</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -559,50 +622,50 @@ section.active{display:block}
   <div class="sec">
     <div class="wrap">
       <div class="sec-head">
-        <h2>我們可以幫到你。</h2>
-        <p>遇到問題先看常見問答；找不到答案，直接私訊回報。</p>
+        <h2 data-i18n="support.title">我們可以幫到你。</h2>
+        <p data-i18n="support.sub">遇到問題先看常見問答；找不到答案，直接私訊回報。</p>
       </div>
       <div class="faq">
         <details open>
-          <summary>教師端廣播需要哪些權限？<span class="pm">+</span></summary>
-          <p>開啟「系統設定 → 私隱與安全性 → 屏幕錄製」，勾選 FocusIn 教師端。若先前選過「拒絕」，請先在該頁取消勾選再重新勾選。</p>
+          <summary data-i18n="support.q1">教師端廣播需要哪些權限？<span class="pm">+</span></summary>
+          <p data-i18n="support.a1">開啟「系統設定 → 私隱與安全性 → 屏幕錄製」，勾選 FocusIn 教師端。若先前選過「拒絕」，請先在該頁取消勾選再重新勾選。</p>
         </details>
         <details>
-          <summary>學生端鎖定無效／攔截不到快捷鍵？<span class="pm">+</span></summary>
-          <p>開啟「系統設定 → 私隱與安全性 → 輔助功能」，勾選 FocusIn 學生端。鎖定攔截（鼠標、鍵盤、⌘Tab 等）與 ⌘⇧U 緊急解鎖都需要此權限。</p>
+          <summary data-i18n="support.q2">學生端鎖定無效／攔截不到快捷鍵？<span class="pm">+</span></summary>
+          <p data-i18n="support.a2">開啟「系統設定 → 私隱與安全性 → 輔助功能」，勾選 FocusIn 學生端。鎖定攔截（鼠標、鍵盤、⌘Tab 等）與 ⌘⇧U 緊急解鎖都需要此權限。</p>
         </details>
         <details>
-          <summary>學生機找不到教師端？<span class="pm">+</span></summary>
-          <p>確認教師機與學生機在同一 Wi-Fi／同一子網段，學生端已啟動，且防火牆未阻擋 Network.framework 通訊（mDNS 5353／WebSocket）。</p>
+          <summary data-i18n="support.q3">學生機找不到教師端？<span class="pm">+</span></summary>
+          <p data-i18n="support.a3">確認教師機與學生機在同一 Wi-Fi／同一子網段，學生端已啟動，且防火牆未阻擋 Network.framework 通訊（mDNS 5353／WebSocket）。</p>
         </details>
         <details>
-          <summary>緊急解鎖的密碼是什麼？<span class="pm">+</span></summary>
-          <p>與「管理員密碼」相同——教師端設定後會下發所有已連線學生端。學生機本機按 ⌘⇧U 輸入該密碼即可解鎖（即使斷網）。</p>
+          <summary data-i18n="support.q4">緊急解鎖的密碼是什麼？<span class="pm">+</span></summary>
+          <p data-i18n="support.a4">與「管理員密碼」相同——教師端設定後會下發所有已連線學生端。學生機本機按 ⌘⇧U 輸入該密碼即可解鎖（即使斷網）。</p>
         </details>
         <details>
-          <summary>如何更新到最新版？<span class="pm">+</span></summary>
-          <p>FocusIn 啟動時會自動檢查 GitHub Releases 並提示；也可手動在「檢查更新」按鈕觸發，或直接到 GitHub Releases 下載最新 DMG。</p>
+          <summary data-i18n="support.q5">如何更新到最新版？<span class="pm">+</span></summary>
+          <p data-i18n="support.a5">FocusIn 啟動時會自動檢查 GitHub Releases 並提示；點「下載更新」會直接下載 DMG，完成後自動提示安裝。也可手動觸發「檢查更新」。</p>
         </details>
         <details>
-          <summary>Alpha 版聲音有問題？<span class="pm">+</span></summary>
-          <p>Alpha 用於聲音廣播測試。若遇到延遲、雜音或卡頓，記錄版本號（v1.3.7-alpha）與設備型號，私訊回報 IG：marco.tsk_smile。</p>
+          <summary data-i18n="support.q6">Pro Key 在哪裡輸入？<span class="pm">+</span></summary>
+          <p data-i18n="support.a6">在教師端或學生端的「升級 Pro」區塊輸入 License Key 即可解鎖。Key 由官網「定價」頁購買產生；未購買時可先享受 7 天免費試用。</p>
         </details>
       </div>
       <div class="contact">
         <div class="c">
-          <h4>問題回報</h4>
+          <h4 data-i18n="support.contact1t">問題回報</h4>
           <p class="big">IG：marco.tsk_smile</p>
-          <p>截圖＋版本號＋設備型號</p>
+          <p data-i18n="support.contact1d">截圖＋版本號＋設備型號</p>
         </div>
         <div class="c">
-          <h4>GitHub</h4>
+          <h4 data-i18n="support.contact2t">GitHub</h4>
           <p><a href="https://github.com/marco-crypto-debug/focusin" target="_blank" rel="noopener">marco-crypto-debug/focusin</a></p>
-          <p>Releases、Issues、更新紀錄</p>
+          <p data-i18n="support.contact2d">Releases、Issues、更新紀錄</p>
         </div>
         <div class="c">
-          <h4>授權</h4>
+          <h4 data-i18n="support.contact3t">授權</h4>
           <p class="big">© 2026 Made by Marco TSK</p>
-          <p>版權所有，僅供課堂教學使用</p>
+          <p data-i18n="support.contact3d">版權所有，僅供課堂教學使用</p>
         </div>
       </div>
     </div>
@@ -614,27 +677,27 @@ section.active{display:block}
   <div class="sec">
     <div class="wrap">
       <div class="sec-head">
-        <h2>開始使用 FocusIn。</h2>
-        <p>從 GitHub Releases 取得最新 DMG，教師端與學生端各一份。</p>
+        <h2 data-i18n="dl.title">開始使用 FocusIn。</h2>
+        <p data-i18n="dl.sub">直接下載最新 DMG，教師端與學生端各一份。</p>
       </div>
       <div class="cmp">
         <div class="cmp-row head">
-          <div class="cmp-name" style="font-weight:700">下載</div>
-          <div class="cmp-head-ver"><span class="v-pill">建議</span><div class="v-num">正式版 v1.3.9</div><div class="v-sub">Latest · macOS 14+</div></div>
-          <div class="cmp-head-ver"><div class="v-num">Alpha v1.3.7</div><div class="v-sub">Pre-release · macOS 14+</div></div>
+          <div class="cmp-name" style="font-weight:700" data-i18n="dl.download">下載</div>
+          <div class="cmp-head-ver"><span class="v-pill" data-i18n="home.recommended">建議</span><div class="v-num" data-i18n="home.stableVer">正式版 v1.4.0</div><div class="v-sub">Latest · macOS 14+</div></div>
+          <div class="cmp-head-ver"><div class="v-num" data-i18n="home.alphaVer">Alpha v1.3.7</div><div class="v-sub">Pre-release · macOS 14+</div></div>
         </div>
         <div class="cmp-row">
-          <div class="cmp-name main">教師端</div>
-          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">FocusIn-Teacher.dmg</a></div>
-          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">Alpha-Teacher.dmg</a></div>
+          <div class="cmp-name main" data-i18n="dl.teacher">教師端</div>
+          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.4.0/FocusIn-Teacher.dmg" data-i18n="dl.teacherDmg">FocusIn-Teacher.dmg</a></div>
+          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.3.7-alpha/FocusIn-Alpha-Teacher.dmg" data-i18n="dl.alphaTeacher">Alpha-Teacher.dmg</a></div>
         </div>
         <div class="cmp-row">
-          <div class="cmp-name main">學生端</div>
-          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">FocusIn-Student.dmg</a></div>
-          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">Alpha-Student.dmg</a></div>
+          <div class="cmp-name main" data-i18n="dl.student">學生端</div>
+          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.4.0/FocusIn-Student.dmg" data-i18n="dl.studentDmg">FocusIn-Student.dmg</a></div>
+          <div class="cmp-cell"><a href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.3.7-alpha/FocusIn-Alpha-Student.dmg" data-i18n="dl.alphaStudent">Alpha-Student.dmg</a></div>
         </div>
       </div>
-      <p class="price-note">首次啟動請依畫面提示授予權限：教師端「屏幕錄製」、學生端「輔助功能」。</p>
+      <p class="price-note" data-i18n="dl.note">首次啟動請依畫面提示授予權限：教師端「屏幕錄製」、學生端「輔助功能」。App 內建三語介面（英文／繁體中文／簡體中文）。</p>
     </div>
   </div>
 </section>
@@ -644,32 +707,32 @@ section.active{display:block}
   <div class="wrap">
     <div class="top">
       <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700"><span class="logo-ic" style="width:22px;height:22px;font-size:12px">F</span>FocusIn</div>
-      <div style="font-size:12px;color:var(--ink3)">macOS 課堂管理，專為 iMac 機房設計。</div>
+      <div style="font-size:12px;color:var(--ink3)" data-i18n="footer.tagline">macOS 課堂管理，專為 iMac 機房設計。</div>
     </div>
     <div class="cols">
       <div>
-        <h5>產品</h5>
-        <a href="#features" data-route="features">功能</a>
-        <a href="#pricing" data-route="pricing">定價</a>
-        <a href="#download" data-route="download">下載</a>
+        <h5 data-i18n="footer.product">產品</h5>
+        <a href="#features" data-route="features" data-i18n="nav.features">功能</a>
+        <a href="#pricing" data-route="pricing" data-i18n="nav.pricing">定價</a>
+        <a href="#download" data-route="download" data-i18n="nav.download">下載</a>
       </div>
       <div>
-        <h5>支援</h5>
-        <a href="#support" data-route="support">常見問題</a>
-        <a href="#support" data-route="support">問題回報</a>
+        <h5 data-i18n="footer.support">支援</h5>
+        <a href="#support" data-route="support" data-i18n="footer.faq">常見問題</a>
+        <a href="#support" data-route="support" data-i18n="footer.report">問題回報</a>
       </div>
       <div>
-        <h5>資源</h5>
+        <h5 data-i18n="footer.resources">資源</h5>
         <a href="https://github.com/marco-crypto-debug/focusin" target="_blank" rel="noopener">GitHub</a>
         <a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">Releases</a>
       </div>
       <div>
-        <h5>聯絡</h5>
+        <h5 data-i18n="footer.contact">聯絡</h5>
         <a href="#support" data-route="support">IG：marco.tsk_smile</a>
       </div>
     </div>
     <div class="bottom">
-      <span>© 2026 Made by Marco TSK · 版權所有</span>
+      <span>© 2026 Made by Marco TSK · <span data-i18n="footer.rights">版權所有</span></span>
       <span class="legal">
         <span>bug report IG:marco.tsk_smile</span>
         <span>macOS 14+</span>
@@ -681,138 +744,481 @@ section.active{display:block}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* ===== Hash 路由 ===== */
-(function(){
-  var routes = ["home","features","pricing","support","download"];
-  var sections = {home:"view-home", features:"view-features", pricing:"view-pricing", support:"view-support", download:"view-download"};
-  var toastEl = document.getElementById("toast");
-  var toastTimer = null;
+/* ===================== 三語字典 ===================== */
+var I18N = {
+"en": {
+  "nav.features":"Features","nav.pricing":"Pricing","nav.support":"Support","nav.download":"Download",
+  "home.heroTitle":"Keep the class focused on learning.","home.heroSub":"Broadcast your screen, lock student Macs, and send commands — all over the same Wi-Fi. Auto-discovery, low latency, high quality.",
+  "home.downloadBtn":"Download FocusIn","home.learnMore":"Learn more","home.metaOs":"macOS 14 or later","home.metaDmg":"Separate DMGs for Teacher and Student",
+  "home.demoHint":"Interactive demo — click students, switch quality, try commands","home.demoLabel":"Teacher app mockup",
+  "home.students":"Students (6)","home.online":"online","home.broadcast":"Screen Broadcast","home.qAuto":"Auto","home.qLow":"Low","home.qMid":"Mid","home.qHigh":"High",
+  "home.commands":"Class Commands","home.commandsSub":"Sent to selected students","home.cmdLock":"Lock All","home.cmdUnlock":"Unlock","home.cmdRestart":"Restart","home.cmdShutdown":"Shutdown","home.cmdLaunch":"Open Safari","home.cmdWipe":"Wipe Files",
+  "home.demoStatus":"Ready — no selection","home.featTitle":"Everything a classroom needs, in one place.","home.featSub":"From screen broadcast to remote control, FocusIn puts the teacher's most-used actions in one clean window.",
+  "home.f1n":"Screen Broadcast","home.f1d":"Native ScreenCaptureKit capture, 30fps high quality, low-latency binary frame pipeline. Bonjour auto-discovers students on the same network.",
+  "home.f2n":"Kiosk Fullscreen Lock","home.f2d":"Covers the full screen, blocks mouse, keyboard and ⌘Tab / ⌘⌥Esc / Ctrl+Arrows. Lock window pins above fullscreen Spaces.",
+  "home.stableTag":"Stable","home.f3n":"Remote Control","home.f3d":"Remote shutdown, restart and launch apps (NSWorkspace) — for all students or individual ones.",
+  "home.f4n":"Wipe Files","home.f4d":"Remotely clear Documents & Downloads on student Macs. Requires typing DELETE to confirm.",
+  "home.f5n":"Auto Update","home.f5d":"Checks GitHub Releases on launch. One click downloads the DMG directly — no need to open a web page.",
+  "home.f6n":"Quit Protection","home.f6d":"One admin password guards teacher quit, student quit and emergency unlock (⌘⇧U). Cannot quit without it.",
+  "home.storyTitle":"FocusIn in class","home.storySub":"Three everyday scenarios, one panel.",
+  "home.s1k":"Exam Mode","home.s1t":"Lock the whole room with one click","home.s1d":"Select \"All Students\" and lock before an exam. Every iMac instantly goes fullscreen and blocks input. Offline admins can unlock locally with ⌘⇧U and the admin password.",
+  "home.s1h":"Class Status","home.locked":"Locked",
+  "home.s2h":"Screen Broadcast · 30fps HD","home.s2all":"All Students","home.s2live":"Live","home.s2q":"Quality: High","home.s2s":"Sharpen: On","home.s2start":"Start","home.s2stop":"Stop",
+  "home.s2k":"Live Demo","home.s2t":"Teacher screen, delivered instantly","home.s2d":"Broadcast during demonstrations — student lock windows show the teacher's screen in real time. Built-in CISharpenLuminance keeps small text crisp. Auto / Low / Mid / High quality.",
+  "home.s3k":"End of Class","home.s3t":"Remote wrap-up in one go","home.s3d":"Shut down or restart all student Macs after class. Wipe Documents & Downloads on selected machines — with DELETE confirmation.",
+  "home.s3h":"Commands sent to 6 devices","home.s3shut":"Remote Shutdown","home.s3wipe":"Wipe Files","home.s3launch":"Open Safari","home.done":"Done",
+  "home.cmpTitle":"Choose the version that fits.","home.cmpSub":"Use Stable in the classroom; try Alpha for audio broadcasting.",
+  "home.cmpFeature":"Feature","home.recommended":"Recommended","home.stableVer":"Stable v1.4.0","home.alphaVer":"Alpha v1.3.7",
+  "home.c1":"Screen Broadcast (video only)","home.c2":"Audio Broadcast (48kHz stereo)","home.c3":"Kiosk lock + input blocking","home.c4":"Quit protection (admin password)","home.c5":"Emergency unlock ⌘⇧U","home.c6":"Sharpen (CISharpenLuminance)","home.c7":"Remote control / wipe files","home.c8":"Auto update (direct download)",
+  "home.cmpBtn":"Go to GitHub Releases",
+  "feat.title":"Every detail, for the classroom.","feat.sub":"Teacher and Student apps work together to keep teaching focused.",
+  "feat.f1n":"Bonjour Auto-Discovery","feat.f1d":"Student app advertises via mDNS (_classroom-ctrl._tcp.). The teacher app lists online devices with latency — no manual IP setup.",
+  "feat.f2n":"Kiosk Fullscreen Lock","feat.f2d":"Fullscreen overlay that blocks mouse, keyboard, ⌘Tab, ⌘⌥Esc and Ctrl+Arrows. Lock window self-heals and rebuilds when a display is attached.",
+  "feat.f3n":"Quit Protection","feat.f3d":"One password guards teacher quit, student quit and emergency unlock. Pushed to all connected students instantly.",
+  "feat.f4n":"Wipe Files","feat.f4d":"Remotely clear Documents & Downloads. Requires typing DELETE to confirm.",
+  "feat.f5n":"Auto Update (direct download)","feat.f5d":"Checks GitHub Releases on launch. New version downloads the DMG straight to your Mac, then prompts to install.",
+  "feat.f6n":"Launch at Login","feat.f6d":"Optional launch at login for both Teacher and Student apps — ready before class starts.",
+  "feat.f7n":"Permission Guidance","feat.f7d":"Teacher needs Screen Recording; Student needs Accessibility. The app points to the exact System Settings pane.",
+  "feat.f8n":"Emergency Unlock ⌘⇧U","feat.f8d":"Offline? An admin can press ⌘⇧U on the student Mac and enter the admin password to unlock.",
+  "feat.f9n":"Broadcast & Sharpen","feat.f9d":"Auto / Low / Mid / High quality. Stable applies CISharpenLuminance for crisper text.",
+  "feat.f10n":"Audio Broadcast (Pro)","feat.f10d":"48kHz stereo over a dedicated audio channel with jitter buffer. Teacher can toggle audio independently. Pro feature.",
+  "feat.proTag":"Pro",
+  "feat.lockTitle":"Locked means truly locked.","feat.lockSub":"Fullscreen overlay, input blocking, and the menu bar & Dock hidden.",
+  "feat.lock1n":"Block System Shortcuts","feat.lock1d":"Blocks ⌘Tab (app switcher), ⌘⌥Esc (force quit) and Ctrl+Left/Right (Space switcher) — students cannot bypass the lock.",
+  "feat.lock2n":"Lock Window Above All","feat.lock2d":"orderFrontRegardless pins the lock window over other apps' fullscreen modes and Spaces. System notifications rebuild the lock window when displays wake or attach.",
+  "price.title":"Simple pricing, no surprises.","price.sub":"Buy on this page and get an instant License Key. Enter it in the app to unlock Pro. 7-day free trial included.",
+  "price.freeName":"Free","price.freeDesc":"Everything a classroom needs","price.freePer":"Free forever",
+  "price.f1":"Screen broadcast (HD)","price.f2":"Kiosk lock & emergency unlock","price.f3":"Remote control & launch apps","price.f4":"Wipe files (DELETE confirm)","price.f5":"Auto update (direct download)","price.f6":"Audio broadcast (Pro)",
+  "price.freeBtn":"Download Free",
+  "price.popular":"Popular","price.proName":"Pro","price.proDesc":"Unlock everything","price.once":"/one-time","price.proPer":"7-day free trial · Sample price",
+  "price.p1":"Everything in Free","price.p2":"Audio broadcast (48kHz stereo)","price.p3":"Early access to new features","price.p4":"Priority support","price.p5":"Permanent unlock with License Key",
+  "price.proBtn":"Buy Pro",
+  "price.schoolName":"School","price.schoolDesc":"Whole-school deployment","price.perYear":"/year","price.schoolPer":"Sample price · Contact us",
+  "price.s1":"Everything in Pro","price.s2":"Unlimited teachers","price.s3":"Multi-lab management","price.s4":"Priority support","price.schoolBtn":"Contact",
+  "price.note":"Prices are illustrative; FocusIn is currently free on GitHub Releases. License Keys are generated instantly on this page (simulated checkout, no real charge). When monetization goes live, keys will be issued by the payment backend.",
+  "key.title":"Get your Pro License Key","key.sub":"Enter your email to generate a License Key instantly. Paste it into the \"Upgrade to Pro\" section in FocusIn.",
+  "key.emailLabel":"Email","key.genBtn":"Generate License Key","key.trialHint":"Tip: you can try Pro free for 7 days in the app",
+  "key.err":"Please enter a valid email address.","key.resultLabel":"Your Pro License Key (save it)","key.copy":"Copy Key",
+  "key.how":"How to use:","key.step1":"Download and open FocusIn (Teacher or Student)","key.step2":"Enter this Key in \"Upgrade to Pro\"","key.step3":"Pro features unlock instantly",
+  "support.title":"We're here to help.","support.sub":"Check the FAQ first; if you can't find an answer, DM us.",
+  "support.q1":"What permissions does the Teacher app need?","support.a1":"Open System Settings → Privacy & Security → Screen Recording and enable FocusIn Teacher. If you previously chose \"Decline\", uncheck and re-check.",
+  "support.q2":"Student lock not working / shortcuts not blocked?","support.a2":"Enable System Settings → Privacy & Security → Accessibility for FocusIn Student. Input blocking and ⌘⇧U emergency unlock both require it.",
+  "support.q3":"Students not showing up?","support.a3":"Make sure teacher and student Macs are on the same Wi-Fi / subnet, the Student app is running, and the firewall allows Network.framework (mDNS 5353 / WebSocket).",
+  "support.q4":"What is the emergency unlock password?","support.a4":"The same admin password — the Teacher app pushes it to all connected students. Press ⌘⇧U on the student Mac and enter it, even offline.",
+  "support.q5":"How do I update?","support.a5":"FocusIn checks GitHub Releases on launch. Tap \"Download Update\" to fetch the DMG directly, then install when prompted. You can also check manually.",
+  "support.q6":"Where do I enter my Pro Key?","support.a6":"In the \"Upgrade to Pro\" section of the Teacher or Student app. Keys are generated on this site's Pricing page. No key yet? Enjoy the 7-day free trial.",
+  "support.contact1t":"Bug Reports","support.contact1d":"Screenshot + version + device model","support.contact2t":"GitHub","support.contact2d":"Releases, issues and changelog","support.contact3t":"License","support.contact3d":"All rights reserved, classroom use",
+  "dl.title":"Get started with FocusIn.","dl.sub":"Download the latest DMG directly — one for Teacher, one for Student.",
+  "dl.download":"Download","dl.teacher":"Teacher","dl.student":"Student","dl.teacherDmg":"FocusIn-Teacher.dmg","dl.studentDmg":"FocusIn-Student.dmg","dl.alphaTeacher":"Alpha-Teacher.dmg","dl.alphaStudent":"Alpha-Student.dmg",
+  "dl.note":"On first launch, grant the permissions shown: Teacher needs Screen Recording, Student needs Accessibility. The apps are available in English, Traditional Chinese and Simplified Chinese.",
+  "footer.tagline":"Classroom management for macOS, built for iMac labs.","footer.product":"Product","footer.support":"Support","footer.resources":"Resources","footer.contact":"Contact","footer.faq":"FAQ","footer.report":"Bug report","footer.rights":"All rights reserved",
+  "toast.copied":"License Key copied to clipboard",
+  "demo.locked":"Locked","demo.online":"Online · Ready","demo.badgeOn":"Online","demo.badgeLock":"Locked",
+  "demo.ready":"Ready — no selection (click a student)","demo.selected":"selected","demo.lockAll":"Lock command sent to all 6 students (Kiosk)","demo.unlockedN":"Unlocked N students","demo.unlockedAll":"Unlocked all students","demo.cmdSent":"command sent to N students","demo.wipeNote":"(type DELETE to confirm)","demo.bcOn":"Screen broadcast started (HD 30fps)","demo.bcOff":"Screen broadcast stopped","demo.quality":"Broadcast quality switched to"
+},
+"zh-Hant": {
+  "nav.features":"功能","nav.pricing":"定價","nav.support":"支援","nav.download":"下載",
+  "home.heroTitle":"讓課堂，專注於學習。","home.heroSub":"教師一鍵廣播屏幕、鎖定學生機、下發管理指令。同一 Wi-Fi 自動發現，低延遲高畫質，課堂管理像 Apple 產品一樣簡單。",
+  "home.downloadBtn":"下載 FocusIn","home.learnMore":"了解更多","home.metaOs":"macOS 14 或以上","home.metaDmg":"教師端與學生端各一份 DMG",
+  "home.demoHint":"可互動示範 — 點擊學生、切換畫質、試試指令","home.demoLabel":"教師端介面模擬",
+  "home.students":"學生（6）","home.online":"在線","home.broadcast":"屏幕廣播","home.qAuto":"自動","home.qLow":"低","home.qMid":"中","home.qHigh":"高",
+  "home.commands":"課堂指令","home.commandsSub":"發送至選中學生","home.cmdLock":"鎖定全部","home.cmdUnlock":"解鎖","home.cmdRestart":"重新啟動","home.cmdShutdown":"關機","home.cmdLaunch":"啟動 Safari","home.cmdWipe":"清空文件",
+  "home.demoStatus":"就緒 — 選中：無","home.featTitle":"課堂需要的，一次到位。","home.featSub":"從屏幕廣播到遠端控制，FocusIn 把教師最常用的操作收進一個乾淨的視窗。",
+  "home.f1n":"屏幕廣播","home.f1d":"ScreenCaptureKit 原生採集，30fps 高畫質，低延遲二進位幀管線。Bonjour 自動發現同網段學生端。",
+  "home.f2n":"Kiosk 全屏鎖定","home.f2d":"全屏覆蓋、攔截鼠標鍵盤與 ⌘Tab／⌘⌥Esc／Ctrl+方向鍵；鎖窗強制置頂，全屏 Space 也蓋得住。",
+  "home.stableTag":"正式版","home.f3n":"遠端控制","home.f3d":"遠端關機、重新啟動、啟動指定 App（NSWorkspace），可選全部學生或個別學生。",
+  "home.f4n":"清空文件","home.f4d":"遠端清空學生機 Documents 與 Downloads；教師需輸入 DELETE 二次確認，杜絕誤觸。",
+  "home.f5n":"自動更新","home.f5d":"啟動即檢查 GitHub Releases，發現新版本一鍵直接下載 DMG，無需跳轉網頁。",
+  "home.f6n":"退出保護","home.f6d":"統一管理員密碼：教師端退出、學生端退出、緊急解鎖（⌘⇧U）共用同一密碼，未設定無法退出。",
+  "home.storyTitle":"FocusIn 在課堂","home.storySub":"三個最常見的場景，一個面板全部搞定。",
+  "home.s1k":"考試模式","home.s1t":"一鍵鎖定全場","home.s1d":"開始考試前選「全部學生」並鎖定，每台 iMac 立即全屏覆蓋、攔截輸入。斷網時管理員可在本機按 ⌘⇧U 輸入管理員密碼緊急解鎖。",
+  "home.s1h":"課堂狀態","home.locked":"已鎖定",
+  "home.s2h":"屏幕廣播 · 高畫質 30fps","home.s2all":"全體學生","home.s2live":"廣播中","home.s2q":"畫質：高","home.s2s":"銳化：開啟","home.s2start":"開始廣播","home.s2stop":"停止",
+  "home.s2k":"即時示範","home.s2t":"教師屏幕，即時送達","home.s2d":"示範操作時開啟廣播，學生機鎖窗即時顯示教師畫面。正式版內建 CISharpenLuminance 銳化，小字也清晰；畫質提供自動／低／中／高四檔。",
+  "home.s3k":"下課維護","home.s3t":"遠端收尾，一站完成","home.s3d":"下課後遠端關機或重新啟動所有學生機；需要清理時清空指定機台的 Documents 與 Downloads——輸入 DELETE 二次確認，避免誤操作。",
+  "home.s3h":"指令已送達 6 台裝置","home.s3shut":"遠端關機","home.s3wipe":"清空文件","home.s3launch":"啟動 Safari","home.done":"完成",
+  "home.cmpTitle":"選擇適合你的版本。","home.cmpSub":"課堂環境使用正式版；想測試聲音廣播再試 Alpha。",
+  "home.cmpFeature":"功能","home.recommended":"建議","home.stableVer":"正式版 v1.4.0","home.alphaVer":"Alpha v1.3.7",
+  "home.c1":"屏幕廣播（僅畫面）","home.c2":"聲音廣播（48kHz 立體聲）","home.c3":"Kiosk 全屏鎖定＋輸入攔截","home.c4":"退出保護（統一管理員密碼）","home.c5":"緊急解鎖 ⌘⇧U","home.c6":"畫面銳化（CISharpenLuminance）","home.c7":"遠端控制／清空文件","home.c8":"自動更新（直接下載）",
+  "home.cmpBtn":"前往 GitHub Releases",
+  "feat.title":"每一個細節，都是為了課堂。","feat.sub":"教師端與學生端的分工，讓教學專注、讓學生專心。",
+  "feat.f1n":"Bonjour 自動發現","feat.f1d":"學生端啟動後透過 mDNS 廣播（_classroom-ctrl._tcp.），教師端自動列出在線裝置與延遲，無需手動配 IP。",
+  "feat.f2n":"Kiosk 全屏鎖定","feat.f2d":"鎖定後全屏覆蓋並攔截本機輸入：鼠標、鍵盤、⌘Tab、⌘⌥Esc、Ctrl+左右方向鍵；鎖窗自愈，接上新顯示器自動重建。",
+  "feat.f3n":"退出保護","feat.f3d":"統一密碼同時保護教師端退出、學生端退出與緊急解鎖；教師端設定後即時下發所有已連線學生端，未設密碼無法退出。",
+  "feat.f4n":"清空文件","feat.f4d":"遠端清空學生機 Documents 與 Downloads；教師必須輸入 DELETE 二次確認，杜絕誤觸。",
+  "feat.f5n":"自動更新（直接下載）","feat.f5d":"啟動即檢查 GitHub Releases，發現新版本一鍵直接下載 DMG 到本機，下載完成即提示安裝。",
+  "feat.f6n":"登入自動啟動","feat.f6d":"教師端／學生端可設定登入 macOS 時自動啟動，開機即就緒，不需手動開啟。",
+  "feat.f7n":"權限指引","feat.f7d":"教師端需「屏幕錄製」、學生端需「輔助功能」；未授權時 app 內直接提示開啟路徑，附詳細系統設定步驟。",
+  "feat.f8n":"緊急解鎖 ⌘⇧U","feat.f8d":"網路異常時，管理員可在學生機本機按 ⌘⇧U，輸入與教師端相同的管理員密碼即可解鎖。",
+  "feat.f9n":"屏幕廣播與銳化","feat.f9d":"自動／低／中／高畫質切換；正式版廣播前套用 CISharpenLuminance，文字邊緣更銳利。",
+  "feat.f10n":"聲音廣播（Pro）","feat.f10d":"48kHz 立體聲，專屬音訊通道 + 抖動緩衝；教師端可獨立開關聲音。Pro 專屬功能。",
+  "feat.proTag":"Pro",
+  "feat.lockTitle":"鎖定，就要鎖得徹底。","feat.lockSub":"鎖定期間全屏覆蓋、攔截本機輸入，並隱藏選單列與 Dock。",
+  "feat.lock1n":"攔截系統快捷鍵","feat.lock1d":"攔截 ⌘Tab（App 切換器）、⌘⌥Esc（強制結束）、Ctrl+左右方向鍵（Space／桌面切換），學生無法繞過鎖定。",
+  "feat.lock2n":"鎖窗強制置頂","feat.lock2d":"鎖窗以 orderFrontRegardless 強制置頂，即使學生機正處於其他 App 全屏模式／全屏 Space，鎖窗也能蓋住整個屏幕；鎖定期間註冊系統通知，顯示器接上或喚醒時自動重建鎖窗。",
+  "price.title":"簡單的定價，沒有隱藏收費。","price.sub":"購買後網站即時產生 License Key，在 App 內輸入即可解鎖 Pro。7 天免費試用。",
+  "price.freeName":"免費版","price.freeDesc":"課堂必備功能","price.freePer":"永久免費",
+  "price.f1":"屏幕廣播（高畫質）","price.f2":"Kiosk 鎖定與緊急解鎖","price.f3":"遠端控制與啟動 App","price.f4":"清空文件（DELETE 確認）","price.f5":"自動更新（直接下載）","price.f6":"聲音廣播（Pro）",
+  "price.freeBtn":"免費下載",
+  "price.popular":"熱門","price.proName":"Pro 版","price.proDesc":"解鎖全部功能","price.once":"/一次性","price.proPer":"含 7 天免費試用 · 示意價格",
+  "price.p1":"免費版全部功能","price.p2":"聲音廣播（48kHz 立體聲）","price.p3":"優先接收新功能","price.p4":"專屬支援","price.p5":"License Key 永久解鎖",
+  "price.proBtn":"立即購買 Pro",
+  "price.schoolName":"學校版","price.schoolDesc":"整校部署，多教師多機房","price.perYear":"/年","price.schoolPer":"示意價格 · 聯絡購買",
+  "price.s1":"Pro 版全部功能","price.s2":"不限教師數量","price.s3":"多機房管理","price.s4":"優先支援","price.schoolBtn":"聯絡購買",
+  "price.note":"定價為示意，目前 FocusIn 於 GitHub Releases 免費提供。License Key 由本頁即時產生（模擬金流，不真實扣款）；正式商業化後將改由付款後台自動簽發。",
+  "key.title":"取得 Pro License Key","key.sub":"輸入你的電子郵件，立即產生一組 License Key。在 FocusIn 教師端／學生端「升級 Pro」輸入即可解鎖。",
+  "key.emailLabel":"電子郵件","key.genBtn":"產生 License Key","key.trialHint":"提示：可在 App 內先免費試用 7 天",
+  "key.err":"請輸入有效的電子郵件地址。","key.resultLabel":"你的 Pro License Key（請複製保存）","key.copy":"複製 Key",
+  "key.how":"如何使用：","key.step1":"下載並開啟 FocusIn（教師端或學生端）","key.step2":"在「升級 Pro」輸入此 Key","key.step3":"即時解鎖全部 Pro 功能",
+  "support.title":"我們可以幫到你。","support.sub":"遇到問題先看常見問答；找不到答案，直接私訊回報。",
+  "support.q1":"教師端廣播需要哪些權限？","support.a1":"開啟「系統設定 → 私隱與安全性 → 屏幕錄製」，勾選 FocusIn 教師端。若先前選過「拒絕」，請先在該頁取消勾選再重新勾選。",
+  "support.q2":"學生端鎖定無效／攔截不到快捷鍵？","support.a2":"開啟「系統設定 → 私隱與安全性 → 輔助功能」，勾選 FocusIn 學生端。鎖定攔截（鼠標、鍵盤、⌘Tab 等）與 ⌘⇧U 緊急解鎖都需要此權限。",
+  "support.q3":"學生機找不到教師端？","support.a3":"確認教師機與學生機在同一 Wi-Fi／同一子網段，學生端已啟動，且防火牆未阻擋 Network.framework 通訊（mDNS 5353／WebSocket）。",
+  "support.q4":"緊急解鎖的密碼是什麼？","support.a4":"與「管理員密碼」相同——教師端設定後會下發所有已連線學生端。學生機本機按 ⌘⇧U 輸入該密碼即可解鎖（即使斷網）。",
+  "support.q5":"如何更新到最新版？","support.a5":"FocusIn 啟動時會自動檢查 GitHub Releases 並提示；點「下載更新」會直接下載 DMG，完成後自動提示安裝。也可手動觸發「檢查更新」。",
+  "support.q6":"Pro Key 在哪裡輸入？","support.a6":"在教師端或學生端的「升級 Pro」區塊輸入 License Key 即可解鎖。Key 由官網「定價」頁購買產生；未購買時可先享受 7 天免費試用。",
+  "support.contact1t":"問題回報","support.contact1d":"截圖＋版本號＋設備型號","support.contact2t":"GitHub","support.contact2d":"Releases、Issues、更新紀錄","support.contact3t":"授權","support.contact3d":"版權所有，僅供課堂教學使用",
+  "dl.title":"開始使用 FocusIn。","dl.sub":"直接下載最新 DMG，教師端與學生端各一份。",
+  "dl.download":"下載","dl.teacher":"教師端","dl.student":"學生端","dl.teacherDmg":"FocusIn-Teacher.dmg","dl.studentDmg":"FocusIn-Student.dmg","dl.alphaTeacher":"Alpha-Teacher.dmg","dl.alphaStudent":"Alpha-Student.dmg",
+  "dl.note":"首次啟動請依畫面提示授予權限：教師端「屏幕錄製」、學生端「輔助功能」。App 內建三語介面（英文／繁體中文／簡體中文）。",
+  "footer.tagline":"macOS 課堂管理，專為 iMac 機房設計。","footer.product":"產品","footer.support":"支援","footer.resources":"資源","footer.contact":"聯絡","footer.faq":"常見問題","footer.report":"問題回報","footer.rights":"版權所有",
+  "toast.copied":"License Key 已複製到剪貼簿",
+  "demo.locked":"已鎖定","demo.online":"在線 · 就緒","demo.badgeOn":"在線","demo.badgeLock":"鎖定",
+  "demo.ready":"就緒 — 選中：無（點擊左側學生）","demo.selected":"已選中","demo.lockAll":"鎖定指令已發送至全部 6 台學生機（Kiosk）","demo.unlockedN":"已解鎖 N 台選中學生機","demo.unlockedAll":"已解鎖全部學生機","demo.cmdSent":"指令已發送至 N 台學生機","demo.wipeNote":"（需輸入 DELETE 確認）","demo.bcOn":"已開始屏幕廣播（高畫質 30fps）","demo.bcOff":"已停止屏幕廣播","demo.quality":"廣播畫質：已切換至「"
+},
+"zh-Hans": {
+  "nav.features":"功能","nav.pricing":"定价","nav.support":"支持","nav.download":"下载",
+  "home.heroTitle":"让课堂，专注于学习。","home.heroSub":"教师一键广播屏幕、锁定学生机、下发管理指令。同一 Wi-Fi 自动发现，低延迟高画质，课堂管理像 Apple 产品一样简单。",
+  "home.downloadBtn":"下载 FocusIn","home.learnMore":"了解更多","home.metaOs":"macOS 14 或以上","home.metaDmg":"教师端与学生端各一份 DMG",
+  "home.demoHint":"可互动示范 — 点击学生、切换画质、试试指令","home.demoLabel":"教师端界面模拟",
+  "home.students":"学生（6）","home.online":"在线","home.broadcast":"屏幕广播","home.qAuto":"自动","home.qLow":"低","home.qMid":"中","home.qHigh":"高",
+  "home.commands":"课堂指令","home.commandsSub":"发送至选中学生","home.cmdLock":"锁定全部","home.cmdUnlock":"解锁","home.cmdRestart":"重新启动","home.cmdShutdown":"关机","home.cmdLaunch":"启动 Safari","home.cmdWipe":"清空文件",
+  "home.demoStatus":"就绪 — 选中：无","home.featTitle":"课堂需要的，一次到位。","home.featSub":"从屏幕广播到远程控制，FocusIn 把教师最常用的操作收进一个干净的窗口。",
+  "home.f1n":"屏幕广播","home.f1d":"ScreenCaptureKit 原生采集，30fps 高画质，低延迟二进制帧管线。Bonjour 自动发现同网段学生端。",
+  "home.f2n":"Kiosk 全屏锁定","home.f2d":"全屏覆盖、拦截鼠标键盘与 ⌘Tab／⌘⌥Esc／Ctrl+方向键；锁窗强制置顶，全屏 Space 也盖得住。",
+  "home.stableTag":"正式版","home.f3n":"远程控制","home.f3d":"远程关机、重新启动、启动指定 App（NSWorkspace），可选全部学生或个别学生。",
+  "home.f4n":"清空文件","home.f4d":"远程清空学生机 Documents 与 Downloads；教师需输入 DELETE 二次确认，杜绝误触。",
+  "home.f5n":"自动更新","home.f5d":"启动即检查 GitHub Releases，发现新版本一键直接下载 DMG，无需跳转网页。",
+  "home.f6n":"退出保护","home.f6d":"统一管理员密码：教师端退出、学生端退出、紧急解锁（⌘⇧U）共用同一密码，未设定无法退出。",
+  "home.storyTitle":"FocusIn 在课堂","home.storySub":"三个最常见的场景，一个面板全部搞定。",
+  "home.s1k":"考试模式","home.s1t":"一键锁定全场","home.s1d":"开始考试前选「全部学生」并锁定，每台 iMac 立即全屏覆盖、拦截输入。断网时管理员可在本机按 ⌘⇧U 输入管理员密码紧急解锁。",
+  "home.s1h":"课堂状态","home.locked":"已锁定",
+  "home.s2h":"屏幕广播 · 高画质 30fps","home.s2all":"全体学生","home.s2live":"广播中","home.s2q":"画质：高","home.s2s":"锐化：开启","home.s2start":"开始广播","home.s2stop":"停止",
+  "home.s2k":"即时示范","home.s2t":"教师屏幕，即时送达","home.s2d":"示范操作时开启广播，学生机锁窗即时显示教师画面。正式版内置 CISharpenLuminance 锐化，小字也清晰；画质提供自动／低／中／高四档。",
+  "home.s3k":"下课维护","home.s3t":"远程收尾，一站完成","home.s3d":"下课后远程关机或重新启动所有学生机；需要清理时清空指定机台的 Documents 与 Downloads——输入 DELETE 二次确认，避免误操作。",
+  "home.s3h":"指令已送达 6 台设备","home.s3shut":"远程关机","home.s3wipe":"清空文件","home.s3launch":"启动 Safari","home.done":"完成",
+  "home.cmpTitle":"选择适合你的版本。","home.cmpSub":"课堂环境使用正式版；想测试声音广播再试 Alpha。",
+  "home.cmpFeature":"功能","home.recommended":"建议","home.stableVer":"正式版 v1.4.0","home.alphaVer":"Alpha v1.3.7",
+  "home.c1":"屏幕广播（仅画面）","home.c2":"声音广播（48kHz 立体声）","home.c3":"Kiosk 全屏锁定＋输入拦截","home.c4":"退出保护（统一管理员密码）","home.c5":"紧急解锁 ⌘⇧U","home.c6":"画面锐化（CISharpenLuminance）","home.c7":"远程控制／清空文件","home.c8":"自动更新（直接下载）",
+  "home.cmpBtn":"前往 GitHub Releases",
+  "feat.title":"每一个细节，都是为了课堂。","feat.sub":"教师端与学生端的分工，让教学专注、让学生专心。",
+  "feat.f1n":"Bonjour 自动发现","feat.f1d":"学生端启动后通过 mDNS 广播（_classroom-ctrl._tcp.），教师端自动列出在线设备与延迟，无需手动配 IP。",
+  "feat.f2n":"Kiosk 全屏锁定","feat.f2d":"锁定后全屏覆盖并拦截本机输入：鼠标、键盘、⌘Tab、⌘⌥Esc、Ctrl+左右方向键；锁窗自愈，接上新的显示器自动重建。",
+  "feat.f3n":"退出保护","feat.f3d":"统一密码同时保护教师端退出、学生端退出与紧急解锁；教师端设定后即时下发所有已连接学生端，未设密码无法退出。",
+  "feat.f4n":"清空文件","feat.f4d":"远程清空学生机 Documents 与 Downloads；教师必须输入 DELETE 二次确认，杜绝误触。",
+  "feat.f5n":"自动更新（直接下载）","feat.f5d":"启动即检查 GitHub Releases，发现新版本一键直接下载 DMG 到本机，下载完成即提示安装。",
+  "feat.f6n":"登录自动启动","feat.f6d":"教师端／学生端可设定登录 macOS 时自动启动，开机即就绪，不需手动开启。",
+  "feat.f7n":"权限指引","feat.f7d":"教师端需「屏幕录制」、学生端需「辅助功能」；未授权时 app 内直接提示开启路径，附详细系统设置步骤。",
+  "feat.f8n":"紧急解锁 ⌘⇧U","feat.f8d":"网络异常时，管理员可在学生机本机按 ⌘⇧U，输入与教师端相同的管理员密码即可解锁。",
+  "feat.f9n":"屏幕广播与锐化","feat.f9d":"自动／低／中／高画质切换；正式版广播前套用 CISharpenLuminance，文字边缘更锐利。",
+  "feat.f10n":"声音广播（Pro）","feat.f10d":"48kHz 立体声，专属音频通道 + 抖动缓冲；教师端可独立开关声音。Pro 专属功能。",
+  "feat.proTag":"Pro",
+  "feat.lockTitle":"锁定，就要锁得彻底。","feat.lockSub":"锁定期间全屏覆盖、拦截本机输入，并隐藏菜单栏与 Dock。",
+  "feat.lock1n":"拦截系统快捷键","feat.lock1d":"拦截 ⌘Tab（App 切换器）、⌘⌥Esc（强制退出）、Ctrl+左右方向键（Space／桌面切换），学生无法绕过锁定。",
+  "feat.lock2n":"锁窗强制置顶","feat.lock2d":"锁窗以 orderFrontRegardless 强制置顶，即使学生机正处于其他 App 全屏模式／全屏 Space，锁窗也能盖住整个屏幕；锁定期间注册系统通知，显示器接上或唤醒时自动重建锁窗。",
+  "price.title":"简单的定价，没有隐藏收费。","price.sub":"购买后网站即时生成 License Key，在 App 内输入即可解锁 Pro。7 天免费试用。",
+  "price.freeName":"免费版","price.freeDesc":"课堂必备功能","price.freePer":"永久免费",
+  "price.f1":"屏幕广播（高画质）","price.f2":"Kiosk 锁定与紧急解锁","price.f3":"远程控制与启动 App","price.f4":"清空文件（DELETE 确认）","price.f5":"自动更新（直接下载）","price.f6":"声音广播（Pro）",
+  "price.freeBtn":"免费下载",
+  "price.popular":"热门","price.proName":"Pro 版","price.proDesc":"解锁全部功能","price.once":"/一次性","price.proPer":"含 7 天免费试用 · 示意价格",
+  "price.p1":"免费版全部功能","price.p2":"声音广播（48kHz 立体声）","price.p3":"优先接收新功能","price.p4":"专属支持","price.p5":"License Key 永久解锁",
+  "price.proBtn":"立即购买 Pro",
+  "price.schoolName":"学校版","price.schoolDesc":"整校部署，多教师多机房","price.perYear":"/年","price.schoolPer":"示意价格 · 联系购买",
+  "price.s1":"Pro 版全部功能","price.s2":"不限教师数量","price.s3":"多机房管理","price.s4":"优先支持","price.schoolBtn":"联系购买",
+  "price.note":"定价为示意，目前 FocusIn 于 GitHub Releases 免费提供。License Key 由本页即时生成（模拟支付，不真实扣款）；正式商业化后将改由支付后台自动签发。",
+  "key.title":"获取 Pro License Key","key.sub":"输入你的电子邮件，立即生成一组 License Key。在 FocusIn 教师端／学生端「升级 Pro」输入即可解锁。",
+  "key.emailLabel":"电子邮件","key.genBtn":"生成 License Key","key.trialHint":"提示：可在 App 内先免费试用 7 天",
+  "key.err":"请输入有效的电子邮件地址。","key.resultLabel":"你的 Pro License Key（请复制保存）","key.copy":"复制 Key",
+  "key.how":"如何使用：","key.step1":"下载并打开 FocusIn（教师端或学生端）","key.step2":"在「升级 Pro」输入此 Key","key.step3":"即时解锁全部 Pro 功能",
+  "support.title":"我们可以帮到你。","support.sub":"遇到问题先看常见问答；找不到答案，直接私信反馈。",
+  "support.q1":"教师端广播需要哪些权限？","support.a1":"打开「系统设置 → 隐私与安全性 → 屏幕录制」，勾选 FocusIn 教师端。若先前选过「拒绝」，请先在该页取消勾选再重新勾选。",
+  "support.q2":"学生端锁定无效／拦截不到快捷键？","support.a2":"打开「系统设置 → 隐私与安全性 → 辅助功能」，勾选 FocusIn 学生端。锁定拦截（鼠标、键盘、⌘Tab 等）与 ⌘⇧U 紧急解锁都需要此权限。",
+  "support.q3":"学生机找不到教师端？","support.a3":"确认教师机与学生机在同一 Wi-Fi／同一子网段，学生端已启动，且防火墙未阻止 Network.framework 通信（mDNS 5353／WebSocket）。",
+  "support.q4":"紧急解锁的密码是什么？","support.a4":"与「管理员密码」相同——教师端设定后会下发所有已连接学生端。学生机本机按 ⌘⇧U 输入该密码即可解锁（即使断网）。",
+  "support.q5":"如何更新到最新版？","support.a5":"FocusIn 启动时会自动检查 GitHub Releases 并提示；点「下载更新」会直接下载 DMG，完成后自动提示安装。也可手动触发「检查更新」。",
+  "support.q6":"Pro Key 在哪里输入？","support.a6":"在教师端或学生端的「升级 Pro」区域输入 License Key 即可解锁。Key 由官网「定价」页购买生成；未购买时可先享受 7 天免费试用。",
+  "support.contact1t":"问题反馈","support.contact1d":"截图＋版本号＋设备型号","support.contact2t":"GitHub","support.contact2d":"Releases、Issues、更新记录","support.contact3t":"授权","support.contact3d":"版权所有，仅供课堂教学使用",
+  "dl.title":"开始使用 FocusIn。","dl.sub":"直接下载最新 DMG，教师端与学生端各一份。",
+  "dl.download":"下载","dl.teacher":"教师端","dl.student":"学生端","dl.teacherDmg":"FocusIn-Teacher.dmg","dl.studentDmg":"FocusIn-Student.dmg","dl.alphaTeacher":"Alpha-Teacher.dmg","dl.alphaStudent":"Alpha-Student.dmg",
+  "dl.note":"首次启动请按画面提示授予权限：教师端「屏幕录制」、学生端「辅助功能」。App 内置三语界面（英文／繁体中文／简体中文）。",
+  "footer.tagline":"macOS 课堂管理，专为 iMac 机房设计。","footer.product":"产品","footer.support":"支持","footer.resources":"资源","footer.contact":"联系","footer.faq":"常见问题","footer.report":"问题反馈","footer.rights":"版权所有",
+  "toast.copied":"License Key 已复制到剪贴板",
+  "demo.locked":"已锁定","demo.online":"在线 · 就绪","demo.badgeOn":"在线","demo.badgeLock":"锁定",
+  "demo.ready":"就绪 — 选中：无（点击左侧学生）","demo.selected":"已选中","demo.lockAll":"锁定指令已发送至全部 6 台学生机（Kiosk）","demo.unlockedN":"已解锁 N 台选中学生机","demo.unlockedAll":"已解锁全部学生机","demo.cmdSent":"指令已发送至 N 台学生机","demo.wipeNote":"（需输入 DELETE 确认）","demo.bcOn":"已开始屏幕广播（高画质 30fps）","demo.bcOff":"已停止屏幕广播","demo.quality":"广播画质：已切换至「"
+}
+};
 
-  function showToast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2200);
-  }
-  window.showToast = showToast;
-
-  function currentRoute(){
-    var h = location.hash.replace(/^#\/?/, "");
-    return routes.indexOf(h) >= 0 ? h : "home";
-  }
-  function render(){
-    var r = currentRoute();
-    for (var k in sections){
-      var el = document.getElementById(sections[k]);
-      if (el) el.classList.toggle("active", k === r);
-    }
-    document.title = r === "home" ? "FocusIn — macOS 課堂管理"
-      : ({features:"功能", pricing:"定價", support:"支援", download:"下載"}[r]) + " — FocusIn";
-    window.scrollTo({top:0, behavior:"auto"});
-  }
-  window.addEventListener("hashchange", render);
-  document.addEventListener("click", function(e){
-    var a = e.target.closest("a[data-route]");
-    if (a){
-      var r = a.getAttribute("data-route");
-      if (routes.indexOf(r) >= 0){
-        if (location.hash === "#" + r){ window.scrollTo({top:0, behavior:"smooth"}); }
-        else { location.hash = r; }
-        e.preventDefault();
-      }
-    }
+/* ===================== i18n 引擎 ===================== */
+var CURRENT_LANG = localStorage.getItem("focusin-lang") || "zh-Hant";
+function t(key){ return (I18N[CURRENT_LANG] && I18N[CURRENT_LANG][key]) || (I18N["zh-Hant"][key]) || key; }
+function applyI18n(){
+  document.documentElement.lang = CURRENT_LANG === "en" ? "en" : (CURRENT_LANG === "zh-Hans" ? "zh-CN" : "zh-Hant");
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    var key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
   });
-  render();
-})();
+  document.querySelectorAll("#lang-switch button").forEach(function(b){
+    b.classList.toggle("on", b.getAttribute("data-lang") === CURRENT_LANG);
+  });
+}
+document.querySelectorAll("#lang-switch button").forEach(function(b){
+  b.addEventListener("click", function(){
+    CURRENT_LANG = b.getAttribute("data-lang");
+    localStorage.setItem("focusin-lang", CURRENT_LANG);
+    applyI18n();
+    renderDemo();
+  });
+});
 
-/* ===== 互動 Demo：教師端面板 ===== */
-(function(){
-  var names = ["iMac 01","iMac 02","iMac 03","iMac 04","iMac 05","iMac 06"];
-  var students = names.map(function(n){ return {name:n, locked:false, sel:false}; });
+/* ===================== SHA-256 / HMAC（純 JS，兩端一致） ===================== */
+  var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+           0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+           0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+           0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+           0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+           0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+           0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+           0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  function rotr(x, n){ return (x >>> n) | (x << (32 - n)); }
+function sha256Raw(msg){
+  var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  var l = msg.length, i, j, w = [];
+  var ml = l * 8;
+  var paddedLen = ((l + 9 + 63) >> 6) << 6;
+  var padded = new Uint8Array(paddedLen);
+  for (i = 0; i < l; i++) padded[i] = msg.charCodeAt(i) & 0xff;
+  padded[l] = 0x80;
+  var dv = new DataView(padded.buffer);
+  dv.setUint32(paddedLen - 8, Math.floor(ml / 0x100000000), false);
+  dv.setUint32(paddedLen - 4, ml >>> 0, false);
+  for (i = 0; i < paddedLen; i += 64){
+    for (j = 0; j < 16; j++) w[j] = dv.getUint32(i + j * 4, false);
+    for (j = 16; j < 64; j++){
+      var s0 = rotr(w[j-15],7) ^ rotr(w[j-15],18) ^ (w[j-15] >>> 3);
+      var s1 = rotr(w[j-2],17) ^ rotr(w[j-2],19) ^ (w[j-2] >>> 10);
+      w[j] = (w[j-16] + s0 + w[j-7] + s1) >>> 0;
+    }
+    var a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for (j = 0; j < 64; j++){
+      var S1 = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25);
+      var ch = (e & f) ^ (~e & g);
+      var t1 = (h + S1 + ch + K[j] + w[j]) >>> 0;
+      var S0 = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22);
+      var maj = (a & b) ^ (a & c) ^ (b & c);
+      var t2 = (S0 + maj) >>> 0;
+      h=g; g=f; f=e; e=(d+t1)>>>0; d=c; c=b; b=a; a=(t1+t2)>>>0;
+    }
+    H[0]=(H[0]+a)>>>0; H[1]=(H[1]+b)>>>0; H[2]=(H[2]+c)>>>0; H[3]=(H[3]+d)>>>0;
+    H[4]=(H[4]+e)>>>0; H[5]=(H[5]+f)>>>0; H[6]=(H[6]+g)>>>0; H[7]=(H[7]+h)>>>0;
+  }
+  var out = "";
+  for (i = 0; i < 8; i++) out += String.fromCharCode((H[i]>>>24)&0xff, (H[i]>>>16)&0xff, (H[i]>>>8)&0xff, H[i]&0xff);
+  return out;
+}
+function sha256Hex(msg){
+  var raw = sha256Raw(msg), out = "";
+  for (var i = 0; i < raw.length; i++) out += ("00" + raw.charCodeAt(i).toString(16)).slice(-2);
+  return out;
+}
+var SHA256 = sha256Hex;
+function hmacSHA256Hex(key, msg){
+  var block = 64;
+  var k = key;
+  if (k.length > block) k = sha256Raw(k);
+  while (k.length < block) k += "\x00";
+  var ipad = "", opad = "";
+  for (var i = 0; i < block; i++){
+    ipad += String.fromCharCode(k.charCodeAt(i) ^ 0x36);
+    opad += String.fromCharCode(k.charCodeAt(i) ^ 0x5c);
+  }
+  return sha256Hex(opad + sha256Raw(ipad + msg));
+}
+
+/* ===================== License Key 產生（與 App 端一致） ===================== */
+var LICENSE_SECRET = "focusin-pro-2026-secret";
+function randomHex(n){
+  var out = "";
+  for (var i = 0; i < n; i++) out += "0123456789abcdef".charAt(Math.floor(Math.random() * 16));
+  return out;
+}
+function generateLicenseKey(){
+  var raw = "FOCUSIN-PRO:" + randomHex(12);
+  var checksum = hmacSHA256Hex(LICENSE_SECRET, raw).slice(0, 8);
+  var code = raw.slice(12) + checksum;   // 12 + 8 = 20 hex
+  var groups = [];
+  for (var i = 0; i < 5; i++) groups.push(code.slice(i*4, i*4+4));
+  return "FI-PRO-" + groups.join("-");
+}
+function verifyLicenseKey(key){
+  if (!key) return false;
+  var s = key.trim().toUpperCase().replace(/\s+/g, "");
+  if (s.indexOf("FI-PRO-") !== 0) return false;
+  var code = s.slice(7).replace(/-/g, "");
+  if (!/^[0-9A-F]{20}$/.test(code)) return false;
+  var raw = "FOCUSIN-PRO:" + code.slice(0, 12).toLowerCase();
+  var checksum = hmacSHA256Hex(LICENSE_SECRET, raw).slice(0, 8).toUpperCase();
+  return checksum === code.slice(12);
+}
+window.verifyLicenseKey = verifyLicenseKey;
+
+/* ===================== Toast / 路由 ===================== */
+var toastEl = document.getElementById("toast");
+var toastTimer = null;
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2400);
+}
+var routes = ["home","features","pricing","support","download"];
+var sections = {home:"view-home", features:"view-features", pricing:"view-pricing", support:"view-support", download:"view-download"};
+function currentRoute(){
+  var h = location.hash.replace(/^#\/?/, "");
+  return routes.indexOf(h) >= 0 ? h : "home";
+}
+function render(){
+  var r = currentRoute();
+  for (var k in sections){
+    var el = document.getElementById(sections[k]);
+    if (el) el.classList.toggle("active", k === r);
+  }
+  document.title = (r === "home" ? "" : t("nav." + r) + " — ") + "FocusIn";
+  window.scrollTo({top:0, behavior:"auto"});
+}
+window.addEventListener("hashchange", render);
+document.addEventListener("click", function(e){
+  var a = e.target.closest("a[data-route]");
+  if (a){
+    var r = a.getAttribute("data-route");
+    if (routes.indexOf(r) >= 0){
+      if (location.hash === "#" + r){ window.scrollTo({top:0, behavior:"smooth"}); }
+      else { location.hash = r; }
+      e.preventDefault();
+    }
+  }
+});
+
+/* ===================== 互動 Demo ===================== */
+var demoState = { students: [], broadcastOn: false, quality: "high" };
+function renderDemo(){
   var listEl = document.getElementById("demo-student-list");
   if (!listEl) return;
   var statusEl = document.getElementById("demo-status");
   var onlineEl = document.getElementById("demo-online-count");
-  var broadcastEl = document.getElementById("demo-broadcast");
-  var broadcastOn = false;
-
-  function renderStudents(){
-    listEl.innerHTML = "";
-    students.forEach(function(s, i){
-      var row = document.createElement("div");
-      row.className = "student" + (s.sel ? " sel" : "") + (s.locked ? " locked" : "");
-      row.setAttribute("role","button"); row.setAttribute("tabindex","0");
-      row.innerHTML =
-        '<span class="st-ic">' + (s.locked ? '🔒' : s.name.replace("iMac ","")) + '</span>' +
-        '<span class="st-info"><span class="st-name">' + s.name + '</span>' +
-        '<span class="st-state">' + (s.locked ? "已鎖定" : "在線 · 就緒") + '</span></span>' +
-        '<span class="st-badge ' + (s.locked ? "st-b-lock" : "st-b-on") + '">' + (s.locked ? "鎖定" : "在線") + '</span>';
-      row.addEventListener("click", function(){ s.sel = !s.sel; renderStudents(); updateStatus(); });
-      row.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); s.sel = !s.sel; renderStudents(); updateStatus(); } });
-      listEl.appendChild(row);
-    });
-    var locked = students.filter(function(s){ return s.locked; }).length;
-    onlineEl.textContent = (students.length - locked) + " 在線";
-  }
-  function selected(){ return students.filter(function(s){ return s.sel; }); }
-  function updateStatus(){
-    var sel = selected();
-    if (sel.length === 0){ statusEl.innerHTML = "就緒 — 選中：無（點擊左側學生）"; }
-    else { statusEl.innerHTML = '<span class="ok">已選中 ' + sel.length + ' 台</span> — ' + sel.map(function(s){ return s.name; }).join("、"); }
-  }
-  function allMsg(action){
-    var n = students.length;
-    return action + "指令已發送至全部 " + n + " 台學生機";
-  }
-
-  // 廣播開關
-  broadcastEl.addEventListener("click", function(){
-    broadcastOn = !broadcastOn;
-    broadcastEl.classList.toggle("on", broadcastOn);
-    broadcastEl.setAttribute("aria-checked", broadcastOn);
-    showToast(broadcastOn ? "已開始屏幕廣播（高畫質 30fps）" : "已停止屏幕廣播");
+  listEl.innerHTML = "";
+  demoState.students.forEach(function(s, i){
+    var row = document.createElement("div");
+    row.className = "student" + (s.sel ? " sel" : "") + (s.locked ? " locked" : "");
+    row.setAttribute("role","button"); row.setAttribute("tabindex","0");
+    row.innerHTML =
+      '<span class="st-ic">' + (s.locked ? '🔒' : s.name.replace("iMac ","")) + '</span>' +
+      '<span class="st-info"><span class="st-name">' + s.name + '</span>' +
+      '<span class="st-state">' + (s.locked ? t("demo.locked") : t("demo.online")) + '</span></span>' +
+      '<span class="st-badge ' + (s.locked ? "st-b-lock" : "st-b-on") + '">' + (s.locked ? t("demo.badgeLock") : t("demo.badgeOn")) + '</span>';
+    row.addEventListener("click", function(){ s.sel = !s.sel; renderDemo(); updateDemoStatus(); });
+    row.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); s.sel = !s.sel; renderDemo(); updateDemoStatus(); } });
+    listEl.appendChild(row);
   });
-  broadcastEl.addEventListener("keydown", function(e){
-    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); broadcastEl.click(); }
+  var locked = demoState.students.filter(function(s){ return s.locked; }).length;
+  onlineEl.textContent = (demoState.students.length - locked) + " " + t("home.online");
+  document.getElementById("demo-broadcast").classList.toggle("on", demoState.broadcastOn);
+  document.querySelectorAll("#demo-quality .q-opt").forEach(function(el){
+    el.classList.toggle("on", el.getAttribute("data-q") === demoState.quality);
   });
-
-  // 畫質
-  var qEls = document.querySelectorAll("#demo-quality .q-opt");
-  qEls.forEach(function(el){
+  updateDemoStatus();
+}
+function selectedStudents(){ return demoState.students.filter(function(s){ return s.sel; }); }
+function updateDemoStatus(){
+  var statusEl = document.getElementById("demo-status");
+  var sel = selectedStudents();
+  if (sel.length === 0){ statusEl.innerHTML = t("demo.ready"); }
+  else { statusEl.innerHTML = '<span class="ok">' + t("demo.selected") + ' ' + sel.length + '</span> — ' + sel.map(function(s){ return s.name; }).join("、"); }
+}
+function initDemo(){
+  demoState.students = [];
+  for (var i = 1; i <= 6; i++) demoState.students.push({name:"iMac 0" + i, locked:false, sel:false});
+  var bc = document.getElementById("demo-broadcast");
+  bc.addEventListener("click", function(){
+    demoState.broadcastOn = !demoState.broadcastOn;
+    bc.setAttribute("aria-checked", demoState.broadcastOn);
+    showToast(demoState.broadcastOn ? t("demo.bcOn") : t("demo.bcOff"));
+    renderDemo();
+  });
+  bc.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); bc.click(); } });
+  document.querySelectorAll("#demo-quality .q-opt").forEach(function(el){
     el.addEventListener("click", function(){
-      qEls.forEach(function(x){ x.classList.remove("on"); });
-      el.classList.add("on");
-      showToast("廣播畫質：已切換至「" + el.textContent + "」");
+      demoState.quality = el.getAttribute("data-q");
+      showToast(t("demo.quality") + t("home.q" + demoState.quality.charAt(0).toUpperCase() + demoState.quality.slice(1)) + "」");
+      renderDemo();
     });
   });
-
-  // 指令
-  var cmdMap = {
-    lock: "鎖定", unlock: "解鎖", restart: "重新啟動", shutdown: "關機", launch: "啟動 Safari", wipe: "清空文件"
-  };
   document.querySelectorAll(".cmd").forEach(function(btn){
     btn.addEventListener("click", function(){
       var c = btn.getAttribute("data-cmd");
-      var sel = selected();
+      var sel = selectedStudents();
       if (c === "lock"){
-        students.forEach(function(s){ s.locked = true; });
-        renderStudents(); updateStatus();
-        showToast(allMsg(cmdMap.lock) + "（Kiosk 全屏）");
+        demoState.students.forEach(function(s){ s.locked = true; });
+        showToast(t("demo.lockAll"));
       } else if (c === "unlock"){
-        var t = sel.length ? sel : students;
-        t.forEach(function(s){ s.locked = false; });
-        renderStudents(); updateStatus();
-        showToast(sel.length ? ("已解鎖 " + sel.length + " 台選中學生機") : "已解鎖全部學生機");
+        var target = sel.length ? sel : demoState.students;
+        target.forEach(function(s){ s.locked = false; });
+        showToast(sel.length ? t("demo.unlockedN").replace("N", sel.length) : t("demo.unlockedAll"));
       } else {
-        var t2 = sel.length ? sel : students;
-        showToast(cmdMap[c] + "指令已發送至 " + t2.length + " 台學生機" + (c === "wipe" ? "（需輸入 DELETE 確認）" : ""));
+        var n = (sel.length ? sel : demoState.students).length;
+        var m = t("demo.cmdSent").replace("N", n);
+        if (c === "wipe") m += t("demo.wipeNote");
+        showToast(m);
       }
+      renderDemo();
     });
   });
+  renderDemo();
+}
 
-  renderStudents();
-  updateStatus();
-})();
+/* ===================== License Key 產生器 ===================== */
+function initLicense(){
+  var btn = document.getElementById("license-gen");
+  if (!btn) return;
+  btn.addEventListener("click", function(){
+    var email = (document.getElementById("license-email").value || "").trim();
+    var err = document.getElementById("license-err");
+    var res = document.getElementById("license-result");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      err.textContent = t("key.err");
+      err.classList.add("show");
+      res.classList.remove("show");
+      return;
+    }
+    err.classList.remove("show");
+    var key = generateLicenseKey();
+    document.getElementById("license-key-text").textContent = key;
+    res.classList.add("show");
+  });
+  document.getElementById("license-copy").addEventListener("click", function(){
+    var txt = document.getElementById("license-key-text").textContent;
+    var ta = document.createElement("textarea");
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); showToast(t("toast.copied")); }
+    catch(e){}
+    document.body.removeChild(ta);
+  });
+}
+
+/* ===================== 啟動 ===================== */
+applyI18n();
+initDemo();
+initLicense();
+render();
 </script>
 </body>
 </html>
