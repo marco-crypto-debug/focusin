@@ -83,7 +83,7 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func mbQuit() {
-        #if FOCUSIN_STABLE
+        #if FOCUSIN_STABLE || FOCUSIN_BETA
         let allow = QuitGuard.shouldAllowQuit(
             appName: "FocusIn 學生端",
             hasConfigured: KioskConfig.hasAdminPassword,
@@ -96,7 +96,7 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
         #endif
     }
 
-    #if FOCUSIN_STABLE
+    #if FOCUSIN_STABLE || FOCUSIN_BETA
     /// 退出保護：⌘Q / Dock / 選單一律需要管理員密碼。
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let allow = QuitGuard.shouldAllowQuit(

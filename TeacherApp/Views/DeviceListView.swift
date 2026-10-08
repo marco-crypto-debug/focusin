@@ -12,11 +12,12 @@ struct DeviceListView: View {
     @State private var autoStartError = ""
     @State private var showingWipeConfirm = false
     @State private var wipeConfirmText = ""
-#if FOCUSIN_STABLE
+#if FOCUSIN_STABLE || FOCUSIN_BETA
     @State private var newQuitPass = ""
     @State private var oldQuitPass = ""
     @State private var quitPassError = ""
-#else
+#endif
+#if !FOCUSIN_STABLE
     @State private var licenseKeyInput = ""
     @State private var licenseMsg = ""
     @State private var licenseMsgIsError = false
@@ -425,8 +426,8 @@ struct DeviceListView: View {
             }
 #endif
 
-            // 管理員密碼（穩定版）
-#if FOCUSIN_STABLE
+            // 管理員密碼（穩定版 / Beta 版）
+#if FOCUSIN_STABLE || FOCUSIN_BETA
             FocusInTheme.sectionLabel("Admin Password")
             FocusInTheme.card {
                 VStack(alignment: .leading, spacing: 8) {

@@ -186,7 +186,7 @@ final class CommandListener: ObservableObject {
             appendLog(result)
             peer.send(CommandMessage(type: .wipeResult, senderID: deviceID, senderName: deviceName, payload: result))
 
-#if FOCUSIN_STABLE
+#if FOCUSIN_STABLE || FOCUSIN_BETA
         case .setAdminPassword:
             if let password = message.payload {
                 do {

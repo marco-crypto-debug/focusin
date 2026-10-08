@@ -99,7 +99,7 @@ final class TeacherAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func mbQuit() {
         // 穩定版有退出保護（QuitGuard）；非穩定版直接退出。
-        #if FOCUSIN_STABLE
+        #if FOCUSIN_STABLE || FOCUSIN_BETA
         let allow = QuitGuard.shouldAllowQuit(
             appName: "FocusIn 教師端",
             hasConfigured: QuitGuard.hasPassword,
@@ -112,7 +112,7 @@ final class TeacherAppDelegate: NSObject, NSApplicationDelegate {
         #endif
     }
 
-    #if FOCUSIN_STABLE
+    #if FOCUSIN_STABLE || FOCUSIN_BETA
     /// 退出保護：⌘Q / Dock / 選單一律需要管理員密碼。
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let allow = QuitGuard.shouldAllowQuit(
