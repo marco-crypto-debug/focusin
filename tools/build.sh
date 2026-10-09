@@ -24,6 +24,7 @@ SHARED_SRC=(
   "$ROOT/Shared/Networking/PeerConnection.swift"
   "$ROOT/Shared/Networking/PeerDiscovery.swift"
   "$ROOT/Shared/Networking/PeerTransport.swift"
+  "$ROOT/Shared/Networking/MulticastTransport.swift"
   "$ROOT/Shared/Protocol/CommandMessage.swift"
   "$ROOT/Shared/Protocol/CommandType.swift"
   "$ROOT/Shared/Utility/DiagLog.swift"
@@ -39,11 +40,13 @@ TEACHER_SRC=(
   "$ROOT/TeacherApp/TeacherApp.swift"
   "$ROOT/TeacherApp/TeacherViewModel.swift"
   "$ROOT/TeacherApp/ScreenBroadcaster.swift"
+  "$ROOT/TeacherApp/H264Encoder.swift"
   "$ROOT/TeacherApp/Views/DeviceListView.swift"
 )
 STUDENT_SRC=(
   "$ROOT/StudentApp/StudentApp.swift"
   "$ROOT/StudentApp/CommandListener.swift"
+  "$ROOT/StudentApp/H264Decoder.swift"
   "$ROOT/StudentApp/AudioPlayer.swift"
   "$ROOT/StudentApp/FileWipeManager.swift"
   "$ROOT/StudentApp/Kiosk/InputInterceptor.swift"

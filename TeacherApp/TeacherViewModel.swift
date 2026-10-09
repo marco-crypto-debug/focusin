@@ -21,6 +21,18 @@ final class TeacherViewModel: ObservableObject {
     /// 重連狀態追蹤：studentID -> (endpoint, retryCount, timer)
     private var reconnectionState: [String: (NWEndpoint, Int, Timer?)] = [:]
     private let broadcaster = ScreenBroadcaster()
+#if FOCUSIN_BETA
+    /// v1.5-beta：畫面組播傳輸（單流發送）
+    private let multicastVideo = MulticastTransport()
+    /// v1.5-beta：AP 組播探測（吞吐測試工具）
+    private let multicastProbe = MulticastTransport()
+    /// 探測報告：studentID -> 最新統計文字
+    @Published var probeResults: [String: String] = [:]
+    /// 探測進行中
+    @Published var probeRunning = false
+    private var probeThread: Thread?
+    private var probeSeq: UInt32 = 0
+#endif
     private var pingTimer: Timer?
     /// alpha 除錯開關：以 `--autobroadcast` 啟動時，發現首台學生端即自動全選並開始廣播。
     private let autoBroadcast = CommandLine.arguments.contains("--autobroadcast")
@@ -232,6 +244,13 @@ final class TeacherViewModel: ObservableObject {
                 let rtt = Int((Date().timeIntervalSinceReferenceDate - stamp) * 1000)
                 latencies[id] = max(rtt, 0)
             }
+#if FOCUSIN_BETA
+        case .multicastProbeReport:
+            let name = peers.first(where: { $0.id == id })?.name ?? "學生"
+            if let payload = message.payload {
+                probeResults[name] = payload
+            }
+#endif
         default:
             break
         }
@@ -359,9 +378,15 @@ final class TeacherViewModel: ObservableObject {
         }
 #endif
         broadcaster.onFrame = { jpegData in
+#if FOCUSIN_BETA
+            // —— v1.5-beta：H.264 幀走 UDP 組播（單流，AP 複製給所有學生）——
+            self.multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
+            self.multicastVideo.send(jpegData)
+#else
             for target in targets {
                 target.sendFrame(jpegData)
             }
+#endif
         }
 #if !FOCUSIN_STABLE
         broadcaster.onAudio = { pcm, info in
@@ -388,6 +413,9 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
+#if FOCUSIN_BETA
+        multicastVideo.stop()
+#endif
         audioConnections.values.forEach { $0.close() }
         audioConnections.removeAll()
         send(CommandMessage(type: .streamStop))
@@ -400,12 +428,76 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
+#if FOCUSIN_BETA
+        multicastVideo.stop()
+#endif
         audioConnections.values.forEach { $0.close() }
         audioConnections.removeAll()
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         startBroadcast()
     }
+
+#if FOCUSIN_BETA
+    // MARK: - v1.5-beta AP 組播探測（吞吐測試）
+
+    /// 開始組播探測：教師端發送階梯組播流 + 通知學生端統計回報。
+    func startMulticastProbe(rate: Double, maxRate: Double, step: Double, stageSeconds: Double) {
+        guard !probeRunning else { return }
+        probeRunning = true
+        probeResults.removeAll()
+        appendLog("組播探測開始：\(rate) → \(maxRate) Mbps（每檔 \(stageSeconds)s）")
+
+        // 通知所有學生端開始統計（payload = "rate,maxRate,step,stage"）
+        send(CommandMessage(type: .multicastProbeStart,
+                            payload: "\(rate),\(maxRate),\(step),\(stageSeconds)"))
+
+        multicastProbe.startSender(port: MulticastTransport.probePort, ifaceIP: nil)
+        probeSeq = 0
+        probeThread = Thread { [weak self] in
+            guard let self else { return }
+            var current = rate
+            var stageStart = Date()
+            let payloadSize = 1456
+            while current <= maxRate {
+                if Thread.current.isCancelled { break }
+                let bytesPerSec = current * 1_000_000 / 8
+                let interval = Double(payloadSize + MulticastProbeStats.headerSize) / bytesPerSec
+                if Date().timeIntervalSince(stageStart) >= stageSeconds {
+                    current += step
+                    stageStart = Date()
+                    if current > maxRate { break }
+                    Task { @MainActor in
+                        self.appendLog("組播探測升檔：\(current) Mbps")
+                    }
+                    continue
+                }
+                let packet = MulticastProbeStats.makeProbePacket(seq: self.probeSeq,
+                                                                 stage: UInt16(current),
+                                                                 payloadSize: payloadSize)
+                self.multicastProbe.send(packet)
+                self.probeSeq &+= 1
+                Thread.sleep(forTimeInterval: interval)
+            }
+            self.multicastProbe.stop()
+            Task { @MainActor in
+                self.probeRunning = false
+                self.appendLog("組播探測結束（教師端已發送 \(self.probeSeq) 包）")
+            }
+        }
+        probeThread?.name = "FocusIn.MulticastProbe"
+        probeThread?.start()
+    }
+
+    func stopMulticastProbe() {
+        probeThread?.cancel()
+        probeThread = nil
+        multicastProbe.stop()
+        send(CommandMessage(type: .multicastProbeStop))
+        probeRunning = false
+        appendLog("組播探測已停止")
+    }
+#endif
 
     private func appendLog(_ text: String) { log.append(text) }
 }

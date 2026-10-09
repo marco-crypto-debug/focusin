@@ -21,6 +21,11 @@ struct DeviceListView: View {
     @State private var licenseKeyInput = ""
     @State private var licenseMsg = ""
     @State private var licenseMsgIsError = false
+#if FOCUSIN_BETA
+    @State private var probeRateText = "2"
+    @State private var probeMaxRateText = "16"
+    @State private var probeStageText = "8"
+#endif
     private var licenseStatus: LicenseStatus { LicenseManager.shared.status }
 #endif
 
@@ -470,6 +475,70 @@ struct DeviceListView: View {
                         Text(quitPassError)
                             .font(.system(size: 11))
                             .foregroundStyle(.red)
+                    }
+                }
+            }
+#endif
+
+#if FOCUSIN_BETA
+            // v1.5-beta：AP 組播吞吐測試
+            FocusInTheme.sectionLabel("Multicast Test")
+            FocusInTheme.card {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .foregroundStyle(.blue)
+                        Text("AP 組播吞吐測試").font(.system(size: 13, weight: .semibold))
+                        Spacer()
+                        if viewModel.probeRunning {
+                            ProgressView().controlSize(.small)
+                        }
+                    }
+                    Text("教師端向組播組 \(MulticastTransport.group) 發送階梯速率流（埠 \(MulticastTransport.probePort)），學生端統計 5 秒窗口回報。用於確認 AP 的 multicast 基礎速率 / IGMP snooping 是否支援 30 台擴容。")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    HStack(spacing: 8) {
+                        TextField("起", text: $probeRateText).textFieldStyle(.plain)
+                            .frame(width: 44)
+                            .padding(6)
+                            .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+                        Text("→").foregroundStyle(.secondary)
+                        TextField("上限", text: $probeMaxRateText).textFieldStyle(.plain)
+                            .frame(width: 56)
+                            .padding(6)
+                            .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+                        Text("Mbps，每檔").foregroundStyle(.secondary).font(.system(size: 11))
+                        TextField("秒", text: $probeStageText).textFieldStyle(.plain)
+                            .frame(width: 40)
+                            .padding(6)
+                            .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 6))
+                        Spacer()
+                        Button(viewModel.probeRunning ? "停止" : "開始測試") {
+                            if viewModel.probeRunning {
+                                viewModel.stopMulticastProbe()
+                            } else {
+                                let rate = Double(probeRateText) ?? 2
+                                let max = Double(probeMaxRateText) ?? 16
+                                let stage = Double(probeStageText) ?? 8
+                                viewModel.startMulticastProbe(rate: rate, maxRate: max,
+                                                              step: 2, stageSeconds: stage)
+                            }
+                        }
+                        .controlSize(.small)
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
+                    }
+                    if !viewModel.probeResults.isEmpty {
+                        Divider()
+                        ForEach(viewModel.probeResults.sorted(by: { $0.key < $1.key }), id: \.key) { name, report in
+                            HStack {
+                                Text(name).font(.system(size: 11))
+                                Spacer()
+                                Text(report)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
             }

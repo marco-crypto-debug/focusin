@@ -51,10 +51,29 @@ final class ScreenBroadcaster: NSObject {
         }
     }
 
+#if FOCUSIN_BETA
+    /// beta：依畫質決定的 H.264 目標碼率（bps）。
+    private func h264Bitrate(displayWidth: Int) -> Int {
+        let base: Double
+        switch quality {
+        case .high: base = 10_000_000
+        case .mid:  base = 6_000_000
+        case .low:  base = 3_000_000
+        case .auto: base = displayWidth > 3840 ? 8_000_000 : 10_000_000
+        }
+        return Int(base)
+    }
+#endif
+
     private var stream: SCStream?
     private let context = CIContext(options: [.cacheIntermediates: false])
     /// 編碼節流旗標：上一幀尚未完成編碼時，直接丟棄新幀（保延遲優先於幀率）。
     private var isEncodingFrame = false
+
+#if FOCUSIN_BETA
+    // —— v1.5-beta：H.264 硬體編碼（VideoToolbox，組播單流）——
+    private let h264Encoder = H264Encoder()
+#endif
 
     // —— 音訊聚合：把 ~10ms 的小緩衝區併成 ~80ms 一塊再送出，
     //    大幅減少訊息數量與學生端排程抖動（低延遲 + 更穩）——
@@ -130,6 +149,15 @@ final class ScreenBroadcaster: NSObject {
                 if #available(macOS 14.0, *) {
                     config.captureResolution = .best
                 }
+#if FOCUSIN_BETA
+                // v1.5-beta：啟動 H.264 硬體編碼器（輸出 Annex-B，每秒 1 關鍵幀）
+                let bitrate = h264Bitrate(displayWidth: display.width)
+                h264Encoder.start(width: config.width, height: config.height,
+                                  fps: params.fps, bitrate: bitrate) { [weak self] data, key, sps, pps in
+                    self?.onFrame?(MulticastTransport.packH264Frame(data, key: key, sps: sps, pps: pps))
+                }
+                DiagLog.log("Beta 廣播走 H.264 硬編（\(bitrate / 1000)kbps）")
+#endif
                 // 音訊：依教師端開關決定是否同步採集系統聲音。
                 // 取樣率用 48000Hz：與 macOS 內建輸出裝置的預設取樣率一致，
                 // 學生端播放時無需取樣率轉換（消除渲染執行緒 SRC 的潛在崩潰點）。
@@ -174,6 +202,9 @@ final class ScreenBroadcaster: NSObject {
         }
         stream?.stopCapture { _ in }
         stream = nil
+#if FOCUSIN_BETA
+        h264Encoder.stop()
+#endif
     }
 }
 
@@ -283,18 +314,45 @@ extension ScreenBroadcaster: SCStreamOutput {
         isEncodingFrame = true
         defer { isEncodingFrame = false }
 
+#if FOCUSIN_BETA
+        // —— v1.5-beta：銳化 → H.264 硬體編碼（組播單流）——
         let image = CIImage(cvPixelBuffer: pixelBuffer)
-#if FOCUSIN_STABLE || FOCUSIN_BETA
-        // 正式版（含原 Beta 功能）：廣播畫面輕銳化（CISharpenLuminance 只提升亮度銳度，不改變色彩/飽和度）
         let processed = image.applyingFilter("CISharpenLuminance",
                                              parameters: [kCIInputSharpnessKey: 0.8])
+        // CI → CVPixelBuffer（VideoToolbox 需要 pixel buffer 輸入）
+        if let outBuffer = makePixelBuffer(width: processed.extent.width,
+                                           height: processed.extent.height),
+           let cg = context.createCGImage(processed, from: processed.extent) {
+            context.render(processed, to: outBuffer)
+            h264Encoder.encode(outBuffer)
+        }
 #else
+        let image = CIImage(cvPixelBuffer: pixelBuffer)
         let processed = image
-#endif
         guard let cgImage = context.createCGImage(processed, from: processed.extent) else { return }
         guard let jpeg = NSBitmapImageRep(cgImage: cgImage)
             .representation(using: .jpeg, properties: [.compressionFactor: activeJpegQuality]) else { return }
 
         onFrame?(jpeg)
+#endif
     }
+
+    // MARK: - v1.5-beta H.264 幀封裝
+
+#if FOCUSIN_BETA
+    /// 建立用於 VideoToolbox 的 CVPixelBuffer（BGRA）。
+    private func makePixelBuffer(width: CGFloat, height: CGFloat) -> CVPixelBuffer? {
+        var out: CVPixelBuffer?
+        let attrs: [CFString: Any] = [
+            kCVPixelBufferCGImageCompatibilityKey: true,
+            kCVPixelBufferCGBitmapContextCompatibilityKey: true,
+            kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA
+        ]
+        let status = CVPixelBufferCreate(kCFAllocatorDefault,
+                                         Int(width), Int(height),
+                                         kCVPixelFormatType_32BGRA,
+                                         attrs as CFDictionary, &out)
+        return status == kCVReturnSuccess ? out : nil
+    }
+#endif
 }

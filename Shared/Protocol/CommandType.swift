@@ -22,6 +22,11 @@ enum CommandType: String, Codable {
     case streamFrame    // 歷史：JSON 幀（base64 JPEG）；現行幀走二進位通道
     case streamStop     // 教師端停止廣播
 
+    // —— v1.5-beta：AP 組播探測 ——
+    case multicastProbeStart    // 教師端 → 學生端：開始組播統計，payload = "rate,maxRate,step,stageSeconds"
+    case multicastProbeReport   // 學生端 → 教師端：統計回報，payload = "packets,mbps,lossPercent"
+    case multicastProbeStop     // 教師端 → 學生端：停止統計
+
     // —— 保活 ——
     case ping
     case pong

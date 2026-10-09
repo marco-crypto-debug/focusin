@@ -204,7 +204,9 @@ final class CommandListener: ObservableObject {
         case .streamStart:
             isBroadcasting = true
             kiosk.clearBroadcastImage()
-#if !FOCUSIN_STABLE
+#if FOCUSIN_BETA
+            startMulticastVideo()
+#else
             audio.start()
 #endif
 
@@ -215,14 +217,109 @@ final class CommandListener: ObservableObject {
         case .streamStop:
             isBroadcasting = false
             kiosk.clearBroadcastImage()
-#if !FOCUSIN_STABLE
+#if FOCUSIN_BETA
+            stopMulticastVideo()
+#else
             audio.stop()
+#endif
+
+#if FOCUSIN_BETA
+        // —— v1.5-beta：AP 組播探測 ——
+        case .multicastProbeStart:
+            startMulticastProbe(params: message.payload)
+        case .multicastProbeReport:
+            break   // 教師端使用
+        case .multicastProbeStop:
+            stopMulticastProbe()
 #endif
 
         default:
             break
         }
     }
+
+#if FOCUSIN_BETA
+    // MARK: - v1.5-beta 組播畫面接收
+
+    private let multicastVideo = MulticastTransport()
+    private let h264Decoder = H264Decoder()
+    private var hasDecodedFrame = false
+
+    private func startMulticastVideo() {
+        multicastVideo.stop()
+        hasDecodedFrame = false
+        h264Decoder.start { [weak self] pixelBuffer in
+            // 背景佇列：pixel buffer → NSImage → 主執行緒更新畫面
+            let image = Self.image(from: pixelBuffer)
+            guard let image else { return }
+            Task { @MainActor in
+                self?.kiosk.setBroadcastImage(image)
+            }
+        }
+        multicastVideo.startReceiver(port: MulticastTransport.videoPort, ifaceIP: nil) { [weak self] data in
+            guard let self,
+                  let frame = MulticastTransport.unpackH264Frame(data) else { return }
+            // 過濾：尚未解出第一幀前只接受關鍵幀（快速同步）
+            if !self.hasDecodedFrame && !frame.key { return }
+            self.hasDecodedFrame = true
+            self.h264Decoder.decode(frame.annexB, isKeyframe: frame.key,
+                                    sps: frame.sps, pps: frame.pps)
+        }
+        appendLog("Beta 組播畫面接收已啟動（\(MulticastTransport.group):\(MulticastTransport.videoPort)）")
+    }
+
+    private func stopMulticastVideo() {
+        multicastVideo.stop()
+        h264Decoder.stop()
+        hasDecodedFrame = false
+    }
+
+    /// CVPixelBuffer → NSImage（BGRA）。
+    static func image(from pixelBuffer: CVPixelBuffer) -> NSImage? {
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let rep = NSCIImageRep(ciImage: ciImage)
+        let image = NSImage(size: rep.size)
+        image.addRepresentation(rep)
+        return image
+    }
+
+    // MARK: - v1.5-beta AP 組播探測
+
+    private let probeReceiver = MulticastTransport()
+    private let probeStats = MulticastProbeStats()
+    private var probeReportTimer: Timer?
+    private var probeSendingPeer: PeerConnection?
+
+    private func startMulticastProbe(params: String?) {
+        probeStats.resetForProbe()
+        probeSendingPeer = connections.first
+        probeReceiver.startReceiver(port: MulticastTransport.probePort, ifaceIP: nil) { [weak self] data in
+            self?.probeStats.record(packet: data)
+        }
+        appendLog("組播探測統計已啟動（\(MulticastTransport.group):\(MulticastTransport.probePort)）")
+        probeReportTimer?.invalidate()
+        probeReportTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.reportProbeStats() }
+        }
+        _ = params
+    }
+
+    private func reportProbeStats() {
+        let (mbps, loss, packets) = probeStats.windowStats()
+        let report = "\(packets),\(String(format: "%.2f", mbps)),\(String(format: "%.1f", loss))"
+        if let peer = probeSendingPeer {
+            peer.send(CommandMessage(type: .multicastProbeReport, senderID: deviceID,
+                                     senderName: deviceName, payload: report))
+        }
+    }
+
+    private func stopMulticastProbe() {
+        probeReportTimer?.invalidate()
+        probeReportTimer = nil
+        probeReceiver.stop()
+        appendLog("組播探測統計已停止")
+    }
+#endif
 
     // MARK: - 系統動作
 
