@@ -1,178 +1,182 @@
-# FocusIn — macOS 課堂管理（教師端 / 學生端）
+**English** · [繁體中文](README.zh-Hant.md) · [简体中文](README.zh-Hans.md)
 
-FocusIn 是面向 iMac 機房的區域網課堂管理方案：教師端（TeacherApp）自動發現學生端、即時廣播教師屏幕（正式版為高畫質畫面，Alpha 版另含聲音）、下發鎖屏/解鎖/關機/重新啟動/啟動應用程式/清空文件指令；學生端（StudentApp）提供 Kiosk 全屏鎖定、輸入攔截、退出保護與本地緊急解鎖，並可設定登入時自動啟動。
+---
 
-技術棧：Swift / SwiftUI（macOS 14+）、Network.framework（WebSocket + Bonjour/mDNS）、ScreenCaptureKit。
+# FocusIn — macOS Classroom Management (Teacher / Student)
 
-## 版本劃分
+FocusIn is a LAN classroom management solution built for iMac labs. The **Teacher App** auto-discovers student devices, broadcasts the teacher's screen in real time (high-quality video on the stable build, plus audio on the Alpha build), and sends lock/unlock, shutdown, restart, launch-app and wipe-files commands. The **Student App** provides a kiosk full-screen lock, input interception, quit protection and a local emergency unlock, and can launch automatically at login.
 
-- **stable（正式版）**：`release/stable/` 下的 `FocusIn-Teacher.dmg` + `FocusIn-Student.dmg`。**僅傳畫面**（程式碼層面不採集、不傳輸、不播放聲音，徹底避開音訊渲染鏈路）；含 Kiosk 全屏鎖定、輸入攔截、**退出保護（管理員密碼，未設密碼無法退出 ⌘Q）**、**統一管理員密碼（教師端設定即下發所有學生端，同時用於教師端退出、學生端退出、緊急解鎖 ⌘⇧U）**、**廣播畫面銳化**、鎖屏/解鎖、關機/重啟、啟動應用程式、**清空文件（Documents + Downloads，需輸 DELETE 二次確認）**、自動更新、登入自動啟動。課堂環境請使用此版。
-- **alpha（含聲音測試版）**：`release/alpha/` 下的 `FocusIn-Alpha-Teacher.dmg` + `FocusIn-Alpha-Student.dmg`。教師端與學生端含**聲音廣播**（48kHz 立體聲，專屬音訊通道 + 抖動緩衝 + 雙端格式鎖 + 交錯緩衝播放）。此版用於測試/回報音訊問題，不代表穩定交付。教師端另有「傳送聲音」開關可臨時只傳畫面。
-- **beta（已併入 stable，GitHub 保留歷史）**：原「穩定+鎖定」測試渠道已於 v1.3.9 併入正式版（退出保護、統一管理員密碼、廣播銳化），不再維護新版本；歷史 Release 與 Tag 保留於 GitHub（`v1.3.x-beta`）。
+Tech stack: Swift / SwiftUI (macOS 14+), Network.framework (WebSocket + Bonjour/mDNS), ScreenCaptureKit.
 
-## 架構
+## Editions
+
+- **stable (release)**: `FocusIn-Teacher.dmg` + `FocusIn-Student.dmg` under `release/stable/`. **Video only** — at the code level it never captures, transmits or plays audio, which completely avoids the audio-rendering path. Includes kiosk full-screen lock, input interception, **quit protection (admin password required to ⌘Q)**, **unified admin password (set in the Teacher App and pushed to every student; used for teacher quit, student quit and emergency unlock ⌘⇧U)**, **broadcast sharpening**, lock/unlock, shutdown/restart, launch app, **wipe student files (Documents + Downloads, requires typing DELETE to confirm)**, auto-update and login auto-start. Use this build in classrooms.
+- **alpha (audio testing)**: `FocusIn-Alpha-Teacher.dmg` + `FocusIn-Alpha-Student.dmg` under `release/alpha/`. Both apps include **audio broadcasting** (48 kHz stereo, dedicated audio channel with jitter buffer, format-lock on both ends, interleaved playback). Use this build to test/report audio issues; it is not a stable deliverable. The teacher can toggle "Send Audio" off to send video only.
+- **beta (merged into stable, kept on GitHub)**: the former "stable + lock" test channel was merged into the release build at v1.3.9 (quit protection, unified admin password, broadcast sharpening). No longer maintained; historical Releases and Tags stay on GitHub (`v1.3.x-beta`).
+
+## Architecture
 
 ```
 ┌─────────────────────────────┐              ┌─────────────────────────────┐
 │        TeacherApp           │              │        StudentApp           │
 │                             │   Bonjour    │                             │
-│  PeerBrowser  ──發現( mDNS )──────→  PeerAdvertiser (_classroom-ctrl._tcp.)│
+│  PeerBrowser  ──discovers(mDNS)──→  PeerAdvertiser (_classroom-ctrl._tcp.)│
 │  ScreenBroadcaster          │              │  CommandListener            │
 │  (ScreenCaptureKit→JPEG)    │              │   ├─ lock/unlock → Kiosk    │
 │  CommandCenter              │◄─WebSocket──►│   ├─ shutdown/restart       │
-│                             │  命令/幀     │   ├─ launchApp(NSWorkspace) │
-│                             │              │   └─ streamFrame → 鎖窗顯示 │
+│                             │  commands/frames│  ├─ launchApp(NSWorkspace)│
+│                             │              │   └─ streamFrame → lock view│
 └─────────────────────────────┘              └─────────────────────────────┘
-        同一 Wi-Fi 區域網 / 同一子網路
+        Same Wi-Fi LAN / same subnet
 ```
 
-## 目錄結構
+## Directory Layout
 
 ```
 ClassroomManager/
 ├── README.md
-├── project.yml                     # XcodeGen 工程定義（一鍵生成兩個 Xcode 工程）
-├── Shared/                         # 兩端共用的原始碼（同時編譯進兩個 target）
+├── project.yml                     # XcodeGen project definition (generates both Xcode projects)
+├── Shared/                         # Source shared by both targets (compiled into both)
 │   ├── Networking/
-│   │   ├── PeerTransport.swift     # NWParameters 工廠（WebSocket 應用程式協定）
-│   │   ├── PeerConnection.swift    # WebSocket 連線封裝：收發 CommandMessage
-│   │   └── PeerDiscovery.swift     # PeerAdvertiser(學生) / PeerBrowser(教師)
+│   │   ├── PeerTransport.swift     # NWParameters factory (WebSocket application protocol)
+│   │   ├── PeerConnection.swift    # WebSocket wrapper: send/receive CommandMessage
+│   │   └── PeerDiscovery.swift     # PeerAdvertiser (student) / PeerBrowser (teacher)
 │   └── Protocol/
-│       ├── CommandType.swift       # 命令列舉：lock/unlock/shutdown/restart/launchApp/stream*
-│       └── CommandMessage.swift    # JSON 訊息信封
+│       ├── CommandType.swift       # Command enum: lock/unlock/shutdown/restart/launchApp/stream*
+│       └── CommandMessage.swift    # JSON message envelope
 ├── Shared/Utility/
-│   ├── LoginStartManager.swift     # 登入時自動啟動（LaunchAgent 註冊，兩端共用）
-│   └── UpdateChecker.swift         # 自動更新檢查（GitHub API：Release tag / commit SHA）
+│   ├── LoginStartManager.swift     # Launch-at-login (LaunchAgent registration, shared)
+│   └── UpdateChecker.swift         # Auto-update check (GitHub API: release tag / commit SHA)
 ├── TeacherApp/
-│   ├── TeacherApp.swift            # @main 入口
-│   ├── TeacherViewModel.swift      # 發現/連線/命令分發
-│   ├── ScreenBroadcaster.swift     # ScreenCaptureKit 採集 → JPEG 幀 + 音訊 PCM
-│   ├── Views/DeviceListView.swift  # 裝置列表 + 控制面板 UI（含畫質/自動啟動）
+│   ├── TeacherApp.swift            # @main entry
+│   ├── TeacherViewModel.swift      # Discovery / connection / command dispatch
+│   ├── ScreenBroadcaster.swift     # ScreenCaptureKit capture → JPEG frames + audio PCM
+│   ├── Views/DeviceListView.swift  # Device list + control panel UI (quality / auto-start)
 │   ├── Info.plist
 │   └── TeacherApp.entitlements
 └── StudentApp/
-    ├── StudentApp.swift            # @main 入口
-    ├── CommandListener.swift       # 公布服務 + 命令監聽 + 系統動作
-    ├── AudioPlayer.swift           # 廣播音訊播放（AVAudioEngine）
-    ├── FileWipeManager.swift       # 清空 Documents + Downloads（教師下發）
-    ├── Views/StatusView.swift      # 狀態視窗（管理員密碼 + 自動啟動 + 更新檢查）
+    ├── StudentApp.swift            # @main entry
+    ├── CommandListener.swift       # Advertise service + command listener + system actions
+    ├── AudioPlayer.swift           # Broadcast audio playback (AVAudioEngine)
+    ├── FileWipeManager.swift       # Wipe Documents + Downloads (sent by teacher)
+    ├── Views/StatusView.swift      # Status window (admin password + auto-start + update check)
     ├── Kiosk/
-    │   ├── KioskModeController.swift # 全屏鎖窗 + presentationOptions + 解鎖流程
-    │   ├── InputInterceptor.swift    # CGEventTap 鍵盤/滑鼠攔截
-    │   ├── KioskLockView.swift       # 鎖屏介面（廣播畫面 + 密碼輸入）
-    │   └── KioskConfig.swift         # 管理員密碼加鹽雜湊儲存
+    │   ├── KioskModeController.swift # Full-screen lock window + presentationOptions + unlock flow
+    │   ├── InputInterceptor.swift    # CGEventTap keyboard/mouse interception
+    │   ├── KioskLockView.swift       # Lock screen UI (broadcast view + password field)
+    │   └── KioskConfig.swift         # Salted-hash storage of admin password
     ├── Info.plist
     └── StudentApp.entitlements
 ```
 
-## 構建與運行
+## Build & Run
 
-方式 A：XcodeGen（推薦，一條命令生成兩個工程）
+Option A: XcodeGen (recommended — one command generates both projects)
 
 ```bash
 brew install xcodegen
 cd ClassroomManager
-xcodegen generate        # 生成 TeacherApp.xcodeproj / StudentApp.xcodeproj
-open TeacherApp.xcodeproj    # 選擇 TeacherApp scheme，⌘R 運行
-open StudentApp.xcodeproj    # 選擇 StudentApp scheme，⌘R 運行
+xcodegen generate        # generates TeacherApp.xcodeproj / StudentApp.xcodeproj
+open TeacherApp.xcodeproj    # select the TeacherApp scheme, ⌘R to run
+open StudentApp.xcodeproj    # select the StudentApp scheme, ⌘R to run
 ```
 
-方式 B：手動建工程（不用 XcodeGen）
-1. Xcode → New Project → macOS → App，語言 Swift，介面 SwiftUI。
-2. 將 `TeacherApp`、`Shared` 資料夾拖入 TeacherApp target；`StudentApp`、`Shared` 拖入 StudentApp target。
-3. Build Settings：`MACOSX_DEPLOYMENT_TARGET = 13.0`；Info.plist 分別指定對應檔案；Entitlements 指向對應 `.entitlements` 檔案。
-4. 建議對兩個 target 使用獨立簽名 Team（本地開發可直接 Sign to Run Locally）。
+Option B: manual Xcode project (without XcodeGen)
+1. Xcode → New Project → macOS → App, language Swift, interface SwiftUI.
+2. Drag the `TeacherApp` and `Shared` folders into the TeacherApp target; drag `StudentApp` and `Shared` into the StudentApp target.
+3. Build Settings: `MACOSX_DEPLOYMENT_TARGET = 13.0`; point each Info.plist and Entitlements at the corresponding files.
+4. Use a separate signing team per target (for local development, "Sign to Run Locally" is fine).
 
-部署流程
-1. 學生機先啟動 FocusIn 學生端（StudentApp）→ 在狀態視窗設定本地管理員密碼（至少 4 位；之後變更密碼需先輸入目前密碼）；建議勾選「登入時自動啟動學生端」，開機登入即自動就緒。
-2. 教師機啟動 FocusIn 教師端（TeacherApp）→ 自動發現學生端（同一 Wi-Fi）；可勾選「登入時自動啟動教師端」。
-3. 勾選「全部學生」或具體裝置 → 廣播（含聲音）/ 鎖定 / 解鎖 / 關機 / 重新啟動 / 啟動應用程式。
-4. 學生端鎖定時：教師可隨時下發 `unlock`；若網路中斷，本地管理員按 **⌘⇧U** 輸入預設密碼緊急解鎖。
+Deployment flow
+1. On the student Mac, launch FocusIn Student → set a local admin password in the status window (at least 4 characters; changing it requires the current password first). We recommend enabling "Launch Student at login".
+2. On the teacher Mac, launch FocusIn Teacher → it auto-discovers students (same Wi-Fi). You can enable "Launch Teacher at login" too.
+3. Select "All Students" or specific devices → broadcast (with audio on Alpha) / lock / unlock / shutdown / restart / launch app.
+4. While students are locked: the teacher can send `unlock` anytime; if the network is down, a local admin presses **⌘⇧U** and enters the password to unlock.
 
-## 權限清單
+## Permissions
 
-### 1. 系統設定（System Settings → Privacy & Security）
+### 1. System Settings (System Settings → Privacy & Security)
 
-| 應用程式 | 權限 | 用途 | 位置 |
+| App | Permission | Purpose | Location |
 |---|---|---|---|
-| FocusIn 教師端（TeacherApp） | 屏幕錄製 (Screen Recording) | 採集教師屏幕**與聲音**用於廣播（音訊採集共用同一權限） | 私隱與安全性 → 屏幕錄製 |
-| FocusIn 學生端（StudentApp） | 輔助功能 (Accessibility) | CGEventTap 攔截鍵盤/滑鼠 | 私隱與安全性 → 輔助功能 |
-| FocusIn 學生端（StudentApp） | 自動化 (Automation, 可選) | 關機/重新啟動走 System Events，首次執行會彈授權框 | 私隱與安全性 → 自動化 |
-| 兩端 | 本地網路/防火牆 | macOS 防火牆首次運行可能彈「接受傳入連線」，需允許 | 系統設定 → 網路 → 防火牆 |
+| FocusIn Teacher (TeacherApp) | Screen Recording | Capture the teacher's screen **and audio** for broadcast (audio capture shares the same permission) | Privacy & Security → Screen Recording |
+| FocusIn Student (StudentApp) | Accessibility | CGEventTap keyboard/mouse interception | Privacy & Security → Accessibility |
+| FocusIn Student (StudentApp) | Automation (optional) | Shutdown/restart via System Events; first run shows an authorization prompt | Privacy & Security → Automation |
+| Both | Local network / firewall | macOS firewall may ask "Allow incoming connections" on first run | System Settings → Network → Firewall |
 
-> **屏幕錄製授權指引（教師端）**：點擊「廣播教師屏幕」時，若未授權，教師端會先在介面顯示紅色提示並附「開啟屏幕錄製設定」按鈕（一鍵跳到 系統設定 → 私隱與安全性 → 屏幕錄製），同時觸發系統授權彈窗。請在該頁面勾選 **FocusIn 教師端（TeacherApp）** 後重新點擊「廣播教師屏幕」。若之前選過「拒絕」，需先在該頁面取消勾選再重新勾選。
->
-> **廣播畫面在哪看（學生端）**：教師鎖定學生端後，廣播畫面在鎖屏全屏顯示；未鎖定時，學生端狀態視窗會顯示廣播預覽，方便先確認畫面與網路正常。
+> **Screen Recording guidance (Teacher)**: when you press "Broadcast Teacher Screen" without permission, the Teacher App shows a red notice with an "Open Screen Recording Settings" button (jumps straight to System Settings → Privacy & Security → Screen Recording) and triggers the system authorization prompt. Tick **FocusIn Teacher (TeacherApp)** on that page, then press "Broadcast Teacher Screen" again. If you previously chose "Deny", untick and re-tick it on that page.
 
-### 2. Info.plist 鍵（已在檔案內提供）
+> **Where the broadcast is shown (Student)**: once the teacher locks the student device, the broadcast appears full-screen on the lock screen; when unlocked, the student status window shows a broadcast preview so you can verify picture and network first.
 
-| Key | 所在應用程式 | 說明 |
+### 2. Info.plist keys (already provided in the project)
+
+| Key | App | Description |
 |---|---|---|
-| `NSScreenCaptureUsageDescription` | TeacherApp | 屏幕錄製用途說明（TCC 提示文案） |
-| `NSAppleEventsUsageDescription` | StudentApp | 向 System Events 發 Apple Events 的用途說明 |
+| `NSScreenCaptureUsageDescription` | TeacherApp | Screen-recording purpose text (TCC prompt) |
+| `NSAppleEventsUsageDescription` | StudentApp | Purpose text for sending Apple Events to System Events |
 
 ### 3. Entitlements
 
-工程預設**關閉 App Sandbox**（`com.apple.security.app-sandbox = false`），並預置 `com.apple.security.network.client / server` 兩個網路權限。若未來開啟沙箱，這兩項即可覆蓋 WebSocket 收發；開啟沙箱還會要求其他能力（如 `com.apple.security.temporary-exception.apple-events` 才能向 System Events 發 Apple Events）。
+App Sandbox is **disabled by default** (`com.apple.security.app-sandbox = false`), with `com.apple.security.network.client` / `server` pre-provisioned. If you enable the sandbox later, these two cover WebSocket traffic; enabling the sandbox also requires other capabilities (e.g. `com.apple.security.temporary-exception.apple-events` to send Apple Events to System Events).
 
-## 協定參考（WebSocket 二進位幀，JSON 信封）
+## Protocol Reference (WebSocket binary frames, JSON envelope)
 
-| type | 方向 | payload | 說明 |
+| type | direction | payload | description |
 |---|---|---|---|
-| `hello` / `helloAck` | S→T / T→S | — | 握手，hello 攜帶裝置名稱 |
-| `lock` / `unlock` | T→S | — | 進入 / 退出 Kiosk |
-| `shutdown` / `restart` | T→S | — | 遠端關機 / 重新啟動（System Events） |
-| `launchApp` | T→S | Bundle ID | 啟動應用程式（NSWorkspace） |
-| `deleteAllFiles` | T→S | — | 清空學生端 Documents + Downloads（教師點擊 + 輸入 DELETE 確認） |
-| `wipeResult` | S→T | 摘要文字 | 清空執行結果回執 |
-| `streamStart` / `streamStop` | T→S | — | 廣播開始 / 結束 |
-| 廣播幀（二進位） | T→S | 魔數 `FZFR` + 原始 JPEG | 低延遲路徑：跳過 JSON/base64（約省 33% 體積與大量編解碼） |
-| 廣播音訊（二進位） | T→S | 魔數 `FZAU` + 格式標頭 + PCM | 48kHz 立體聲；**走專屬連線**（hello payload = `audio` 標記），與畫面分開；教師端把 SCStream 的非交錯 PCM **重排成交錯格式**後以 ~80ms 聚合送出（跨塊拼接永遠連續，杜絕左右聲道交替切片造成的低頻風鳴）；學生端 AVAudioEngine 播放（一律以交錯緩衝 + 整段拷貝建立緩衝，杜絕非交錯分通道指標類別的渲染崩潰）+ 抖動緩衝（預卷 3 塊 ≈240ms，積壓超限**丟新不丟舊**，播放連續且延遲有界）；全鏈路鎖定單一格式，格式不符的塊兩端一律丟棄 |
-| `ping` / `pong` | 雙向 | — | 應用程式層保活 + 即時延遲測量（教師端每 3 秒測一次，UI 顯示每台學生端 ms） |
+| `hello` / `helloAck` | S→T / T→S | — | Handshake; hello carries the device name |
+| `lock` / `unlock` | T→S | — | Enter / exit Kiosk |
+| `shutdown` / `restart` | T→S | — | Remote shutdown / restart (System Events) |
+| `launchApp` | T→S | Bundle ID | Launch an app (NSWorkspace) |
+| `deleteAllFiles` | T→S | — | Wipe student Documents + Downloads (teacher clicks + types DELETE to confirm) |
+| `wipeResult` | S→T | summary text | Wipe result acknowledgement |
+| `streamStart` / `streamStop` | T→S | — | Broadcast start / stop |
+| Broadcast frame (binary) | T→S | magic `FZFR` + raw JPEG | Low-latency path: skips JSON/base64 (~33% smaller, far less codec work) |
+| Broadcast audio (binary) | T→S | magic `FZAU` + format header + PCM | 48 kHz stereo; **dedicated connection** (hello payload = `audio` marker), separate from video; the teacher re-interleaves non-interleaved SCStream PCM and sends ~80 ms chunks (always continuous across chunks, eliminating the low-frequency hum from alternating left/right slices); the student plays via AVAudioEngine (always builds buffers as interleaved with a whole-buffer copy, avoiding non-interleaved per-channel crashes) + jitter buffer (~240 ms pre-roll, drops newest when overloaded — continuous playback with bounded latency); the format is locked on the whole path and mismatched chunks are dropped on both ends |
+| `ping` / `pong` | both | — | App-level keepalive + live latency measurement (teacher measures every 3 s, UI shows ms per student) |
 
-> 崩潰防護：教師端每次廣播鎖定一個規範音訊格式（首個緩衝決定），格式不符的緩衝直接丟棄；學生端同樣鎖定首塊格式並拒收畸形/異構格式塊（取樣率 8k-96k、1-2 聲道、16/32 位元），已排入節點的緩衝以強引用保活至播完——杜絕渲染執行緒讀到異構格式或已釋放記憶體造成的 EXC_BAD_ACCESS 崩潰。
+> Crash protection: each broadcast locks one canonical audio format (decided by the first buffer); mismatched buffers are dropped. The student locks the first chunk's format and rejects malformed/heterogeneous chunks (8k–96k rate, 1–2 channels, 16/32-bit); queued buffers are strongly referenced until playback ends — no EXC_BAD_ACCESS from rendering threads reading heterogeneous or freed memory.
 
-> 延遲優化：TCP 啟用 `TCP_NODELAY`；教師端編碼節流（編不過來丟舊幀、不積壓）；每條連線同一時間只允許一幀在途；學生端 JPEG 解碼在背景佇列進行；**音訊走專屬 WebSocket 連線**（與畫面分流，消除大幀頭部阻塞），採集端把非交錯 PCM 重排成交錯格式並以 ~80ms 塊送出（保證跨塊拼接連續、左右聲道正確）；學生端以**抖動緩衝**平滑 Wi-Fi 到達抖動（預卷 ~240ms、積壓超限丟新不丟舊以保持播放連續），並以正確的「聲道數×每採樣位元組」計算幀數；教師端每 3 秒以 ping/pong 測量每台學生端的即時延遲並在裝置列顯示。
+> Latency optimizations: `TCP_NODELAY` on TCP; teacher encoding throttle (drops old frames instead of queueing); one in-flight frame per connection; student JPEG decode on a background queue; **audio on its own WebSocket connection** (no head-of-line blocking from large frames), non-interleaved PCM re-interleaved and sent in ~80 ms chunks; student jitter buffer smooths Wi-Fi arrival jitter (~240 ms pre-roll, drops newest on overload) with correct frame counts per channel/bytes-per-sample; the teacher measures live latency per student every 3 s with ping/pong and shows it in the device list.
 
-> 廣播畫質由教師端介面切換（自動/低/中/高），採集參數集中在 `TeacherApp/ScreenBroadcaster.swift` 的 `BroadcastQuality` 與 `resolutionParameters`，如需自訂可在該處修改。
+> Broadcast quality is switched in the teacher UI (Auto / Low / Medium / High). Capture parameters live in `TeacherApp/ScreenBroadcaster.swift` under `BroadcastQuality` and `resolutionParameters` — customize there.
 
-## 鎖屏機制說明（StudentApp）
+## Lock Screen Mechanism (StudentApp)
 
-Kiosk 由三層組成，任一被攻破仍有兜底：
+Kiosk is built from three layers; if any is bypassed, the others still hold:
 
-1. **presentationOptions**：隱藏 Dock/選單列，停用 ⌘⇥、⌘⌥⎋ 等系統級入口（新系統還可停用 ⌘Space、⌘⇧3/4、控制中心/通知中心；為相容舊 SDK，本工程使用最小集合）。
-2. **CGEventTap（.cghidEventTap）**：系統級吞掉全部鍵盤/滑鼠事件，硬攔截 ⌘⇥、⌘⌥⎋、⌃←/⌃→、⌘Space、⌘⇧3/4 等一切快捷鍵；需要輔助功能權限。
-3. **全屏無邊框鎖窗（level = .screenSaver）**：覆蓋所有顯示器、所有 Space，遮住選單列與 Dock；以 `orderFrontRegardless()` 強制抬升，即使學生機正處於其他 App 的全屏模式也能蓋住。鎖定期間的自愈機制：螢幕參數變化（外接顯示器接上/喚醒、解析度改變）會自動重建鎖窗避免漏縫；若被其他 App 搶走焦點（如尚未授予輔助功能權限時按 ⌘⇥），會自動奪回焦點、抬升鎖窗並補裝輸入攔截。
+1. **presentationOptions**: hides Dock/Menu Bar, disables ⌘⇥, ⌘⌥⎋ and other system-level entries (newer systems can also disable ⌘Space, ⌘⇧3/4, Control Center/Notification Center; this project uses the minimal set for SDK compatibility).
+2. **CGEventTap (`.cghidEventTap`)**: swallows all keyboard/mouse events at the system level, hard-blocking ⌘⇥, ⌘⌥⎋, ⌃←/⌃→, ⌘Space, ⌘⇧3/4 and more. Requires Accessibility permission.
+3. **Full-screen borderless lock window (level = `.screenSaver`)**: covers every display and every Space, hiding the Menu Bar and Dock. It is force-raised with `orderFrontRegardless()`, so it covers the screen even when another app is in full-screen mode on the student Mac. Self-healing while locked: screen-parameter changes (external display plugged/woken, resolution change) rebuild the lock window to avoid uncovered gaps; if focus is stolen by another app (e.g. pressing ⌘⇥ before Accessibility is granted), it re-takes focus, re-raises the lock window and re-installs input interception.
 
-緊急解鎖：本地按 **⌘⇧U** → 輸入攔截器暫時卸載 → 鎖窗顯示密碼框（自動聚焦，直接輸入即可）→ 校驗加鹽 SHA-256 雜湊 → 正確則退出 Kiosk；錯誤或 60 秒逾時則自動恢復攔截重新鎖死，鎖屏會顯示對應提示。
+Emergency unlock: press **⌘⇧U** locally → the interceptor unloads temporarily → the lock window shows a password field (auto-focused, just type) → salted SHA-256 hash check → correct password exits Kiosk; wrong password or 60 s timeout restores interception and re-locks, with a hint shown on the lock screen.
 
-> 緊急解鎖注意事項：
-> - **必須先在學生端狀態視窗設定本地管理員密碼**；若未設定，按 ⌘⇧U 會在鎖屏顯示「未設定本地管理員密碼」提示並保持鎖定（不會出現無法輸入的死鎖密碼框）。
-> - **⌘⇧U 依賴「輔助功能」權限**：未授權時輸入攔截器不會安裝，組合鍵無法被偵測，鎖屏會顯示黃色「需要輔助功能權限」提示。請在系統設定 → 私隱與安全性 → 輔助功能 中勾選 FocusIn 學生端（StudentApp）。
-> - ⌘⇧U 必須在**被鎖定的學生機本機**按下；在教師機上按無效。
+> Emergency unlock notes:
+> - **Set a local admin password in the student status window first**; otherwise ⌘⇧U shows "No local admin password set" and stays locked (no dead-lock password field).
+> - **⌘⇧U depends on Accessibility permission**: without it the interceptor is not installed and the shortcut cannot be detected — the lock screen shows a yellow "Accessibility permission required" hint. Enable StudentApp in System Settings → Privacy & Security → Accessibility.
+> - ⌘⇧U must be pressed **on the locked student Mac itself**; pressing it on the teacher Mac does nothing.
 
-## 安全與運維注意事項
+## Security & Operations Notes
 
-- **信任模型**：本設計假設教室區域網可信。WebSocket 為明文，若要跨不可信網路部署，應在 `PeerTransport.webSocketParameters()` 中疊加 `NWProtocolTLS.Options` 並做憑證校驗。
-- **遠端關機/重新啟動**：`System Events` 方案首次會彈自動化授權，部分網路帳戶環境可能要求管理員權限；也可改用 `Process` 執行 `/sbin/shutdown -h now` / `-r now`（需 root）。
-- **Kiosk 的邊界**：事件攔截只作用於圖形會話內的輸入；對 SSH、另一個管理員帳戶、或直接 kill 程序沒有防禦力。生產級機房管理應疊加 MDM（Jamf / Apple School Manager / 描述檔 + 單一 App 模式）。
-- **Wi-Fi 注意**：若學校 AP 開啟「用戶端隔離」，Bonjour 發現與直連會被阻斷；請在支援多播/二層互通的 VLAN 上運行。
-- **效能**：廣播畫質可於教師端切換——**高**：原生全分辨率（30fps，JPEG 0.92）；**中**：0.75 縮放（30fps）；**低**：0.5 縮放（24fps）；**自動**：≤4K 用原生分辨率，5K 以上微縮至 0.85。區域網環境建議使用「高」或「自動」。聲音以 48kHz 立體聲 PCM 隨廣播同步傳輸，學生端即時播放。教師端另有「傳送聲音」開關：若個別學生機的音訊鏈路有相容問題，可關閉聲音僅傳畫面（開關切換會自動重啟廣播套用）。
-- **登入時自動啟動**：兩端介面均有開關，透過寫入 `~/Library/LaunchAgents/<bundleID>.plist`（LaunchAgent，RunAtLoad）註冊。取消勾選即移除；App 移動位置後重新勾選一次即可更新路徑。
-- **自動更新檢查**：兩端啟動時自動查 GitHub（`marco-crypto-debug/focusin`）——有 Release 比對 tag，否則比對 main 分支最新 commit SHA 與本機構建 SHA（構建時寫入 `CFBundleVersion`）。發現新版本即在介面提示，可一鍵前往 GitHub 下載；也可手動「檢查更新」。首次構建於未推送提交時會提示一次，屬正常現象。
-- **清空學生文件（破壞性）**：教師端「清空學生文件」按鈕需點擊後在彈窗輸入 `DELETE` 才會下發；學生端只刪除目前使用者家目錄下的 `Documents` 與 `Downloads` 全部內容（資料夾本身保留），逐項回報結果至教師端事件日誌。此操作**不可復原**，部署前請先在單台測試機驗證。
+- **Trust model**: this design assumes a trusted classroom LAN. WebSocket is plaintext; to deploy across untrusted networks, layer `NWProtocolTLS.Options` in `PeerTransport.webSocketParameters()` with certificate verification.
+- **Remote shutdown/restart**: the System Events route shows an Automation authorization prompt on first use and may require admin rights in some network-account environments; alternatively run `/sbin/shutdown -h now` / `-r now` via `Process` (needs root).
+- **Kiosk limits**: event interception only covers input in the graphical session; it does not defend against SSH, another admin account, or killing the process. For production lab management, layer MDM (Jamf / Apple School Manager / configuration profiles + Single App Mode).
+- **Wi-Fi**: if the school AP enables "client isolation", Bonjour discovery and direct connections are blocked; run on a VLAN that supports multicast / L2 interop.
+- **Performance**: broadcast quality is switchable in the teacher UI — **High**: native full resolution (30 fps, JPEG 0.92); **Medium**: 0.75 scale (30 fps); **Low**: 0.5 scale (24 fps); **Auto**: native up to 4K, slightly scaled (0.85) above 5K. Use "High" or "Auto" on a LAN. Audio (48 kHz stereo PCM) travels with the broadcast and plays in real time on students. The teacher also has a "Send Audio" toggle: if a specific student's audio path has compatibility issues, turn it off to send video only (toggling restarts the broadcast automatically).
+- **Launch at login**: both apps have a toggle that writes `~/Library/LaunchAgents/<bundleID>.plist` (LaunchAgent, RunAtLoad). Unticking removes it; re-tick after moving the app to refresh the path.
+- **Auto-update**: both apps check GitHub (`marco-crypto-debug/focusin`) at launch — comparing release tags when a Release exists, otherwise the latest main-branch commit SHA against the build's SHA (written into `CFBundleVersion` at build time). When a new version is found the UI prompts, and you can download it directly (DMG straight to ~/Downloads and auto-opened) or check manually. A first build before any push may prompt once; that is expected.
+- **Wiping student files (destructive)**: the teacher's "Wipe Student Files" button only sends the command after typing `DELETE` in the dialog; the student deletes everything under the current user's `Documents` and `Downloads` (keeping the folders themselves) and reports per-item results to the teacher's event log. **This cannot be undone** — verify on a single test machine before deploying.
 
-## 簽名與 Gatekeeper 攔截
+## Signing & Gatekeeper
 
-FocusIn 目前以 **自簽證書**（`FocusIn Signing (Marco TSK)`）簽名。未付費加入 Apple Developer Program 前無法做正式的 Developer ID 公證，macOS 對未公證 App 一律攔截（「無法驗證開發者 / 已損壞」），屬正常現象。
+FocusIn is currently signed with a **self-signed certificate** (`FocusIn Signing (Marco TSK)`). Without a paid Apple Developer Program membership, formal Developer ID notarization is impossible, and macOS blocks unnotarized apps ("Cannot verify developer / damaged") — this is expected.
 
-- **構建機**：執行 `bash tools/sign-focusin.sh`，自動創建證書（首次）→ 簽名 `release/staging-rel` 下所有 App → 導出公鑰 `tools/focusin-signing.cer`。
-- **學生機**：把 `tools/install-cert.sh` 與 `focusin-signing.cer` 放到同一資料夾執行一次（需管理員密碼），安裝證書 + 移除 quarantine + 加入 Gatekeeper 白名單，之後所有版本都能直接打開。
-- 快速繞過單次攔截：右鍵 App → 開啟 → 再按「開啟」；或 `xattr -dr com.apple.quarantine /Applications/FocusIn\ Teacher.app`。
-- 付費加入 Apple Developer Program 後，可改用正式 **Developer ID 簽名 + `notarytool` 公證**，用戶下載即開、零攔截；屆時替換 `tools/sign-focusin.sh` 內的簽名命令即可。
+- **Build machine**: run `bash tools/sign-focusin.sh` — it creates the certificate (first time), signs every app under `release/staging-rel`, and exports the public key to `tools/focusin-signing.cer`.
+- **Student machines**: put `tools/install-cert.sh` and `focusin-signing.cer` in the same folder and run it once (admin password required). It installs the certificate, removes quarantine and adds a Gatekeeper allowlist — after that, every version opens directly.
+- Quick one-time bypass: right-click the app → Open → Open again; or `xattr -dr com.apple.quarantine /Applications/FocusIn\ Teacher.app`.
+- After joining the paid Apple Developer Program, switch to official **Developer ID signing + `notarytool` notarization** for zero-friction downloads; replace the signing command inside `tools/sign-focusin.sh`.
 
-## 已知限制
+## Known Limitations
 
-- 屏幕錄製權限若未授權或遭撤銷，教師端廣播會在介面顯示紅色提示與「開啟屏幕錄製設定」按鈕引導開啟；權限恢復後重新點擊「廣播教師屏幕」即可。
-- 學生端首次鎖定若輔助功能權限缺失，會彈提示並引導開啟系統設定；未授權期間輸入不會被攔截。
-- `NSAppleScript` 關機/重新啟動在部分新 macOS 上可能被 TCC 拒絕，日誌會記錄錯誤。
+- If Screen Recording permission is missing or revoked, the teacher UI shows a red notice with an "Open Screen Recording Settings" button; after granting, press "Broadcast Teacher Screen" again.
+- If Accessibility permission is missing on first lock, the student shows a prompt and guides you to System Settings; input is not intercepted until granted.
+- `NSAppleScript` shutdown/restart may be denied by TCC on some newer macOS versions; the error is logged.
