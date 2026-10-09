@@ -378,8 +378,8 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
     <div class="spacer"></div>
     <div class="lang" id="lang-switch" role="group" aria-label="Language">
       <button data-lang="en" class="on">EN</button>
-      <button data-lang="zh-Hant">繁</button>
-      <button data-lang="zh-Hans">简</button>
+      <button data-lang="zh-Hant">繁體中文</button>
+      <button data-lang="zh-Hans">简体中文</button>
     </div>
     <a class="cta" href="#download" data-route="download" data-i18n="nav.downloadCta">Download</a>
   </div>
@@ -792,7 +792,7 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
             <div><h3 data-i18n="dl.teacher">FocusIn Teacher</h3><div class="ver-line" data-i18n="dl.teacherVer">Stable v1.4.0 · macOS 14+</div></div>
           </div>
           <p class="d-desc" data-i18n="dl.teacherDesc">The broadcast source. Discover devices, stream your screen, send commands.</p>
-          <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.4.0/FocusIn-Teacher.dmg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="dl.teacherDmg">FocusIn-Teacher.dmg</span></a>
+          <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.4.2/FocusIn-Teacher.dmg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="dl.teacherDmg">FocusIn-Teacher.dmg</span></a>
         </div>
         <div class="dlcard">
           <div class="d-head">
@@ -800,7 +800,7 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
             <div><h3 data-i18n="dl.student">FocusIn Student</h3><div class="ver-line" data-i18n="dl.studentVer">Stable v1.4.0 · macOS 14+</div></div>
           </div>
           <p class="d-desc" data-i18n="dl.studentDesc">The receiving screen. Show the broadcast, follow remote commands, stay in sync.</p>
-          <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.4.0/FocusIn-Student.dmg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="dl.studentDmg">FocusIn-Student.dmg</span></a>
+          <a class="btn btn-dark" href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.4.2/FocusIn-Student.dmg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="dl.studentDmg">FocusIn-Student.dmg</span></a>
         </div>
       </div>
 
@@ -810,8 +810,9 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
           <span data-i18n="brew.title">Install with Homebrew</span>
           <span class="lbl" data-i18n="brew.lbl">macOS · Homebrew</span>
         </div>
-        <pre><span class="c"># 1. Add the FocusIn tap (once)</span>
+        <pre><span class="c"># 1. Add & trust the FocusIn tap (once)</span>
 <span class="cmd">brew tap marco-crypto-debug/homebrew-focusin</span>
+<span class="cmd">brew trust marco-crypto-debug/focusin</span>
 <span class="c"># 2. Install Teacher and/or Student</span>
 <span class="cmd">brew install --cask focusin-teacher</span>
 <span class="cmd">brew install --cask focusin-student</span>
@@ -840,7 +841,7 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
         </details>
         <details class="faq-i">
           <summary data-i18n="faq.q2">Does Homebrew update work with auto-update?<span class="pm">+</span></summary>
-          <div class="a" data-i18n="faq.a2">Yes. You can update either way: <code>brew upgrade --cask focusin-teacher focusin-student</code>, or press "Check for updates" in the app, which downloads the latest DMG directly.</div>
+          <div class="a" data-i18n="faq.a2">Yes. You can update either way: <code>brew upgrade --cask focusin-teacher focusin-student</code> (run <code>brew trust marco-crypto-debug/focusin</code> once after the first tap), or press "Check for updates" in the app, which downloads the latest DMG straight to your Downloads folder and opens it.</div>
         </details>
         <details class="faq-i">
           <summary data-i18n="faq.q3">Devices can't find each other?<span class="pm">+</span></summary>

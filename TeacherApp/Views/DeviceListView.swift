@@ -513,9 +513,11 @@ struct DeviceListView: View {
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(.blue)
                             Spacer()
-                            Button("前往 GitHub 下載") {
-                                if let url = URL(string: update.pageURL) { NSWorkspace.shared.open(url) }
-                                viewModel.updateAvailable = nil
+                            Button("立即下載更新（DMG）") {
+                                if let url = URL(string: update.url) {
+                                    UpdateChecker.downloadAndOpen(url)
+                                    viewModel.updateAvailable = nil
+                                }
                             }
                             .controlSize(.small)
                         }

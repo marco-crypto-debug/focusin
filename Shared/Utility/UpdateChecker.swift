@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 /// 自動更新檢查：App 啟動時查詢 GitHub（marco-crypto-debug/focusin）是否有新版本。
@@ -242,5 +243,63 @@ enum UpdateChecker {
                 completion(isNewer ? info : nil, true)
             }
         }
+    }
+
+    // MARK: - 直接下載 DMG
+
+    /// 直接把最新 DMG 下載到 ~/Downloads 並掛載開啟（不再跳轉 GitHub 網頁）。
+    /// - 下載期間 UI 顯示進度文字（progressHandler 回呼主執行緒）。
+    /// - 完成後用 Finder 掛載 DMG，用戶拖入 Applications 即完成安裝。
+    static func downloadAndOpen(_ url: URL, progressHandler: ((Float) -> Void)? = nil) {
+        let task = URLSession.shared.downloadTask(with: url) { tmpURL, _, error in
+            guard let tmpURL, error == nil else {
+                DispatchQueue.main.async {
+                    DiagLog.log("更新下載失敗：\(error?.localizedDescription ?? "未知錯誤")")
+                    NSSound.beep()
+                }
+                return
+            }
+            let fm = FileManager.default
+            let dest = fm.homeDirectoryForCurrentUser
+                .appendingPathComponent("Downloads")
+                .appendingPathComponent(url.lastPathComponent)
+            do {
+                if fm.fileExists(atPath: dest.path) { try fm.removeItem(at: dest) }
+                try fm.moveItem(at: tmpURL, to: dest)
+                DispatchQueue.main.async {
+                    DiagLog.log("更新已下載：\(dest.path)")
+                    NSWorkspace.shared.activateFileViewerSelecting([dest])
+                    NSWorkspace.shared.open(dest)
+                }
+            } catch {
+                // 移動失敗（跨磁碟等）：退回複製
+                do {
+                    try fm.copyItem(at: tmpURL, to: dest)
+                    DispatchQueue.main.async {
+                        DiagLog.log("更新已下載：\(dest.path)")
+                        NSWorkspace.shared.activateFileViewerSelecting([dest])
+                        NSWorkspace.shared.open(dest)
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        DiagLog.log("更新儲存失敗：\(error.localizedDescription)")
+                        NSSound.beep()
+                    }
+                }
+            }
+        }
+        // 進度回報（downloadTask 進度透過 Progress 物件觀察）
+        if let handler = progressHandler {
+            let progress = task.progress
+            DispatchQueue.global(qos: .utility).async {
+                while !task.progress.isFinished && !task.progress.isCancelled {
+                    let f = Float(progress.fractionCompleted)
+                    DispatchQueue.main.async { handler(f) }
+                    Thread.sleep(forTimeInterval: 0.2)
+                }
+                DispatchQueue.main.async { handler(1) }
+            }
+        }
+        task.resume()
     }
 }
