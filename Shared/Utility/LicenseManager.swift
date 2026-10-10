@@ -34,6 +34,10 @@ final class LicenseManager {
     /// 由 tools/gen-license-key.js --init 生成，請勿隨意更換（會使所有已發 Key 失效）。
     private let pubKeyB64 = "+kWy/MC8XKsOOh2zMJMMChjz4mmFfCD4QC7oDY0RNcY="
 
+    /// 開發者專用永久 KEY（解鎖測試版本；expiry 2099-01-01，永不過期）。
+    /// 僅供開發者 / 測試者輸入，正式用戶請透過官網付款頁取得月度 Key。
+    static let developerKey = "FI-PRO-eyJlIjoiZGV2QGZvY3VzaW4uYXBwIiwicCI6InBybyIsIngiOiIyMDk5LTAxLTAxIn0.6RDTha8QFPoxAsqJbnUL66XqZG_h06PFhTbV8vLcGmxTLW3rl_n4CyZEFAHSTHnKz2SpbR1UGbDtDQ810k9fAg"
+
     /// 儲存 Key 的 UserDefaults 鍵。
     private let storageKey = "focusin.license.key"
 
@@ -116,7 +120,14 @@ final class LicenseManager {
 
     /// 解析並驗證 Key；回傳授權狀態。
     static func validate(key: String, pubKeyB64: String) -> LicenseStatus {
-        let parts = key.split(separator: ".", omittingEmptySubsequences: false)
+        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        // 開發者專用永久 KEY：直接視為 Pro（2099 到期，永不自動停用）
+        if trimmed == developerKey {
+            if let d = parseMonthFirst("2099-01-01") {
+                return .pro(expiry: d)
+            }
+        }
+        let parts = trimmed.split(separator: ".", omittingEmptySubsequences: false)
         guard parts.count == 2,
               let payloadPart = parts.first, !payloadPart.isEmpty,
               let sigB64 = parts.last, !sigB64.isEmpty else {

@@ -34,6 +34,11 @@ enum UpdateChecker {
         Bundle.main.bundleIdentifier?.contains(".beta") == true
     }
 
+    /// 本機是否 delta 測試版（bundle id 含 `.delta`；基於 beta，走同一更新流）。
+    static var isDelta: Bool {
+        Bundle.main.bundleIdentifier?.contains(".delta") == true
+    }
+
     /// 本機是否教師端（bundle id 含 `teacher`）。
     static var isTeacher: Bool {
         Bundle.main.bundleIdentifier?.contains("teacher") == true
@@ -84,6 +89,8 @@ enum UpdateChecker {
     static func check(completion: @escaping (UpdateInfo?) -> Void) {
         if isAlpha {
             checkAlphaRelease(completion: completion)
+        } else if isDelta {
+            checkDeltaRelease(completion: completion)
         } else if isBeta {
             checkBetaRelease(completion: completion)
         } else {
@@ -156,6 +163,20 @@ enum UpdateChecker {
         }
     }
 
+    /// Delta（基於 beta）：只匹配含 `delta` 的 release tag。
+    private static func checkDeltaRelease(completion: @escaping (UpdateInfo?) -> Void) {
+        fetchJSON("releases?per_page=20") { json in
+            guard let array = json as? [[String: Any]] else { completion(nil); return }
+            for release in array {
+                guard let tag = release["tag_name"] as? String,
+                      tag.lowercased().contains("delta") else { continue }
+                completion(makeInfo(from: release, tag: tag))
+                return
+            }
+            completion(nil)
+        }
+    }
+
     // MARK: - 通用
 
     /// 組裝 UpdateInfo：自動匹配「本端別」的 DMG 資產直鏈（teacher/student × stable/alpha）。
@@ -171,8 +192,11 @@ enum UpdateChecker {
         for asset in assets {
             guard let name = asset["name"] as? String, name.lowercased().hasSuffix(".dmg") else { continue }
             let lower = name.lowercased()
-            if lower.contains("alpha") == isAlpha && lower.contains("beta") == isBeta
-                && lower.contains("teacher") == isTeacher,
+            let matches = isDelta
+                ? lower.contains("delta") && lower.contains("teacher") == isTeacher
+                : lower.contains("alpha") == isAlpha && lower.contains("beta") == isBeta
+                    && lower.contains("teacher") == isTeacher
+            if matches,
                let url = asset["browser_download_url"] as? String {
                 return url
             }
@@ -184,6 +208,7 @@ enum UpdateChecker {
     private static func assetURL(forTag tag: String) -> String? {
         let prefix: String
         if isAlpha { prefix = "FocusIn-Alpha-" }
+        else if isDelta { prefix = "FocusIn-Delta-" }
         else if isBeta { prefix = "FocusIn-Beta-" }
         else { prefix = "FocusIn-" }
         let role = isTeacher ? "Teacher" : "Student"

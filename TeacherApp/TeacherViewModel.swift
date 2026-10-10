@@ -184,6 +184,16 @@ final class TeacherViewModel: ObservableObject {
     }
 
     private func connect(to endpoint: NWEndpoint, name: String) {
+#if FOCUSIN_DELTA
+        // Delta：超過裝置上限（免費 5 / Pro 高級 50）時拒絕新學生入列
+        if peers.count >= DeviceLimit.currentLimit {
+            appendLog("⚠️ 已達裝置上限（\(DeviceLimit.currentLimit) 台），拒絕 \(name) 加入：\(DeviceLimit.check(count: peers.count + 1) ?? "")")
+            // 仍建立連線以維持握手，但不列入可廣播清單
+            let connection = PeerConnection(connectTo: endpoint)
+            connection.start()
+            return
+        }
+#endif
         // 防止同一學生重複入列
         let endpointKey = endpoint.debugDescription
         if let existingIdx = peers.firstIndex(where: { $0.endpoint.debugDescription == endpointKey }) {
@@ -344,6 +354,14 @@ final class TeacherViewModel: ObservableObject {
 
     private func startBroadcast() {
         broadcastError = nil
+#if FOCUSIN_DELTA
+        // Delta：廣播前再次確認未超上限
+        if let msg = DeviceLimit.check(count: selectedIDs.count) {
+            broadcastError = msg
+            appendLog("⚠️ 無法開始廣播：\(msg)")
+            return
+        }
+#endif
         broadcaster.quality = broadcastQuality
 #if FOCUSIN_STABLE
         // 穩定版：不傳聲音，只傳畫面
@@ -499,7 +517,7 @@ final class TeacherViewModel: ObservableObject {
     }
 #endif
 
-    private func appendLog(_ text: String) { log.append(text) }
+    func appendLog(_ text: String) { log.append(text) }
 }
 
 /// 一台已發現的學生裝置。

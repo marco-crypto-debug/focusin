@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# FocusIn 一鍵構建：stable / alpha / beta 三版 × 教師端/學生端
+# FocusIn 一鍵構建：stable / alpha / beta / delta 四版 × 教師端/學生端
 #
 # 用法：
 #   bash tools/build.sh            # 預設構建 beta（含 Pro License）
@@ -29,6 +29,7 @@ SHARED_SRC=(
   "$ROOT/Shared/Protocol/CommandType.swift"
   "$ROOT/Shared/Utility/DiagLog.swift"
   "$ROOT/Shared/Utility/LicenseManager.swift"
+  "$ROOT/Shared/Utility/DeviceLimit.swift"
   "$ROOT/Shared/Utility/LoginStartManager.swift"
   "$ROOT/Shared/Utility/MenuBarManager.swift"
   "$ROOT/Shared/Utility/FocusInAppState.swift"
@@ -66,10 +67,11 @@ build_variant() {
   local CAP="Stable"       # 顯示用大寫首字母
 
   case "$VARIANT" in
-    stable) MACRO="-D FOCUSIN_STABLE";  SUFFIX="";      CAP="Stable"; STAGE="$ROOT/release/staging-rel";  OUTDIR="$ROOT/release/stable"; DMG_TAG="";;
+    stable) MACRO="-D FOCUSIN_STABLE";  SUFFIX="";       CAP="Stable"; STAGE="$ROOT/release/staging-rel";  OUTDIR="$ROOT/release/stable"; DMG_TAG="";;
     alpha)  MACRO="-D FOCUSIN_ALPHA";   SUFFIX=".alpha"; CAP="Alpha"; STAGE="$ROOT/release/staging-alpha"; OUTDIR="$ROOT/release/alpha"; DMG_TAG="Alpha-";;
     beta)   MACRO="-D FOCUSIN_BETA";    SUFFIX=".beta";  CAP="Beta"; STAGE="$ROOT/release/staging-beta"; OUTDIR="$ROOT/release/beta"; DMG_TAG="Beta-";;
-    *) echo "✗ 未知版本：$VARIANT（stable/alpha/beta/all）"; exit 1;;
+    delta)  MACRO="-D FOCUSIN_BETA -D FOCUSIN_DELTA"; SUFFIX=".delta"; CAP="Delta"; STAGE="$ROOT/release/staging-delta"; OUTDIR="$ROOT/release/delta"; DMG_TAG="Delta-";;
+    *) echo "✗ 未知版本：$VARIANT（stable/alpha/beta/delta/all）"; exit 1;;
   esac
 
   local VERSION="$VERSION_BASE"
@@ -78,6 +80,7 @@ build_variant() {
   case "$VARIANT" in
     alpha) TAG_SUFFIX="-alpha";;
     beta)  TAG_SUFFIX="-beta";;
+    delta) TAG_SUFFIX="-delta";;
   esac
   [ -n "$TAG_SUFFIX" ] && VERSION="$VERSION_BASE$TAG_SUFFIX"
 
@@ -165,6 +168,7 @@ case "${1:-beta}" in
     build_variant stable
     build_variant alpha
     build_variant beta
+    build_variant delta
     ;;
   *) build_variant "${1:-beta}" ;;
 esac
