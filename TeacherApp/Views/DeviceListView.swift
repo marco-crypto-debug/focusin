@@ -169,8 +169,8 @@ struct DeviceListView: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(FocusInTheme.card, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(FocusInTheme.line, lineWidth: 1))
+            .background(FocusInTheme.card, in: RoundedRectangle(cornerRadius: FocusInTheme.cornerRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: FocusInTheme.cornerRadius, style: .continuous).stroke(FocusInTheme.line, lineWidth: 1))
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text("bug report IG:marco.tsk_smile")
@@ -204,7 +204,7 @@ struct DeviceListView: View {
             }
             .buttonStyle(.plain)
             .background(viewModel.broadcastActive ? Color.red.opacity(0.9) : FocusInTheme.dark,
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        in: RoundedRectangle(cornerRadius: FocusInTheme.cornerRadius, style: .continuous))
             .foregroundStyle(.white)
 
             // 鎖定 / 解鎖

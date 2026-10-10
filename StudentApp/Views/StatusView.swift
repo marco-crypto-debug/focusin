@@ -65,8 +65,8 @@ struct StatusView: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(FocusInTheme.card, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(FocusInTheme.line, lineWidth: 1))
+            .background(FocusInTheme.card, in: RoundedRectangle(cornerRadius: FocusInTheme.cornerRadius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: FocusInTheme.cornerRadius, style: .continuous).stroke(FocusInTheme.line, lineWidth: 1))
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text("bug report IG:marco.tsk_smile")
