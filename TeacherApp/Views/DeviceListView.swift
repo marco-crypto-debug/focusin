@@ -63,8 +63,8 @@ struct DeviceListView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(DeviceLimit.isAdvanced ? FocusInTheme.accent : .secondary)
                 Text(DeviceLimit.isAdvanced
-                     ? "高級模式 · 已連 \(viewModel.peers.count)/\(DeviceLimit.currentLimit) 台"
-                     : "上限 \(DeviceLimit.currentLimit) 台 · 已連 \(viewModel.peers.count) 台")
+                     ? "Pro · 高級版（50 台）· 已連 \(viewModel.peers.count) 台"
+                     : "免費版（5 台）· 已連 \(viewModel.peers.count) 台")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -338,43 +338,6 @@ struct DeviceListView: View {
 
     private var advancedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-#if FOCUSIN_DELTA
-            // Delta：廣播規模模式（Pro 解鎖後可選 5/50）
-            FocusInTheme.sectionLabel("Broadcast Scale")
-            FocusInTheme.card {
-                VStack(alignment: .leading, spacing: 8) {
-                    if LicenseManager.shared.isProActive {
-                        Picker("廣播規模", selection: Binding(
-                            get: { DeviceLimit.scale },
-                            set: { mode in
-                                DeviceLimit.scale = mode
-                                limitMsg = ""
-                                viewModel.appendLog("廣播規模切換為「\(mode.label)」")
-                            }
-                        )) {
-                            ForEach(BroadcastScale.allCases) { m in
-                                Text(m.label).tag(m)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
-                        Text("高級模式最多可同時投放 50 台；普通模式維持 5 台。")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        HStack(spacing: 8) {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 12))
-                                .foregroundStyle(.secondary)
-                            Text("免費版上限 5 台。啟用 FocusIn Pro 後可選擇普通（5 台）或高級（50 台）模式。")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-#endif
-
             // 廣播畫質
             FocusInTheme.sectionLabel("Broadcast Quality")
             FocusInTheme.card {

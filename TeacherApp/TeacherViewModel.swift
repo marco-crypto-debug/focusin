@@ -397,8 +397,8 @@ final class TeacherViewModel: ObservableObject {
 #endif
         broadcaster.onFrame = { jpegData in
 #if FOCUSIN_DELTA
-            // —— Delta：普通模式(≤5台)走 WebSocket 單播；高級模式(≤50台)走 UDP 組播 ——
-            if DeviceLimit.scale == .advanced {
+            // —— Delta：免費版(≤5台)走 WebSocket 單播；Pro(≤50台)走 UDP 組播 ——
+            if DeviceLimit.isAdvanced {
                 self.multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
                 self.multicastVideo.send(jpegData)
             } else {
@@ -428,8 +428,8 @@ final class TeacherViewModel: ObservableObject {
             self.broadcastError = nil
 #if FOCUSIN_DELTA
             // Delta：標記通道模式，學生端據此啟動組播或單播接收
-            let scale = DeviceLimit.scale == .advanced ? "multicast" : "unicast"
-            self.send(CommandMessage(type: .streamStart, payload: scale))
+            let channel = DeviceLimit.isAdvanced ? "multicast" : "unicast"
+            self.send(CommandMessage(type: .streamStart, payload: channel))
 #else
             self.send(CommandMessage(type: .streamStart))
 #endif
