@@ -338,6 +338,46 @@ struct DeviceListView: View {
 
     private var advancedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
+#if FOCUSIN_DELTA
+            // Delta：傳輸方式（僅 Pro 可自選；免費版鎖定 WebSocket 單播）
+            FocusInTheme.sectionLabel("傳輸方式 Transport")
+            FocusInTheme.card {
+                VStack(alignment: .leading, spacing: 8) {
+                    if LicenseManager.shared.isProActive {
+                        Picker("傳輸方式", selection: Binding(
+                            get: { DeviceLimit.transportMode },
+                            set: { mode in
+                                DeviceLimit.transportMode = mode
+                                viewModel.appendLog("傳輸方式切換為「\(mode.label)」")
+                            }
+                        )) {
+                            ForEach(TransportMode.allCases) { m in
+                                Text(m.label).tag(m)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        Text(DeviceLimit.transportRecommendation(for: viewModel.peers.count))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("UDP 組播模式：畫面與聲音均只發 1 份串流，由 AP 複製給全部學生。")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    } else {
+                        HStack(spacing: 8) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                            Text("免費版固定 WebSocket 單播（最多 5 台）。啟用 FocusIn Pro 後可自行選擇傳輸方式。")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+#endif
+
             // 廣播畫質
             FocusInTheme.sectionLabel("Broadcast Quality")
             FocusInTheme.card {

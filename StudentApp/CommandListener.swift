@@ -214,9 +214,10 @@ final class CommandListener: ObservableObject {
             isBroadcasting = true
             kiosk.clearBroadcastImage()
 #if FOCUSIN_DELTA
-            // Delta：教師端 payload 標記通道——"multicast" 高級(組播) / "unicast" 普通(單播)
+            // Delta：教師端 payload 標記通道——"multicast" 組播 / "unicast" 單播
             if message.payload == "multicast" {
                 startMulticastVideo()
+                startMulticastAudio()
             } else {
                 startUnicastVideo()
             }
@@ -236,6 +237,7 @@ final class CommandListener: ObservableObject {
 #if FOCUSIN_DELTA
             stopUnicastVideo()
             stopMulticastVideo()
+            stopMulticastAudio()
 #elseif FOCUSIN_BETA
             stopMulticastVideo()
 #else
@@ -261,6 +263,8 @@ final class CommandListener: ObservableObject {
     // MARK: - v1.5-beta 組播畫面接收
 
     private let multicastVideo = MulticastTransport()
+    /// Delta：組播音訊接收（UDP 組播模式）
+    private let multicastAudio = MulticastTransport()
     private let h264Decoder = H264Decoder()
     private var hasDecodedFrame = false
 
@@ -291,6 +295,23 @@ final class CommandListener: ObservableObject {
         multicastVideo.stop()
         h264Decoder.stop()
         hasDecodedFrame = false
+    }
+
+    /// 啟動組播音訊接收：解包 FZAU → 餵給播放器（與單播音訊共用 BroadcastAudioPlayer）。
+    private func startMulticastAudio() {
+        multicastAudio.stop()
+        multicastAudio.startReceiver(port: MulticastTransport.audioPort, ifaceIP: nil) { [weak self] data in
+            guard let self,
+                  let audio = MulticastTransport.unpackAudio(data) else { return }
+            Task { @MainActor in
+                self.audio.play(pcm: audio.pcm, format: audio.format)
+            }
+        }
+        appendLog("Delta 組播音訊接收已啟動（\(MulticastTransport.group):\(MulticastTransport.audioPort)）")
+    }
+
+    private func stopMulticastAudio() {
+        multicastAudio.stop()
     }
 
 #if FOCUSIN_DELTA

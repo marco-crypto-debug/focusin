@@ -24,6 +24,8 @@ final class TeacherViewModel: ObservableObject {
 #if FOCUSIN_BETA
     /// v1.5-beta：畫面組播傳輸（單流發送）
     private let multicastVideo = MulticastTransport()
+    /// Delta：聲音組播傳輸（UDP 組播模式，1 份串流）
+    private let multicastAudio = MulticastTransport()
     /// v1.5-beta：AP 組播探測（吞吐測試工具）
     private let multicastProbe = MulticastTransport()
     /// 探測報告：studentID -> 最新統計文字
@@ -397,8 +399,8 @@ final class TeacherViewModel: ObservableObject {
 #endif
         broadcaster.onFrame = { jpegData in
 #if FOCUSIN_DELTA
-            // —— Delta：免費版(≤5台)走 WebSocket 單播；Pro(≤50台)走 UDP 組播 ——
-            if DeviceLimit.isAdvanced {
+            // —— Delta：依教師選擇的傳輸方式——WebSocket 單播（≤5 建議）或 UDP 組播（>5 建議）——
+            if DeviceLimit.transportMode == .udp {
                 self.multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
                 self.multicastVideo.send(jpegData)
             } else {
@@ -418,9 +420,21 @@ final class TeacherViewModel: ObservableObject {
         }
 #if !FOCUSIN_STABLE
         broadcaster.onAudio = { pcm, info in
+#if FOCUSIN_DELTA
+            if DeviceLimit.transportMode == .udp {
+                // UDP 組播：聲音也走組播，只發 1 份（AP 複製給所有學生）
+                self.multicastAudio.startSender(port: MulticastTransport.audioPort, ifaceIP: nil)
+                self.multicastAudio.send(MulticastTransport.packAudio(pcm, format: info))
+            } else {
+                for target in audioTargets where target.connection.state == .ready {
+                    target.sendAudio(pcm, format: info)
+                }
+            }
+#else
             for target in audioTargets where target.connection.state == .ready {
                 target.sendAudio(pcm, format: info)
             }
+#endif
         }
 #endif
         broadcaster.start { [weak self] in
@@ -428,7 +442,7 @@ final class TeacherViewModel: ObservableObject {
             self.broadcastError = nil
 #if FOCUSIN_DELTA
             // Delta：標記通道模式，學生端據此啟動組播或單播接收
-            let channel = DeviceLimit.isAdvanced ? "multicast" : "unicast"
+            let channel = DeviceLimit.transportMode == .udp ? "multicast" : "unicast"
             self.send(CommandMessage(type: .streamStart, payload: channel))
 #else
             self.send(CommandMessage(type: .streamStart))
@@ -449,6 +463,7 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.onAudio = nil
 #if FOCUSIN_BETA
         multicastVideo.stop()
+        multicastAudio.stop()
 #endif
         audioConnections.values.forEach { $0.close() }
         audioConnections.removeAll()
@@ -464,6 +479,7 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.onAudio = nil
 #if FOCUSIN_BETA
         multicastVideo.stop()
+        multicastAudio.stop()
 #endif
         audioConnections.values.forEach { $0.close() }
         audioConnections.removeAll()

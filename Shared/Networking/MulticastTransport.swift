@@ -297,3 +297,39 @@ final class MulticastProbeStats {
         return (mbps, loss, packets)
     }
 }
+
+
+// MARK: - 音訊組播（Delta：UDP 組播聲音，1 份串流 AP 複製）
+
+extension MulticastTransport {
+    /// 音訊組播埠（與畫面 videoPort 分開，避免互相阻塞）。
+    static let audioPort: UInt16 = 7200
+
+    /// 打包音訊：FZAU(4) + sampleRate(4, LE) + channels(1) + bits(1) + isFloat(1) + interleaved(1) + reserved(2) + PCM。
+    static func packAudio(_ pcm: Data, format: PeerConnection.AudioFormatInfo) -> Data {
+        var payload = Data(PeerConnection.audioMagic)
+        var sr = UInt32(format.sampleRate.rounded()).littleEndian
+        payload.append(Data(bytes: &sr, count: 4))
+        payload.append(UInt8(format.channels))
+        payload.append(format.bits)
+        payload.append(format.isFloat ? 1 : 0)
+        payload.append(format.interleaved ? 1 : 0)
+        payload.append(0)
+        payload.append(0)
+        payload.append(pcm)
+        return payload
+    }
+
+    /// 解包音訊；格式不符（魔數錯 / 太短）回傳 nil。
+    static func unpackAudio(_ data: Data) -> (pcm: Data, format: PeerConnection.AudioFormatInfo)? {
+        guard data.count > 14, data.prefix(4).elementsEqual(PeerConnection.audioMagic) else { return nil }
+        var sr: UInt32 = 0
+        data.subdata(in: 4..<8).withUnsafeBytes { sr = $0.loadUnaligned(as: UInt32.self) }
+        let info = PeerConnection.AudioFormatInfo(sampleRate: Double(UInt32(littleEndian: sr)),
+                                                  channels: UInt32(data[8]),
+                                                  bits: data[9],
+                                                  isFloat: data[10] == 1,
+                                                  interleaved: data[11] == 1)
+        return (data.subdata(in: 14..<data.count), info)
+    }
+}
