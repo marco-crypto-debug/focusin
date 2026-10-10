@@ -396,7 +396,17 @@ final class TeacherViewModel: ObservableObject {
         }
 #endif
         broadcaster.onFrame = { jpegData in
-#if FOCUSIN_BETA
+#if FOCUSIN_DELTA
+            // —— Delta：普通模式(≤5台)走 WebSocket 單播；高級模式(≤50台)走 UDP 組播 ——
+            if DeviceLimit.scale == .advanced {
+                self.multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
+                self.multicastVideo.send(jpegData)
+            } else {
+                for target in targets {
+                    target.sendFrame(jpegData)
+                }
+            }
+#elseif FOCUSIN_BETA
             // —— v1.5-beta：H.264 幀走 UDP 組播（單流，AP 複製給所有學生）——
             self.multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
             self.multicastVideo.send(jpegData)
@@ -416,7 +426,13 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.start { [weak self] in
             guard let self else { return }
             self.broadcastError = nil
+#if FOCUSIN_DELTA
+            // Delta：標記通道模式，學生端據此啟動組播或單播接收
+            let scale = DeviceLimit.scale == .advanced ? "multicast" : "unicast"
+            self.send(CommandMessage(type: .streamStart, payload: scale))
+#else
             self.send(CommandMessage(type: .streamStart))
+#endif
             self.broadcastActive = true
             self.appendLog("開始廣播教師屏幕（畫質：\(self.broadcastQuality.label)）")
         } onError: { [weak self] message in

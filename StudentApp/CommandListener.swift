@@ -81,14 +81,23 @@ final class CommandListener: ObservableObject {
                 peer.onCommand = { message in
                     Task { @MainActor in self.handle(message, from: peer) }
                 }
-                peer.onFrame = { jpegData in
+                peer.onFrame = { [weak self] frameData in
+#if FOCUSIN_DELTA
+                    // Delta：單播（普通模式）也走 H.264 硬解，與組播共用解碼器
+                    DispatchQueue.global(qos: .userInteractive).async {
+                        guard let self,
+                              let frame = MulticastTransport.unpackH264Frame(frameData) else { return }
+                        self.decodeH264(frame)
+                    }
+#else
                     // JPEG 解碼較耗時：先在背景佇列解碼，再切回主執行緒更新畫面，避免卡頓
                     DispatchQueue.global(qos: .userInteractive).async {
-                        guard let image = NSImage(data: jpegData) else { return }
+                        guard let image = NSImage(data: frameData) else { return }
                         Task { @MainActor in
                             self.kiosk.setBroadcastImage(image)
                         }
                     }
+#endif
                 }
 #if !FOCUSIN_STABLE
                 peer.onAudio = { pcm, info in
@@ -204,7 +213,14 @@ final class CommandListener: ObservableObject {
         case .streamStart:
             isBroadcasting = true
             kiosk.clearBroadcastImage()
-#if FOCUSIN_BETA
+#if FOCUSIN_DELTA
+            // Delta：教師端 payload 標記通道——"multicast" 高級(組播) / "unicast" 普通(單播)
+            if message.payload == "multicast" {
+                startMulticastVideo()
+            } else {
+                startUnicastVideo()
+            }
+#elseif FOCUSIN_BETA
             startMulticastVideo()
 #else
             audio.start()
@@ -217,7 +233,10 @@ final class CommandListener: ObservableObject {
         case .streamStop:
             isBroadcasting = false
             kiosk.clearBroadcastImage()
-#if FOCUSIN_BETA
+#if FOCUSIN_DELTA
+            stopUnicastVideo()
+            stopMulticastVideo()
+#elseif FOCUSIN_BETA
             stopMulticastVideo()
 #else
             audio.stop()
@@ -273,6 +292,37 @@ final class CommandListener: ObservableObject {
         h264Decoder.stop()
         hasDecodedFrame = false
     }
+
+#if FOCUSIN_DELTA
+    // MARK: - Delta 單播畫面接收（普通模式：H.264 幀走 WebSocket）
+
+    /// 啟動單播解碼（與組播共用 h264Decoder；由 onFrame 送入幀）。
+    private func startUnicastVideo() {
+        multicastVideo.stop()
+        hasDecodedFrame = false
+        h264Decoder.start { [weak self] pixelBuffer in
+            let image = Self.image(from: pixelBuffer)
+            guard let image else { return }
+            Task { @MainActor in
+                self?.kiosk.setBroadcastImage(image)
+            }
+        }
+        appendLog("Delta 單播畫面接收已啟動（H.264 over WebSocket）")
+    }
+
+    private func stopUnicastVideo() {
+        h264Decoder.stop()
+        hasDecodedFrame = false
+    }
+
+    /// 解一幀 H.264（供 onFrame 背景佇列呼叫；未解出首幀前只接受關鍵幀）。
+    private func decodeH264(_ frame: (annexB: Data, key: Bool, sps: Data?, pps: Data?)) {
+        if !hasDecodedFrame && !frame.key { return }
+        hasDecodedFrame = true
+        h264Decoder.decode(frame.annexB, isKeyframe: frame.key,
+                           sps: frame.sps, pps: frame.pps)
+    }
+#endif
 
     /// CVPixelBuffer → NSImage（BGRA）。
     static func image(from pixelBuffer: CVPixelBuffer) -> NSImage? {
