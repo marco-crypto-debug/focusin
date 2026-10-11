@@ -12,6 +12,7 @@
  *   POST /api/license/gen  body {email, months}  header x-admin-key → {key, expiry, email}
  *   GET  /api/license/verify?key=... → {valid, status, expiry}
  *   GET  /api/license/pub → {pubKeyB64}（供前端 verify 用，公鑰可公開）
+ *   GET  /api/license/list  header x-admin-key → 簽發記錄後台（email / key / expiry / 狀態）
  */
 import { createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
 
@@ -70,6 +71,9 @@ export default {
       if (request.method === 'GET' && path === '/api/license/pub') {
         return json({ pubKeyB64: env().LICENSE_PUB || '' }, cors);
       }
+      if (request.method === 'GET' && path === '/api/license/list') {
+        return await listKeys(request, cors);
+      }
       return json({ error: 'not found' }, { ...cors }, 404);
     } catch (e) {
       return json({ error: 'server error', detail: String(e) }, { ...cors }, 500);
@@ -98,7 +102,42 @@ async function genKey(request, cors) {
   const priv = privateKeyFromSeed();
   const sig = sign(null, Buffer.from(payload), priv);
   const key = `FI-PRO-${b64url(payload)}.${b64url(sig)}`;
+  // 存入 KV（後台列表）：k:<email> → 最新一條記錄
+  try {
+    const record = { email, key, expiry, issuedAt: new Date().toISOString() };
+    await env().LICENSE_KV.put(`k:${email}`, JSON.stringify(record));
+  } catch (e) {
+    // KV 寫入失敗不阻斷簽發，但回傳標記供診斷
+    return json({ key, expiry, email, kvWarning: String(e && e.message || e) }, cors);
+  }
   return json({ key, expiry, email }, cors);
+}
+
+async function listKeys(request, cors) {
+  // 管理員保護
+  const admin = request.headers.get('x-admin-key') || '';
+  if (!env().ADMIN_KEY || admin !== env().ADMIN_KEY) {
+    return json({ error: 'forbidden' }, { ...cors }, 403);
+  }
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const items = [];
+  let cursor;
+  do {
+    const page = await env().LICENSE_KV.list({ prefix: 'k:', cursor });
+    for (const k of page.keys) {
+      try {
+        const v = JSON.parse(await env().LICENSE_KV.get(k.name));
+        if (!v || !v.key) continue;
+        const expDate = new Date(v.expiry + 'T00:00:00');
+        v.status = today >= expDate ? 'expired' : 'active';
+        items.push(v);
+      } catch {}
+    }
+    cursor = page.cursor;
+  } while (cursor);
+  // 依簽發時間新→舊排序
+  items.sort((a, b) => (b.issuedAt || '').localeCompare(a.issuedAt || ''));
+  return json({ count: items.length, items }, cors);
 }
 
 async function verifyKey(url, cors) {

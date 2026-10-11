@@ -8,5 +8,10 @@ compatibility_flags = ["nodejs_compat"]
 #   wrangler secret put ADMIN_KEY      # 官網發 key 管理密碼
 #   wrangler secret put LICENSE_PUB    # 公鑰 raw 32B base64
 
+# 簽發記錄儲存（後台列表）
+[[kv_namespaces]]
+binding = "LICENSE_KV"
+id = "213770bfb6ed419b919a8181d61dc5c7"
+
 [observability]
 enabled = true

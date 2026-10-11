@@ -783,6 +783,31 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
         </div>
         <div class="trial-hint" data-i18n="key.trialHint">Tip: you can try Pro free for 7 days in the app</div>
       </div>
+
+      <!-- ===== 後台：簽發記錄 ===== -->
+      <div class="license" id="license-admin-box" style="margin-top:16px">
+        <h3 data-i18n="key.recordsTitle">Issued License Records</h3>
+        <p class="l-sub" data-i18n="key.recordsSub">Admin only: view every issued key with its email and expiry.</p>
+        <div class="row">
+          <input type="password" id="license-admin-list" placeholder="Admin key" aria-label="Admin key">
+          <button class="btn btn-dark" id="license-list-btn" style="padding:12px 18px;font-size:14px" data-i18n="key.recordsBtn">Load Records</button>
+        </div>
+        <div class="err" id="license-list-err"></div>
+        <div id="license-list-wrap" style="display:none;margin-top:10px">
+          <table style="width:100%;border-collapse:collapse;font-size:12.5px;text-align:left">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(0,0,0,.08)">
+                <th style="padding:8px" data-i18n="key.recEmail">Email</th>
+                <th style="padding:8px" data-i18n="key.recKey">License Key</th>
+                <th style="padding:8px" data-i18n="key.recExpiry">Expiry</th>
+                <th style="padding:8px" data-i18n="key.recStatus">Status</th>
+                <th style="padding:8px" data-i18n="key.recIssued">Issued</th>
+              </tr>
+            </thead>
+            <tbody id="license-list-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1581,6 +1606,68 @@ function initLicense(){
   });
 }
 
+/* ===================== 後台：簽發記錄列表 ===================== */
+function initLicenseList(){
+  var btn = document.getElementById("license-list-btn");
+  if (!btn) return;
+  btn.addEventListener("click", function(){
+    var ak = (document.getElementById("license-admin-list").value || "").trim();
+    var err = document.getElementById("license-list-err");
+    var wrap = document.getElementById("license-list-wrap");
+    var body = document.getElementById("license-list-body");
+    if (!ak){ err.textContent = "Enter admin key"; err.classList.add("show"); return; }
+    err.classList.remove("show");
+    btn.disabled = true; btn.textContent = "...";
+    fetch(LICENSE_WORKER_URL + "/api/license/list", { headers: { "x-admin-key": ak } })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if (data.error){ throw new Error(data.error); }
+        body.innerHTML = "";
+        if (!data.items || data.items.length === 0){
+          body.innerHTML = '<tr><td colspan="5" style="padding:12px;color:#888">No records yet</td></tr>';
+        } else {
+          data.items.forEach(function(it){
+            var st = it.status === "expired"
+              ? '<span style="color:#d97757;font-weight:600">expired</span>'
+              : '<span style="color:#1a7f37;font-weight:600">active</span>';
+            var tr = document.createElement("tr");
+            tr.style.borderBottom = "1px solid rgba(0,0,0,.05)";
+            var keyShort = it.key.length > 40 ? it.key.slice(0, 40) + "…" : it.key;
+            tr.innerHTML =
+              '<td style="padding:8px;word-break:break-all">' + escapeHtml(it.email) + '</td>' +
+              '<td style="padding:8px;word-break:break-all;font-family:monospace;font-size:11px">' + keyShort +
+              ' <a href="#" style="font-size:10px;color:#4f46e5" onclick="return copyFullKey(event)">copy</a></td>' +
+              '<td style="padding:8px;white-space:nowrap">' + it.expiry + '</td>' +
+              '<td style="padding:8px;white-space:nowrap">' + st + '</td>' +
+              '<td style="padding:8px;white-space:nowrap">' + (it.issuedAt || "").slice(0, 10) + '</td>';
+            tr.setAttribute("data-full-key", it.key);
+            body.appendChild(tr);
+          });
+        }
+        wrap.style.display = "block";
+      })
+      .catch(function(e){
+        err.textContent = "Failed: " + (e && e.message ? e.message : "network error");
+        err.classList.add("show");
+      })
+      .finally(function(){ btn.disabled = false; btn.textContent = "Load Records"; });
+  });
+}
+function copyFullKey(e){
+  e.preventDefault();
+  var tr = e.target.closest("tr");
+  var key = tr.getAttribute("data-full-key") || "";
+  if (!key) return false;
+  var ta = document.createElement("textarea");
+  ta.value = key; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); showToast("Copied"); } catch(ex){}
+  document.body.removeChild(ta);
+  return false;
+}
+function escapeHtml(s){
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
 /* ===================== 定價 / 付款 ===================== */
 var PRO_PRICE = "$12.99";
 function updatePrices(){
@@ -1625,6 +1712,7 @@ function initPricing(){
 applyI18n();
 initDemo();
 initLicense();
+initLicenseList();
 initPricing();
 render();
 initReveal();
