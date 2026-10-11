@@ -91,8 +91,8 @@ final class CommandListener: ObservableObject {
                     }
 #else
                     // JPEG 解碼較耗時：先在背景佇列解碼，再切回主執行緒更新畫面，避免卡頓
-                    DispatchQueue.global(qos: .userInteractive).async {
-                        guard let image = NSImage(data: frameData) else { return }
+                    DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+                        guard let self, let image = NSImage(data: frameData) else { return }
                         Task { @MainActor in
                             self.kiosk.setBroadcastImage(image)
                         }
@@ -223,8 +223,10 @@ final class CommandListener: ObservableObject {
             }
 #elseif FOCUSIN_BETA
             startMulticastVideo()
-#else
+#elseif FOCUSIN_ALPHA
             audio.start()
+#else
+            // stable：無聲音功能
 #endif
 
         // 廣播幀改走二進位通道（PeerConnection.onFrame），此處不再處理 JSON 幀
@@ -240,8 +242,10 @@ final class CommandListener: ObservableObject {
             stopMulticastAudio()
 #elseif FOCUSIN_BETA
             stopMulticastVideo()
-#else
+#elseif FOCUSIN_ALPHA
             audio.stop()
+#else
+            // stable：無聲音功能
 #endif
 
 #if FOCUSIN_BETA
