@@ -792,6 +792,17 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
           <input type="password" id="license-admin-list" placeholder="Admin key" aria-label="Admin key">
           <button class="btn btn-dark" id="license-list-btn" style="padding:12px 18px;font-size:14px" data-i18n="key.recordsBtn">Load Records</button>
         </div>
+        <div class="row" style="margin-top:10px">
+          <input type="email" id="license-send-email" placeholder="Customer email" aria-label="Customer email" style="flex:1">
+          <select id="license-send-months" aria-label="Months" style="width:auto">
+            <option value="1">1 month</option>
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12">12 months</option>
+          </select>
+          <button class="btn btn-brand" id="license-send-btn" style="padding:12px 18px;font-size:14px" data-i18n="key.sendBtn">Issue &amp; Email Key</button>
+        </div>
+        <div class="err" id="license-send-err"></div>
         <div class="err" id="license-list-err"></div>
         <div id="license-list-wrap" style="display:none;margin-top:10px">
           <table style="width:100%;border-collapse:collapse;font-size:12.5px;text-align:left">
@@ -1651,6 +1662,38 @@ function initLicenseList(){
         err.classList.add("show");
       })
       .finally(function(){ btn.disabled = false; btn.textContent = "Load Records"; });
+  });
+  // 簽發 + 寄送
+  var sendBtn = document.getElementById("license-send-btn");
+  if (sendBtn) sendBtn.addEventListener("click", function(){
+    var ak = (document.getElementById("license-admin-list").value || "").trim();
+    var email = (document.getElementById("license-send-email").value || "").trim();
+    var months = parseInt(document.getElementById("license-send-months").value || "1", 10);
+    var err = document.getElementById("license-send-err");
+    if (!ak){ err.textContent = "Enter admin key first"; err.classList.add("show"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent = "Enter a valid customer email"; err.classList.add("show"); return; }
+    err.classList.remove("show");
+    sendBtn.disabled = true; var orig = sendBtn.textContent; sendBtn.textContent = "...";
+    fetch(LICENSE_WORKER_URL + "/api/license/email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-key": ak },
+      body: JSON.stringify({ email: email, months: months })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if (data.error) throw new Error(data.error);
+      if (data.mailError){
+        err.textContent = "Key issued but email FAILED: " + data.mailError;
+        err.classList.add("show");
+      } else {
+        showToast("Key issued & emailed to " + email);
+      }
+      document.getElementById("license-send-email").value = "";
+      // 刷新列表
+      var lb = document.getElementById("license-list-btn");
+      if (lb) lb.click();
+    }).catch(function(e){
+      err.textContent = "Failed: " + (e && e.message ? e.message : "network error");
+      err.classList.add("show");
+    }).finally(function(){ sendBtn.disabled = false; sendBtn.textContent = orig; });
   });
 }
 function copyFullKey(e){

@@ -7,6 +7,9 @@ compatibility_flags = ["nodejs_compat"]
 #   wrangler secret put LICENSE_SEED   # Ed25519 私鑰 seed（raw 32B base64）
 #   wrangler secret put ADMIN_KEY      # 官網發 key 管理密碼
 #   wrangler secret put LICENSE_PUB    # 公鑰 raw 32B base64
+#   wrangler secret put RESEND_API_KEY # （付款後自動發 Key 郵件）resend.com API key，免費層 3000 封/月
+#   wrangler secret put MAIL_FROM      # 寄件人，如 "FocusIn <key@focusin.app>"（網域需在 Resend 驗證）
+#   wrangler secret put DODO_WEBHOOK_SECRET # Dodo Payments webhook 簽名密鑰（接付款後設定）
 
 # 簽發記錄儲存（後台列表）
 [[kv_namespaces]]

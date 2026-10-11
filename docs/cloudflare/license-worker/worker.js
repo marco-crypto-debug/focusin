@@ -74,6 +74,14 @@ export default {
       if (request.method === 'GET' && path === '/api/license/list') {
         return await listKeys(request, cors);
       }
+      // 簽發 + 直接寄送到客戶信箱（付款成功後由 Webhook / 後台觸發）
+      if (request.method === 'POST' && path === '/api/license/email') {
+        return await genAndEmail(request, cors);
+      }
+      // Dodo Payments Webhook（付款成功 → 自動簽發 + 寄信）
+      if (request.method === 'POST' && path === '/api/license/dodo-webhook') {
+        return await dodoWebhook(request, cors);
+      }
       return json({ error: 'not found' }, { ...cors }, 404);
     } catch (e) {
       return json({ error: 'server error', detail: String(e) }, { ...cors }, 500);
@@ -169,4 +177,120 @@ function json(obj, headers, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json', ...headers },
   });
+}
+
+/* ===================== 簽發 + 寄送（付款後自動發 Key） ===================== */
+
+// 共用：簽發 key + 存 KV（回傳 key 或拋錯）
+async function issueKey(email, months) {
+  const expiry = expiryAfterMonths(months);
+  const payload = JSON.stringify({ e: email, p: 'pro', x: expiry });
+  const priv = privateKeyFromSeed();
+  const sig = sign(null, Buffer.from(payload), priv);
+  const key = `FI-PRO-${b64url(payload)}.${b64url(sig)}`;
+  const record = { email, key, expiry, issuedAt: new Date().toISOString() };
+  await env().LICENSE_KV.put(`k:${email}`, JSON.stringify(record));
+  return { key, expiry };
+}
+
+// 寄送郵件（Resend）。from 需在 Resend 驗證過網域。
+async function sendLicenseEmail(to, key, expiry) {
+  const apiKey = env().RESEND_API_KEY;
+  if (!apiKey) throw new Error('RESEND_API_KEY 未設定');
+  const from = env().MAIL_FROM || 'FocusIn <key@focusin.app>';
+  const subject = `Your FocusIn Pro License Key (valid until ${expiry})`;
+  const html = `<!doctype html><html><body style="margin:0;padding:0;background:#faf7f5;font-family:-apple-system,'PingFang HK','PingFang TC',sans-serif">
+    <div style="max-width:560px;margin:24px auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #f0e6e0">
+      <div style="background:#fde8e1;padding:28px 32px;text-align:center">
+        <div style="font-size:26px;font-weight:800;letter-spacing:-0.5px;color:#c2410c">FocusIn</div>
+        <div style="color:#9a3412;font-size:13px;margin-top:2px">Screen sharing beyond AirPlay</div>
+      </div>
+      <div style="padding:32px">
+        <h2 style="margin:0 0 8px;font-size:18px;color:#1f2937">Your Pro License Key is ready</h2>
+        <p style="color:#6b7280;font-size:14px;margin:0 0 20px">Paste this key into <b>FocusIn → Audio &amp; Pro</b> to unlock Pro.</p>
+        <div style="background:#f3f4f6;border:1px dashed #d1d5db;border-radius:10px;padding:16px 18px;font-family:Menlo,monospace;font-size:12px;word-break:break-all;color:#111827">${key}</div>
+        <p style="font-size:13px;color:#6b7280;margin:16px 0 0">Valid until <b>${expiry}</b> (monthly billing, renews on the 1st).</p>
+        <p style="font-size:13px;color:#6b7280;margin:20px 0 0">Questions? Contact <a href="https://www.instagram.com/marco.tsk_smile" style="color:#4f46e5">@marco.tsk_smile</a></p>
+      </div>
+    </div></body></html>`;
+  const resp = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from, to: [to], subject, html }),
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(`Resend 寄送失敗 (${resp.status}): ${JSON.stringify(data)}`);
+  return data;
+}
+
+// POST /api/license/email：admin 保護。body {email, months} → 簽發 + 寄信。
+async function genAndEmail(request, cors) {
+  const admin = request.headers.get('x-admin-key') || '';
+  if (!env().ADMIN_KEY || admin !== env().ADMIN_KEY) {
+    return json({ error: 'forbidden' }, { ...cors }, 403);
+  }
+  let body;
+  try { body = await request.json(); } catch { body = {}; }
+  const email = String(body.email || '').trim().toLowerCase();
+  const months = parseInt(body.months, 10);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ error: 'invalid email' }, { ...cors }, 400);
+  }
+  if (!(months >= 1 && months <= 36)) {
+    return json({ error: 'months 必須在 1~36' }, { ...cors }, 400);
+  }
+  const { key, expiry } = await issueKey(email, months);
+  try {
+    const mail = await sendLicenseEmail(email, key, expiry);
+    return json({ ok: true, key, expiry, email, mailId: mail.id || null }, cors);
+  } catch (e) {
+    // Key 已簽發但寄信失敗：回傳 key 並標記 mailError，避免客戶拿不到 Key
+    return json({ ok: true, key, expiry, email, mailError: String(e && e.message || e) }, cors);
+  }
+}
+
+// Dodo Payments Webhook（付款成功 → 自動簽發 + 寄信）。
+// 驗證 X-Dodo-Signature（HMAC-SHA256(raw body, DODO_WEBHOOK_SECRET)）。
+async function dodoWebhook(request, cors) {
+  const secret = env().DODO_WEBHOOK_SECRET;
+  let body;
+  if (secret) {
+    const sig = request.headers.get('X-Dodo-Signature') || '';
+    const raw = await request.text();
+    const crypto = await import('node:crypto');
+    const expected = crypto.createHmac('sha256', secret).update(raw).digest('hex');
+    const provided = sig.split(',').map(s => s.trim()).find(s => s.startsWith('t=') || /^[0-9a-f]{64}$/i.test(s)) || sig;
+    if (provided !== expected) return json({ error: 'invalid signature' }, { ...cors }, 401);
+    body = JSON.parse(raw);
+  } else {
+    body = await request.json();
+  }
+  // 付款成功 / 訂閱啟用事件
+  const event = body.event || body.type || (body.data && body.data.type) || '';
+  const isPaid = /paid|succeeded|active|renewed|created|invoice/i.test(event) ||
+    /paid|succeeded|active/i.test(String(body.status || ''));
+  if (!isPaid) {
+    return json({ ok: true, ignored: event || 'no-payment-event' }, cors);
+  }
+  // 嘗試從多種欄位結構取 email / 月份
+  const email = String(
+    (body.customer && body.customer.email) ||
+    (body.subscription && body.subscription.customer && body.subscription.customer.email) ||
+    (body.data && body.data.email) ||
+    body.email || ''
+  ).trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return json({ ok: false, error: 'no email in webhook payload' }, { ...cors }, 400);
+  }
+  const months = parseInt(body.months, 10) || 1;
+  const { key, expiry } = await issueKey(email, months);
+  try {
+    const mail = await sendLicenseEmail(email, key, expiry);
+    return json({ ok: true, key, expiry, email, mailId: mail.id || null }, cors);
+  } catch (e) {
+    return json({ ok: true, key, expiry, email, mailError: String(e && e.message || e) }, cors);
+  }
 }
