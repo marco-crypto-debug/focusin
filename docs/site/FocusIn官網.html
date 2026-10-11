@@ -1325,7 +1325,7 @@ function hmacSHA256Hex(key, msg){
 //   正式發行前必須移至 Cloudflare Worker 等安全服務端簽發，否則任何人可自行生成 Key。
 // License Worker（Cloudflare Workers）：私鑰在後端，前端只保留公鑰做驗證
 // 部署後把 workers.dev 網址填進 LICENSE_WORKER_URL
-var LICENSE_WORKER_URL = "";  // 例："https://focusin-license.<你的subdomain>.workers.dev"
+var LICENSE_WORKER_URL = "https://focusin-license.marcoattck.workers.dev";
 var LICENSE_PUB_B64  = "dQt5nXA1NJQt2rkNoTdycK5SjTn+ZBkIZm5qjaoRxLA=";
 
 function b64ToBytes(b64){

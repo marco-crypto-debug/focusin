@@ -13,7 +13,7 @@
  *   GET  /api/license/verify?key=... → {valid, status, expiry}
  *   GET  /api/license/pub → {pubKeyB64}（供前端 verify 用，公鑰可公開）
  */
-import { createPrivateKey, sign, verify } from 'node:crypto';
+import { createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
 
 const PKCS8_PREFIX = Buffer.from('302e020100300506032b657004220420', 'hex');
 
@@ -121,7 +121,7 @@ async function verifyKey(url, cors) {
     const status = today >= expDate ? 'expired' : 'pro';
     return json({ valid: true, status, expiry, email: obj.e }, cors);
   } catch (e) {
-    return json({ valid: false, status: 'invalid', reason: 'decode' }, cors);
+    return json({ valid: false, status: 'invalid', reason: 'decode', detail: String(e && e.message || e) }, cors);
   }
 }
 
