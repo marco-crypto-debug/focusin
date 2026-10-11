@@ -1,0 +1,12 @@
+name = "focusin-license"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 部署後設定 Secrets：
+#   wrangler secret put LICENSE_SEED   # Ed25519 私鑰 seed（raw 32B base64）
+#   wrangler secret put ADMIN_KEY      # 官網發 key 管理密碼
+#   wrangler secret put LICENSE_PUB    # 公鑰 raw 32B base64
+
+[observability]
+enabled = true

@@ -753,7 +753,18 @@ details.faq-i .a code{font-family:var(--font-mono);font-size:.86em;background:va
         <h3 data-i18n="key.title">Get your Pro License Key</h3>
         <p class="l-sub" data-i18n="key.sub">Enter your email to generate a License Key instantly. Paste it into the "Upgrade to Pro" section in FocusIn.</p>
         <div class="field">
+          <div class="row">
+          <input type="password" id="license-admin" placeholder="Admin key (developers)" aria-label="Admin key">
+          </div>
+          <div class="row">
           <input type="email" id="license-email" placeholder="you@example.com" data-i18n-placeholder="key.emailPlaceholder" aria-label="Email">
+          <select id="license-months" aria-label="Months">
+            <option value="1">1 month</option>
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12">12 months</option>
+          </select>
+          </div>
           <button class="btn btn-dark" id="license-gen" style="padding:12px 18px;font-size:14px" data-i18n="key.genBtn">Generate License Key</button>
         </div>
         <div class="err" id="license-err" data-i18n="key.err">Please enter a valid email address.</div>
@@ -1312,8 +1323,10 @@ function hmacSHA256Hex(key, msg){
 /* ===================== License Key 產生（Ed25519 真實驗證，與 App 端一致） ===================== */
 // ⚠ 測試階段：簽發私鑰 seed 內嵌於本頁（可被公眾看到，僅供 Beta 測試）。
 //   正式發行前必須移至 Cloudflare Worker 等安全服務端簽發，否則任何人可自行生成 Key。
-var LICENSE_SEED_B64 = "u6zrereJWCJYrzJhvQAbmH5wqcf1/3ufU74ZFdWOXMk=";
-var LICENSE_PUB_B64  = "+kWy/MC8XKsOOh2zMJMMChjz4mmFfCD4QC7oDY0RNcY=";
+// License Worker（Cloudflare Workers）：私鑰在後端，前端只保留公鑰做驗證
+// 部署後把 workers.dev 網址填進 LICENSE_WORKER_URL
+var LICENSE_WORKER_URL = "";  // 例："https://focusin-license.<你的subdomain>.workers.dev"
+var LICENSE_PUB_B64  = "dQt5nXA1NJQt2rkNoTdycK5SjTn+ZBkIZm5qjaoRxLA=";
 
 function b64ToBytes(b64){
   var bin = atob(b64), u = new Uint8Array(bin.length);
@@ -1337,18 +1350,27 @@ function nextMonthFirst(){
   var m = ("0" + (d.getMonth() + 1)).slice(-2);
   return d.getFullYear() + "-" + m + "-01";
 }
-// 簽發：FI-PRO-<b64url(payload)>.<b64url(ed25519 簽名)>（到期日 = 下個月 1 號，每月 1 號繳費制）
-function generateLicenseKey(email){
-  if (typeof nacl === "undefined") return "";
-  var seed = b64ToBytes(LICENSE_SEED_B64);
-  var pub  = b64ToBytes(LICENSE_PUB_B64);
-  var sk = new Uint8Array(64); sk.set(seed, 0); sk.set(pub, 32);
-  var payload = JSON.stringify({ e: email, p: "pro", x: nextMonthFirst() });
-  var pBytes = new Uint8Array(payload.length);
-  for (var i = 0; i < payload.length; i++) pBytes[i] = payload.charCodeAt(i);
-  var sig = nacl.sign.detached(pBytes, sk);
-  return "FI-PRO-" + bytesToB64url(pBytes) + "." + bytesToB64url(sig);
+// 簽發：交由後端 Worker（私鑰在 Secret，前端無法偽造）。
+// 回傳 Promise：{key, expiry, email} 或丟出 Error。
+function generateLicenseKey(email, months){
+  months = months || 1;
+  return new Promise(function(resolve, reject){
+    if (!LICENSE_WORKER_URL){
+      reject(new Error("LICENSE_WORKER_URL 未設定（後端未部署）"));
+      return;
+    }
+    fetch(LICENSE_WORKER_URL + "/api/license/gen", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-key": LICENSE_ADMIN_KEY || "" },
+      body: JSON.stringify({ email: email, months: months })
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if (data.error){ reject(new Error(data.error)); return; }
+      resolve(data);
+    }).catch(function(e){ reject(e); });
+  });
 }
+// 管理密碼（官網「發 key」區塊輸入後存於記憶體，不寫入 localStorage）
+var LICENSE_ADMIN_KEY = "";
 // 驗證（與 App 端 LicenseManager 相同：Ed25519 公鑰驗簽）
 function verifyLicenseKey(key){
   if (!key) return false;
@@ -1520,6 +1542,7 @@ function initLicense(){
   var btn = document.getElementById("license-gen");
   if (!btn) return;
   btn.addEventListener("click", function(){
+    LICENSE_ADMIN_KEY = (document.getElementById("license-admin").value || "").trim();
     var email = (document.getElementById("license-email").value || "").trim();
     var err = document.getElementById("license-err");
     var res = document.getElementById("license-result");
@@ -1530,10 +1553,23 @@ function initLicense(){
       return;
     }
     err.classList.remove("show");
-    var k = generateLicenseKey(email);
-    if (!k){ err.textContent = "Key service unavailable, please retry later."; err.classList.add("show"); return; }
-    document.getElementById("license-key-text").textContent = k;
-    res.classList.add("show");
+    var months = parseInt(document.getElementById("license-months").value || "1", 10);
+    if (!months || months < 1) months = 1;
+    btn.disabled = true;
+    var original = btn.textContent;
+    btn.textContent = "...";
+    generateLicenseKey(email, months).then(function(data){
+      document.getElementById("license-key-text").textContent = data.key;
+      res.classList.add("show");
+    }).catch(function(e){
+      err.textContent = (e && e.message && e.message.indexOf("未設定") >= 0)
+        ? "License backend not deployed yet. Please contact support."
+        : "Key generation failed: " + (e && e.message ? e.message : "network error");
+      err.classList.add("show");
+    }).finally(function(){
+      btn.disabled = false;
+      btn.textContent = original;
+    });
   });
   document.getElementById("license-copy").addEventListener("click", function(){
     var txt = document.getElementById("license-key-text").textContent;

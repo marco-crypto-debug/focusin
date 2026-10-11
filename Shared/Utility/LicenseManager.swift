@@ -32,7 +32,8 @@ final class LicenseManager {
 
     /// FocusIn License 簽發公鑰（raw 32 bytes，base64）。
     /// 由 tools/gen-license-key.js --init 生成，請勿隨意更換（會使所有已發 Key 失效）。
-    private let pubKeyB64 = "+kWy/MC8XKsOOh2zMJMMChjz4mmFfCD4QC7oDY0RNcY="
+    /// 2026-10-11 輪換：舊金鑰曾暴露於官網前端，已廢棄（新 Key 一律用新金鑰簽發）。
+    private let pubKeyB64 = "dQt5nXA1NJQt2rkNoTdycK5SjTn+ZBkIZm5qjaoRxLA="
 
     /// 開發者專用永久 KEY（解鎖測試版本；expiry 2099-01-01，永不過期）。
     /// 僅供開發者 / 測試者輸入，正式用戶請透過官網付款頁取得月度 Key。
