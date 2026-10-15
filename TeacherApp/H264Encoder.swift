@@ -99,11 +99,38 @@ final class H264Encoder {
         let isKeyframe = sampleBuffer.isKeyFrame
         var sps: Data?
         var pps: Data?
+        var avcc: Data?
         if isKeyframe {
             (sps, pps) = Self.extractParameterSets(from: formatDesc)
+            avcc = Self.readAVCC(sampleBuffer)
+            if let avcc {
+                var nalInfo = ""
+                let b = [UInt8](avcc); var i = 0
+                while i + 4 <= b.count {
+                    if b[i] == 0, b[i+1] == 0, b[i+2] == 0, b[i+3] == 1 {
+                        var h = i + 4
+                        if h < b.count { nalInfo += " type=\(b[h] & 0x1F)" }
+                        var e = h
+                        while e + 4 <= b.count {
+                            if b[e] == 0, b[e+1] == 0, b[e+2] == 0, b[e+3] == 1 { break }
+                            e += 1
+                        }
+                        if e > h { nalInfo += "@\(e-h)" }
+                        i = e
+                    } else { i += 1 }
+                }
+                let spsHex = sps?.map { String(format: "%02x", $0) }.joined(separator: " ") ?? "nil"
+                let ppsHex = pps?.map { String(format: "%02x", $0) }.joined(separator: " ") ?? "nil"
+                DiagLog.log("H.264 關鍵幀: SPS \(sps?.count ?? 0)B [\(spsHex)] PPS \(pps?.count ?? 0)B [\(ppsHex)] avcc=\(avcc.count)B NAL:\(nalInfo)")
+            } else {
+                DiagLog.log("H.264 關鍵幀: SPS \(sps?.count ?? 0)B / PPS \(pps?.count ?? 0)B")
+            }
         }
-        if let annexB = Self.convertToAnnexB(sampleBuffer) {
-            onEncoded(annexB, isKeyframe, sps, pps)
+        if avcc == nil {
+            avcc = Self.readAVCC(sampleBuffer)
+        }
+        if let avcc {
+            onEncoded(avcc, isKeyframe, sps, pps)
         }
     }
 
@@ -138,8 +165,9 @@ final class H264Encoder {
         return (spsData, ppsData)
     }
 
-    /// AVCC（4 位元組長度前綴）→ Annex-B（00 00 00 01 start code）。
-    private static func convertToAnnexB(_ sampleBuffer: CMSampleBuffer) -> Data? {
+    /// 直接讀取 VideoToolbox 輸出的 AVCC（4 位元組長度前綴）原始資料，不轉 Annex-B——
+    /// 學生端解碼時直接以 AVCC 建 sample，避免 start-code 掃描被 NAL 內資料誤導（-12909）。
+    private static func readAVCC(_ sampleBuffer: CMSampleBuffer) -> Data? {
         guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return nil }
         var length = 0
         var dataPointer: UnsafeMutablePointer<Int8>?
@@ -149,14 +177,21 @@ final class H264Encoder {
         let bytes = UnsafeRawBufferPointer(start: dataPointer, count: length)
         var out = Data()
         var offset = 0
+        var nalLens = [Int]()
         while offset + 4 <= length {
             let raw = bytes.loadUnaligned(fromByteOffset: offset, as: UInt32.self)
             let nalLength = Int(UInt32(bigEndian: raw))
             offset += 4
             guard nalLength > 0, offset + nalLength <= length else { break }
-            out.append(contentsOf: [0x00, 0x00, 0x00, 0x01])
-            out.append(contentsOf: bytes[offset..<offset + nalLength])
+            let nalType = Int(bytes[offset] & 0x1F)
+            nalLens.append(nalType << 20 | nalLength)
+            let sliceStart = offset - 4
+            out.append(contentsOf: bytes[sliceStart..<(sliceStart + 4 + nalLength)].map { $0 })
             offset += nalLength
+        }
+        if !nalLens.isEmpty {
+            let desc = nalLens.map { String(format: "t=%d@%d", $0 >> 20, $0 & 0xFFFFF) }.joined(separator: " ")
+            DiagLog.log("AVCC 幀: total=\(length)B NAL: \(desc)")
         }
         return out.isEmpty ? nil : out
     }

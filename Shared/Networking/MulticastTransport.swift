@@ -196,6 +196,47 @@ extension MulticastTransport {
         return out
     }
 
+    /// 從 Annex-B 數據中掃描提取 SPS(type 7)/PPS(type 8) NAL。
+    /// 找不到時回傳 (nil, nil)——用於教師端提取失敗 / 學生端自愈。
+    static func extractParameterSets(fromAnnexB data: Data) -> (sps: Data?, pps: Data?) {
+        var sps: Data?
+        var pps: Data?
+        let bytes = [UInt8](data)
+        var i = 0
+        let count = bytes.count
+        while i + 4 <= count {
+            let is4 = bytes[i] == 0 && bytes[i + 1] == 0 && bytes[i + 2] == 0 && bytes[i + 3] == 1
+            let is3 = !is4 && bytes[i] == 0 && bytes[i + 1] == 0 && bytes[i + 2] == 1
+            if is4 || is3 {
+                let headerIdx = i + (is4 ? 4 : 3)
+                guard headerIdx < count else { break }
+                let nalType = bytes[headerIdx] & 0x1F
+                var end = headerIdx
+                while end + 3 < count {
+                    let nIs4 = bytes[end] == 0 && bytes[end + 1] == 0 && bytes[end + 2] == 0 && bytes[end + 3] == 1
+                    let nIs3 = bytes[end] == 0 && bytes[end + 1] == 0 && bytes[end + 2] == 1
+                    if nIs4 || nIs3 { break }
+                    end += 1
+                }
+                let nal = Data(bytes[headerIdx..<end])
+                if nalType == 7 && sps == nil { sps = nal }
+                else if nalType == 8 && pps == nil { pps = nal }
+                if sps != nil && pps != nil { break }
+                i = (end > i) ? end : i + 1
+            } else {
+                i += 1
+            }
+        }
+        return (sps, pps)
+    }
+
+    /// 判斷某 NAL 是否為 SPS(type 7) / PPS(type 8)（學生端建 session 後要過濾，避免重複參數集報錯）。
+    static func isParameterSetNAL(_ data: Data) -> Bool {
+        guard !data.isEmpty else { return false }
+        let t = data[data.startIndex] & 0x1F
+        return t == 7 || t == 8
+    }
+
     /// 解析 H.264 幀（學生端）。
     static func unpackH264Frame(_ data: Data) -> (annexB: Data, key: Bool, sps: Data?, pps: Data?)? {
         guard data.count > 9, data.prefix(4).elementsEqual(MulticastTransport.videoMagic) else { return nil }

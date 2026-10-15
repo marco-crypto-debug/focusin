@@ -327,7 +327,11 @@ final class CommandListener: ObservableObject {
         hasDecodedFrame = false
         h264Decoder.start { [weak self] pixelBuffer in
             let image = Self.image(from: pixelBuffer)
-            guard let image else { return }
+            guard let image else {
+                DiagLog.log("單播 onFrame: image 轉換失敗 px=\(CVPixelBufferGetWidth(pixelBuffer))x\(CVPixelBufferGetHeight(pixelBuffer))")
+                return
+            }
+            DiagLog.log("單播 onFrame: 解碼成功 \(image.size.width)x\(image.size.height)")
             Task { @MainActor in
                 self?.kiosk.setBroadcastImage(image)
             }
@@ -350,12 +354,12 @@ final class CommandListener: ObservableObject {
 #endif
 
     /// CVPixelBuffer → NSImage（BGRA）。
+    /// 用 CIContext 同步渲染成 CGImage（拷貝像素），避免解碼 session 重用 buffer 導致引用失效。
+    private static let imageContext = CIContext(options: [.cacheIntermediates: false])
     static func image(from pixelBuffer: CVPixelBuffer) -> NSImage? {
         let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        let rep = NSCIImageRep(ciImage: ciImage)
-        let image = NSImage(size: rep.size)
-        image.addRepresentation(rep)
-        return image
+        guard let cgImage = Self.imageContext.createCGImage(ciImage, from: ciImage.extent) else { return nil }
+        return NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
     }
 
     // MARK: - v1.5-beta AP 組播探測

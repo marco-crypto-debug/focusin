@@ -36,6 +36,11 @@ final class PeerConnection {
     /// 幀傳送忙碌旗標：同時間只允許一幀在途，其餘丟棄，避免延遲堆積。
     private var frameSendBusy = false
     private let sendLock = NSLock()
+    /// 單槽待發緩衝：忙碌期間保留最新幀；關鍵幀優先（可覆蓋非關鍵幀），絕不丟失關鍵幀
+    private var pendingFrame: Data?
+    /// 串行發送隊列：所有 send/sendFrame/sendAudio 都經此隊列，
+    /// 避免多線程併發 send 同一 NWConnection 觸發 Network.framework 內部崩潰（SIGBUS）。
+    private let sendQueue = DispatchQueue(label: "focusin.peer.send")
 
     /// 用戶端側：主動連線被發現的教師/學生。
     init(connectTo endpoint: NWEndpoint) {
@@ -69,60 +74,105 @@ final class PeerConnection {
 
     func send(_ message: CommandMessage) {
         guard let data = message.encoded() else { return }
-        let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
-        let context = NWConnection.ContentContext(identifier: "command", metadata: [metadata])
-        connection.send(content: data, contentContext: context, isComplete: true,
-                        completion: .contentProcessed { [weak self] error in
-            if let error {
-                DispatchQueue.main.async { self?.onError?(error) }
-            }
-        })
+        sendQueue.async { [weak self] in
+            guard let self, self.connection.state == .ready else { return }
+            let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
+            let context = NWConnection.ContentContext(identifier: "command", metadata: [metadata])
+            self.connection.send(content: data, contentContext: context, isComplete: true,
+                                 completion: .contentProcessed { [weak self] error in
+                if let error {
+                    DispatchQueue.main.async { self?.onError?(error) }
+                }
+            })
+        }
     }
 
-    /// 發送一幀原始 JPEG（低延遲路徑）。
-    /// 若上一幀尚未發送完成則直接丟棄本幀，避免接收端畫面延遲不斷堆積。
+    /// 發送一幀畫面（低延遲路徑；Delta 為 H.264 包，其餘為 JPEG）。
+    /// 串行隊列 + 單槽待發緩衝：同時間只允許一幀在途；
+    /// 忙碌期間——非關鍵幀被更新幀覆蓋（丟舊保新）；關鍵幀必須送達（否則學生端無參考幀，解碼報 -12909）
     func sendFrame(_ jpegData: Data) {
-        sendLock.lock()
-        guard !frameSendBusy else {
+        // 判斷是否 H.264 關鍵幀（FZHV magic 後第 5 字節 = key 旗標）
+        let isKey: Bool
+        if jpegData.count >= 5,
+           jpegData.prefix(4).elementsEqual(MulticastTransport.videoMagic),
+           jpegData[jpegData.startIndex + 4] == 1 {
+            isKey = true
+        } else {
+            isKey = false
+        }
+        sendQueue.async { [weak self] in
+            guard let self else { return }
+            DiagLog.log("sendFrame 進入: key=\(isKey) size=\(jpegData.count)B")
+            self.sendLock.lock()
+            if self.frameSendBusy {
+                // 在途：關鍵幀覆蓋待發（非關鍵幀可犧牲）；無待發時非關鍵幀也可暫存
+                DiagLog.log("sendFrame 忙碌→暫存 pending: key=\(isKey) size=\(jpegData.count)B")
+                if isKey {
+                    self.pendingFrame = jpegData
+                } else if self.pendingFrame == nil {
+                    self.pendingFrame = jpegData
+                }
+                self.sendLock.unlock()
+                return
+            }
+            self.frameSendBusy = true
+            self.sendLock.unlock()
+            self.performSend(jpegData)
+        }
+    }
+
+    private func performSend(_ frameData: Data) {
+        DiagLog.log("performSend: size=\(frameData.count)B")
+        guard connection.state == .ready else {
+            sendLock.lock()
+            frameSendBusy = false
+            let next = pendingFrame
+            pendingFrame = nil
             sendLock.unlock()
+            if let next { performSend(next) }
             return
         }
-        frameSendBusy = true
-        sendLock.unlock()
-
         var payload = Data(Self.frameMagic)
-        payload.append(jpegData)
+        payload.append(frameData)
         let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
         let context = NWConnection.ContentContext(identifier: "frame", metadata: [metadata])
         connection.send(content: payload, contentContext: context, isComplete: true,
-                        completion: .contentProcessed { [weak self] _ in
-            self?.sendLock.lock()
-            self?.frameSendBusy = false
-            self?.sendLock.unlock()
+                        completion: .contentProcessed { [weak self] error in
+            guard let self else { return }
+            if let error { DiagLog.log("sendFrame 完成錯誤: \(error)") }
+            self.sendLock.lock()
+            self.frameSendBusy = false
+            let next = self.pendingFrame
+            self.pendingFrame = nil
+            self.sendLock.unlock()
+            if let next { self.performSend(next) }
         })
     }
 
     /// 發送一段廣播音訊（PCM + 格式標頭）。
     /// 音訊不節流：聲音中斷比延遲更明顯，逐緩衝區直送。
     func sendAudio(_ pcm: Data, format: AudioFormatInfo) {
-        var payload = Data(Self.audioMagic)
-        var sr = UInt32(format.sampleRate.rounded()).littleEndian
-        payload.append(Data(bytes: &sr, count: 4))
-        payload.append(UInt8(format.channels))
-        payload.append(format.bits)
-        payload.append(format.isFloat ? 1 : 0)
-        payload.append(format.interleaved ? 1 : 0)
-        payload.append(0)   // reserved
-        payload.append(0)   // reserved
-        payload.append(pcm)
-        let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
-        let context = NWConnection.ContentContext(identifier: "audio", metadata: [metadata])
-        connection.send(content: payload, contentContext: context, isComplete: true,
-                        completion: .contentProcessed { [weak self] error in
-            if let error {
-                DispatchQueue.main.async { self?.onError?(error) }
-            }
-        })
+        sendQueue.async { [weak self] in
+            guard let self, self.connection.state == .ready else { return }
+            var payload = Data(Self.audioMagic)
+            var sr = UInt32(format.sampleRate.rounded()).littleEndian
+            payload.append(Data(bytes: &sr, count: 4))
+            payload.append(UInt8(format.channels))
+            payload.append(format.bits)
+            payload.append(format.isFloat ? 1 : 0)
+            payload.append(format.interleaved ? 1 : 0)
+            payload.append(0)   // reserved
+            payload.append(0)   // reserved
+            payload.append(pcm)
+            let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
+            let context = NWConnection.ContentContext(identifier: "audio", metadata: [metadata])
+            self.connection.send(content: payload, contentContext: context, isComplete: true,
+                                 completion: .contentProcessed { [weak self] error in
+                if let error {
+                    DispatchQueue.main.async { self?.onError?(error) }
+                }
+            })
+        }
     }
 
     // MARK: - 接收循環
@@ -130,6 +180,7 @@ final class PeerConnection {
     private func receiveNext() {
         connection.receiveMessage { [weak self] data, context, _, error in
             guard let self else { return }
+            DiagLog.log("receiveMessage: size=\(data?.count ?? -1) error=\(error.map(String.init(describing:)) ?? "nil")")
             if error == nil {
                 if let data, !data.isEmpty {
                     // 1) 原始廣播幀（魔數 FZFR 開頭）：直接交回呼，背景佇列解碼

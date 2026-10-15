@@ -120,7 +120,12 @@ final class ScreenBroadcaster: NSObject {
             // 權限預檢：未授權「屏幕錄製」時，先觸發系統授權提示，並回報明確指引
             guard CGPreflightScreenCaptureAccess() else {
                 await MainActor.run {
-                    onStartError?("廣播需要「屏幕錄製」權限。請開啟 系統設定 → 私隱與安全性 → 屏幕錄製，勾選 FocusIn 教師端（TeacherApp），完成後重新點擊「廣播教師屏幕」。若之前選擇過「拒絕」，請先在該頁面取消勾選再重新勾選。")
+                    let appName = ProcessInfo.processInfo.processName   // 如 TeacherAppDelta
+                    onStartError?("廣播需要「屏幕與系統音頻錄製」權限（macOS 15+ 名稱；舊系統叫「屏幕錄製」）。\n請開啟：系統設定 → 私隱與安全性 → 屏幕與系統音頻錄製 → 點「+」加入本 App（\(appName)）並開啟開關；若已在列表，請取消勾選再重新勾選。完成後重新點擊「廣播教師屏幕」。")
+                    // 自動打開正確的權限設定頁（macOS 15+ 與舊版共用此 deep link）
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                        NSWorkspace.shared.open(url)
+                    }
                     NSApp.activate(ignoringOtherApps: true)
                     CGRequestScreenCaptureAccess()   // 觸發系統權限彈窗（首次）
                 }

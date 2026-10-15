@@ -257,6 +257,7 @@ final class KioskModeController: ObservableObject {
 
     func setBroadcastImage(_ image: NSImage?) {
         broadcastImage = image
+        DiagLog.log("setBroadcastImage: \(image == nil ? "nil" : "圖像")")
     }
 
     func clearBroadcastImage() {

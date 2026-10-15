@@ -16,6 +16,9 @@ final class TeacherViewModel: ObservableObject {
 
     private var browser: PeerBrowser?
     private var connections: [String: PeerConnection] = [:]   // studentID -> command connection
+    /// 廣播目標（WebSocket 單播）：重連時動態更新，避免發到斷開的舊連接
+    private let broadcastTargetsLock = NSLock()
+    private var broadcastTargets: [PeerConnection] = []
     /// 廣播音訊專屬連線（studentID -> audio connection）：與畫面分開，避免被大畫面幀阻塞。
     private var audioConnections: [String: PeerConnection] = [:]
     /// 重連狀態追蹤：studentID -> (endpoint, retryCount, timer)
@@ -95,6 +98,8 @@ final class TeacherViewModel: ObservableObject {
             reconnectionState.removeValue(forKey: id)
             return
         }
+        // 清除可能殘留的重連 timer，避免同一學生多條重連排程並行
+        reconnectionState[id]?.2?.invalidate()
 
         appendLog("嘗試重連 \(id)...")
         let connection = PeerConnection(connectTo: endpoint)
@@ -109,12 +114,21 @@ final class TeacherViewModel: ObservableObject {
         connection.start()
         connections[id] = connection
 
+        // 若正在廣播（WebSocket 單播），刷新目標讓新連接收到幀
+        broadcastTargetsLock.lock()
+        broadcastTargets = selectedIDs.compactMap { connections[$0] }
+        broadcastTargetsLock.unlock()
+
         // 發送 hello 以重新建立握手
         let deviceID = UUID().uuidString // 這裡簡單用新 ID；實際可存在 UserDefaults
         connection.send(CommandMessage(type: .hello, senderID: deviceID, senderName: "TeacherApp"))
     }
 
     private func handleConnectionLost(id: String, endpoint: NWEndpoint) {
+        // 關閉前先解除回呼：close() 會觸發 onConnectionLost，若不清除會再次進入本函式，
+        // 連帶把「重連成功後的新連線」也關掉，造成無限重連循環
+        connections[id]?.onConnectionLost = nil
+        audioConnections[id]?.onConnectionLost = nil
         connections.removeValue(forKey: id)?.close()
         audioConnections.removeValue(forKey: id)?.close()
         // 保留 peer 在列表中（標記為離線），啟動重連
@@ -201,6 +215,10 @@ final class TeacherViewModel: ObservableObject {
         if let existingIdx = peers.firstIndex(where: { $0.endpoint.debugDescription == endpointKey }) {
             // 已存在：可能是重連，更新連線
             let existingID = peers[existingIdx].id
+            // 解除舊連線回呼再關閉：否則舊連線 close 觸發 onConnectionLost，
+            // handleConnectionLost 會把剛建立的新連線一併關掉 → 無限重連循環
+            connections[existingID]?.onConnectionLost = nil
+            audioConnections[existingID]?.onConnectionLost = nil
             connections[existingID]?.close()
             audioConnections[existingID]?.close()
             reconnectionState[existingID]?.2?.invalidate()
@@ -357,6 +375,12 @@ final class TeacherViewModel: ObservableObject {
     private func startBroadcast() {
         broadcastError = nil
 #if FOCUSIN_DELTA
+        // Delta：未勾選任何學生時直接提示，避免「廣播中」但學生端收不到
+        if selectedIDs.isEmpty {
+            broadcastError = "請先勾選至少一位學生再開始廣播"
+            appendLog("⚠️ 無法開始廣播：請先勾選學生")
+            return
+        }
         // Delta：廣播前再次確認未超上限
         if let msg = DeviceLimit.check(count: selectedIDs.count) {
             broadcastError = msg
@@ -376,11 +400,24 @@ final class TeacherViewModel: ObservableObject {
         }
         broadcaster.withAudio = broadcastWithAudio && LicenseManager.shared.isProActive
 #endif
+#if FOCUSIN_BETA
+        // 組播模式：廣播開始時建立發送 socket（畫面 + 聲音各一），避免每幀重建
+        #if FOCUSIN_DELTA
+        let useUdp = DeviceLimit.transportMode == .udp   // delta：依教師選擇
+        #else
+        let useUdp = true                                // beta：恆為組播
+        #endif
+        if useUdp {
+            multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
+            multicastAudio.startSender(port: MulticastTransport.audioPort, ifaceIP: nil)
+        }
+#endif
         // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
         let targets = selectedIDs.compactMap { connections[$0] }
 #if !FOCUSIN_STABLE
-        // 為每個目標開闢「音訊專屬連線」：與畫面分開傳輸，避免被大畫面幀阻塞造成聲音延遲
-        let audioTargets: [PeerConnection] = selectedIDs.compactMap { id in
+        // 音訊連線只在「實際會傳聲音」時建立（Pro 且開啟聲音）：
+        // 免費版/僅畫面時不開多餘連線，降低負載與崩潰面
+        let audioTargets: [PeerConnection] = (broadcaster.withAudio ? selectedIDs : []).compactMap { id in
             guard let peer = peers.first(where: { $0.id == id }) else { return nil }
             let audioConn = PeerConnection(connectTo: peer.endpoint)
             audioConn.onStateChange = { [weak audioConn] state in
@@ -397,20 +434,26 @@ final class TeacherViewModel: ObservableObject {
             return audioConn
         }
 #endif
+        // 填入初始廣播目標（重連時 attemptReconnect 會動態刷新）
+        broadcastTargetsLock.lock()
+        broadcastTargets = targets
+        broadcastTargetsLock.unlock()
         broadcaster.onFrame = { jpegData in
 #if FOCUSIN_DELTA
             // —— Delta：依教師選擇的傳輸方式——WebSocket 單播（≤5 建議）或 UDP 組播（>5 建議）——
+            // 組播 socket 於 startBroadcast 時建立一次；此處只發送，避免每幀重建 socket 掉幀
             if DeviceLimit.transportMode == .udp {
-                self.multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
                 self.multicastVideo.send(jpegData)
             } else {
-                for target in targets {
+                self.broadcastTargetsLock.lock()
+                let ts = self.broadcastTargets
+                self.broadcastTargetsLock.unlock()
+                for target in ts {
                     target.sendFrame(jpegData)
                 }
             }
 #elseif FOCUSIN_BETA
             // —— v1.5-beta：H.264 幀走 UDP 組播（單流，AP 複製給所有學生）——
-            self.multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
             self.multicastVideo.send(jpegData)
 #else
             for target in targets {
@@ -423,7 +466,6 @@ final class TeacherViewModel: ObservableObject {
 #if FOCUSIN_DELTA
             if DeviceLimit.transportMode == .udp {
                 // UDP 組播：聲音也走組播，只發 1 份（AP 複製給所有學生）
-                self.multicastAudio.startSender(port: MulticastTransport.audioPort, ifaceIP: nil)
                 self.multicastAudio.send(MulticastTransport.packAudio(pcm, format: info))
             } else {
                 for target in audioTargets where target.connection.state == .ready {
