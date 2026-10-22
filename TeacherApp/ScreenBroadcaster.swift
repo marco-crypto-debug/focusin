@@ -53,13 +53,14 @@ final class ScreenBroadcaster: NSObject {
 
 #if FOCUSIN_BETA
     /// beta：依畫質決定的 H.264 目標碼率（bps）。
+    /// 提高基準碼率，靜態文字/細線更清晰；組播單流下 1 份流量複製給所有學生。
     private func h264Bitrate(displayWidth: Int) -> Int {
         let base: Double
         switch quality {
-        case .high: base = 10_000_000
-        case .mid:  base = 6_000_000
-        case .low:  base = 3_000_000
-        case .auto: base = displayWidth > 3840 ? 8_000_000 : 10_000_000
+        case .high: base = 14_000_000
+        case .mid:  base = 8_000_000
+        case .low:  base = 4_500_000
+        case .auto: base = displayWidth > 3840 ? 10_000_000 : 14_000_000
         }
         return Int(base)
     }
@@ -320,16 +321,20 @@ extension ScreenBroadcaster: SCStreamOutput {
         defer { isEncodingFrame = false }
 
 #if FOCUSIN_BETA
-        // —— v1.5-beta：銳化 → H.264 硬體編碼（組播單流）——
-        let image = CIImage(cvPixelBuffer: pixelBuffer)
-        let processed = image.applyingFilter("CISharpenLuminance",
-                                             parameters: [kCIInputSharpnessKey: 0.8])
-        // CI → CVPixelBuffer（VideoToolbox 需要 pixel buffer 輸入）
-        if let outBuffer = makePixelBuffer(width: processed.extent.width,
-                                           height: processed.extent.height),
-           let cg = context.createCGImage(processed, from: processed.extent) {
-            context.render(processed, to: outBuffer)
-            h264Encoder.encode(outBuffer)
+        // —— v1.5-beta：H.264 硬體編碼（組播單流）——
+        // 原始畫面直通：不做任何銳化/後處理，畫面與屏幕完全一致。
+        // 若採集 buffer 已是 BGRA 直接送編碼器（零複製、零失真）；
+        // 其他格式（NV12 等）才轉 BGRA。
+        let fmt = CVPixelBufferGetPixelFormatType(pixelBuffer)
+        if fmt == kCVPixelFormatType_32BGRA {
+            h264Encoder.encode(pixelBuffer)
+        } else {
+            let image = CIImage(cvPixelBuffer: pixelBuffer)
+            if let outBuffer = makePixelBuffer(width: image.extent.width,
+                                               height: image.extent.height) {
+                context.render(image, to: outBuffer)
+                h264Encoder.encode(outBuffer)
+            }
         }
 #else
         let image = CIImage(cvPixelBuffer: pixelBuffer)
