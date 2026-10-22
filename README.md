@@ -33,40 +33,62 @@ Tech stack: Swift / SwiftUI (macOS 14+), Network.framework (WebSocket + Bonjour/
 ## Directory Layout
 
 ```
-ClassroomManager/
-├── README.md
-├── project.yml                     # XcodeGen project definition (generates both Xcode projects)
-├── Shared/                         # Source shared by both targets (compiled into both)
-│   ├── Networking/
-│   │   ├── PeerTransport.swift     # NWParameters factory (WebSocket application protocol)
-│   │   ├── PeerConnection.swift    # WebSocket wrapper: send/receive CommandMessage
-│   │   └── PeerDiscovery.swift     # PeerAdvertiser (student) / PeerBrowser (teacher)
-│   └── Protocol/
-│       ├── CommandType.swift       # Command enum: lock/unlock/shutdown/restart/launchApp/stream*
-│       └── CommandMessage.swift    # JSON message envelope
-├── Shared/Utility/
-│   ├── LoginStartManager.swift     # Launch-at-login (LaunchAgent registration, shared)
-│   └── UpdateChecker.swift         # Auto-update check (GitHub API: release tag / commit SHA)
-├── TeacherApp/
-│   ├── TeacherApp.swift            # @main entry
-│   ├── TeacherViewModel.swift      # Discovery / connection / command dispatch
-│   ├── ScreenBroadcaster.swift     # ScreenCaptureKit capture → JPEG frames + audio PCM
-│   ├── Views/DeviceListView.swift  # Device list + control panel UI (quality / auto-start)
-│   ├── Info.plist
-│   └── TeacherApp.entitlements
-└── StudentApp/
-    ├── StudentApp.swift            # @main entry
-    ├── CommandListener.swift       # Advertise service + command listener + system actions
-    ├── AudioPlayer.swift           # Broadcast audio playback (AVAudioEngine)
-    ├── FileWipeManager.swift       # Wipe Documents + Downloads (sent by teacher)
-    ├── Views/StatusView.swift      # Status window (admin password + auto-start + update check)
-    ├── Kiosk/
-    │   ├── KioskModeController.swift # Full-screen lock window + presentationOptions + unlock flow
-    │   ├── InputInterceptor.swift    # CGEventTap keyboard/mouse interception
-    │   ├── KioskLockView.swift       # Lock screen UI (broadcast view + password field)
-    │   └── KioskConfig.swift         # Salted-hash storage of admin password
-    ├── Info.plist
-    └── StudentApp.entitlements
+FocusIn/
+├── README.md                      # This file (English)
+├── README.zh-Hans.md              # 簡體中文版
+├── README.zh-Hant.md              # 繁體中文版
+├── release/                       # 發布物（每版一份 DMG）
+│   ├── stable/                    # 穩定版（僅畫面 + 退出保護）
+│   ├── alpha/                     # Alpha（聲音 + Pro License）
+│   ├── delta/                     # Delta（主力：5/50 台、聲音僅 Pro、WebSocket/UDP 可選）
+│   └── archive/                   # 舊版封存
+└── source/                        # 全部源碼
+    ├── app/                       # macOS App
+    │   ├── project.yml            # XcodeGen project definition
+    │   ├── Shared/                # Source shared by both targets (compiled into both)
+    │   │   ├── Networking/
+    │   │   │   ├── PeerTransport.swift     # NWParameters factory (WebSocket application protocol)
+    │   │   │   ├── PeerConnection.swift    # WebSocket wrapper: send/receive CommandMessage
+    │   │   │   └── PeerDiscovery.swift     # PeerAdvertiser (student) / PeerBrowser (teacher)
+    │   │   └── Protocol/
+    │   │       ├── CommandType.swift       # Command enum: lock/unlock/shutdown/restart/launchApp/stream*
+    │   │       └── CommandMessage.swift    # JSON message envelope
+    │   ├── Shared/Utility/
+    │   │   ├── LoginStartManager.swift     # Launch-at-login (LaunchAgent registration, shared)
+    │   │   └── UpdateChecker.swift         # Auto-update check (GitHub API: release tag / commit SHA)
+    │   ├── TeacherApp/
+    │   │   ├── TeacherApp.swift            # @main entry
+    │   │   ├── TeacherViewModel.swift      # Discovery / connection / command dispatch
+    │   │   ├── ScreenBroadcaster.swift     # ScreenCaptureKit capture → H.264 frames + audio PCM
+    │   │   ├── Views/DeviceListView.swift  # Device list + control panel UI (quality / brightness)
+    │   │   ├── Info.plist
+    │   │   └── TeacherApp.entitlements
+    │   └── StudentApp/
+    │       ├── StudentApp.swift            # @main entry
+    │       ├── CommandListener.swift       # Advertise service + command listener + system actions
+    │       ├── BrightnessManager.swift     # DisplayServices brightness control (teacher remote)
+    │       ├── AudioPlayer.swift           # Broadcast audio playback (AVAudioEngine)
+    │       ├── FileWipeManager.swift       # Wipe Documents + Downloads (sent by teacher)
+    │       ├── Views/StatusView.swift      # Status window (admin password + auto-start + update check)
+    │       ├── Kiosk/
+    │       │   ├── KioskModeController.swift # Full-screen lock window + presentationOptions + unlock flow
+    │       │   ├── InputInterceptor.swift    # CGEventTap keyboard/mouse interception
+    │       │   ├── KioskLockView.swift       # Lock screen UI (broadcast view + password field)
+    │       │   └── KioskConfig.swift         # Salted-hash storage of admin password
+    │       ├── Info.plist
+    │       └── StudentApp.entitlements
+    ├── web/                       # 網站
+    │   ├── site/                  # 官網 HTML（FocusIn官網.html 等，三語單檔）
+    │   └── wrangler.toml          # Cloudflare Pages 構建設定
+    ├── backend/                   # 背景 / 後端
+    │   ├── license-worker/        # License Key 簽發 Worker（Cloudflare Workers）
+    │   ├── docs/                  # 架構說明（architecture.html）
+    │   └── package.json           # License 工具鏈依賴
+    └── tools/                     # 構建 / 簽名 / 授權工具
+        ├── build.sh               # 一鍵構建 stable/alpha/beta/delta
+        ├── sign-focusin.sh        # 自動簽名
+        ├── gen-license-key.js     # License Key 簽發 CLI
+        └── license-keys/          # 簽名金鑰對（不入 git）
 ```
 
 ## Build & Run

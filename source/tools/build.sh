@@ -21,42 +21,42 @@ BUILD_SHA="$(git -C "$ROOT" rev-parse --short HEAD)"
 VERSION_BASE="${FOCUSIN_VERSION:-1.4.1}"
 
 SHARED_SRC=(
-  "$ROOT/Shared/Networking/PeerConnection.swift"
-  "$ROOT/Shared/Networking/PeerDiscovery.swift"
-  "$ROOT/Shared/Networking/PeerTransport.swift"
-  "$ROOT/Shared/Networking/MulticastTransport.swift"
-  "$ROOT/Shared/Protocol/CommandMessage.swift"
-  "$ROOT/Shared/Protocol/CommandType.swift"
-  "$ROOT/Shared/Utility/DiagLog.swift"
-  "$ROOT/Shared/Utility/LicenseManager.swift"
-  "$ROOT/Shared/Utility/DeviceLimit.swift"
-  "$ROOT/Shared/Utility/LoginStartManager.swift"
-  "$ROOT/Shared/Utility/MenuBarManager.swift"
-  "$ROOT/Shared/Utility/FocusInAppState.swift"
-  "$ROOT/Shared/Utility/FocusInTheme.swift"
-  "$ROOT/Shared/Utility/QuitGuard.swift"
-  "$ROOT/Shared/Utility/UpdateChecker.swift"
-  "$ROOT/Shared/Utility/DisplayKeepAlive.swift"
+  "$ROOT/source/app/Shared/Networking/PeerConnection.swift"
+  "$ROOT/source/app/Shared/Networking/PeerDiscovery.swift"
+  "$ROOT/source/app/Shared/Networking/PeerTransport.swift"
+  "$ROOT/source/app/Shared/Networking/MulticastTransport.swift"
+  "$ROOT/source/app/Shared/Protocol/CommandMessage.swift"
+  "$ROOT/source/app/Shared/Protocol/CommandType.swift"
+  "$ROOT/source/app/Shared/Utility/DiagLog.swift"
+  "$ROOT/source/app/Shared/Utility/LicenseManager.swift"
+  "$ROOT/source/app/Shared/Utility/DeviceLimit.swift"
+  "$ROOT/source/app/Shared/Utility/LoginStartManager.swift"
+  "$ROOT/source/app/Shared/Utility/MenuBarManager.swift"
+  "$ROOT/source/app/Shared/Utility/FocusInAppState.swift"
+  "$ROOT/source/app/Shared/Utility/FocusInTheme.swift"
+  "$ROOT/source/app/Shared/Utility/QuitGuard.swift"
+  "$ROOT/source/app/Shared/Utility/UpdateChecker.swift"
+  "$ROOT/source/app/Shared/Utility/DisplayKeepAlive.swift"
 )
 TEACHER_SRC=(
-  "$ROOT/TeacherApp/TeacherApp.swift"
-  "$ROOT/TeacherApp/TeacherViewModel.swift"
-  "$ROOT/TeacherApp/ScreenBroadcaster.swift"
-  "$ROOT/TeacherApp/H264Encoder.swift"
-  "$ROOT/TeacherApp/Views/DeviceListView.swift"
+  "$ROOT/source/app/TeacherApp/TeacherApp.swift"
+  "$ROOT/source/app/TeacherApp/TeacherViewModel.swift"
+  "$ROOT/source/app/TeacherApp/ScreenBroadcaster.swift"
+  "$ROOT/source/app/TeacherApp/H264Encoder.swift"
+  "$ROOT/source/app/TeacherApp/Views/DeviceListView.swift"
 )
 STUDENT_SRC=(
-  "$ROOT/StudentApp/StudentApp.swift"
-  "$ROOT/StudentApp/CommandListener.swift"
-  "$ROOT/StudentApp/BrightnessManager.swift"
-  "$ROOT/StudentApp/H264Decoder.swift"
-  "$ROOT/StudentApp/AudioPlayer.swift"
-  "$ROOT/StudentApp/FileWipeManager.swift"
-  "$ROOT/StudentApp/Kiosk/InputInterceptor.swift"
-  "$ROOT/StudentApp/Kiosk/KioskConfig.swift"
-  "$ROOT/StudentApp/Kiosk/KioskLockView.swift"
-  "$ROOT/StudentApp/Kiosk/KioskModeController.swift"
-  "$ROOT/StudentApp/Views/StatusView.swift"
+  "$ROOT/source/app/StudentApp/StudentApp.swift"
+  "$ROOT/source/app/StudentApp/CommandListener.swift"
+  "$ROOT/source/app/StudentApp/BrightnessManager.swift"
+  "$ROOT/source/app/StudentApp/H264Decoder.swift"
+  "$ROOT/source/app/StudentApp/AudioPlayer.swift"
+  "$ROOT/source/app/StudentApp/FileWipeManager.swift"
+  "$ROOT/source/app/StudentApp/Kiosk/InputInterceptor.swift"
+  "$ROOT/source/app/StudentApp/Kiosk/KioskConfig.swift"
+  "$ROOT/source/app/StudentApp/Kiosk/KioskLockView.swift"
+  "$ROOT/source/app/StudentApp/Kiosk/KioskModeController.swift"
+  "$ROOT/source/app/StudentApp/Views/StatusView.swift"
 )
 
 build_variant() {
@@ -117,7 +117,7 @@ build_variant() {
       "${SRC[@]}"
 
     # Info.plist
-    local PLIST_SRC="$ROOT/$APP/Info.plist"
+    local PLIST_SRC="$ROOT/source/app/$APP/Info.plist"
     local PLIST="$APPDIR/Contents/Info.plist"
     cp "$PLIST_SRC" "$PLIST"
     plutil -replace CFBundleExecutable -string "$EXE" "$PLIST"
@@ -143,7 +143,7 @@ build_variant() {
 
   # 簽名
   echo "→ 簽名..."
-  bash "$ROOT/tools/sign-focusin.sh" "$STAGE"/*.app
+  bash "$ROOT/source/tools/sign-focusin.sh" "$STAGE"/*.app
 
   # DMG
   make_dmg() {
@@ -153,8 +153,8 @@ build_variant() {
     rm -rf "$TMP"; mkdir -p "$TMP"
     cp -R "$STAGE/$APP.app" "$TMP/"
     # 附帶信任工具
-    cp "$ROOT/tools/install-cert.sh" "$TMP/" 2>/dev/null || true
-    cp "$ROOT/tools/focusin-signing.cer" "$TMP/" 2>/dev/null || true
+    cp "$ROOT/source/tools/install-cert.sh" "$TMP/" 2>/dev/null || true
+    cp "$ROOT/source/tools/focusin-signing.cer" "$TMP/" 2>/dev/null || true
     hdiutil create -volname "$NAME" -srcfolder "$TMP" -ov -format UDZO "$DMG" >/dev/null
     echo "→ DMG：$DMG"
   }
