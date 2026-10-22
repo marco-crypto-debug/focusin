@@ -72,6 +72,9 @@ final class KioskModeController: ObservableObject {
         broadcastImage = nil
         unlockHint = nil
 
+        // 防熄屏：鎖定期間停用 idle display/system sleep，避免全屏鎖窗自動熄屏
+        DisplayKeepAlive.shared.engage()
+
         // 3) 全屏鎖窗覆蓋所有顯示器（並註冊自愈機制）
         showLockWindows()
         registerLockObservers()
@@ -88,6 +91,7 @@ final class KioskModeController: ObservableObject {
         lockWindows.removeAll()
         NSApp.presentationOptions = []
         isLocked = false
+        DisplayKeepAlive.shared.release()
         unlockRequested = false
         isInputBlocked = false
         unlockHint = nil

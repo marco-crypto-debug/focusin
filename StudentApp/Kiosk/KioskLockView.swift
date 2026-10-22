@@ -14,6 +14,7 @@ struct KioskLockView: View {
             if let image = controller.broadcastImage {
                 Image(nsImage: image)
                     .resizable()
+                    .interpolation(.high)   // 高品質縮放，1080p/2K 級畫面更清晰
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {

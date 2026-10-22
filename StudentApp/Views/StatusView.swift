@@ -127,6 +127,7 @@ struct StatusView: View {
                         if let image = kiosk.broadcastImage {
                             Image(nsImage: image)
                                 .resizable()
+                                .interpolation(.high)   // 高品質縮放，1080p/2K 級畫面更清晰
                                 .aspectRatio(contentMode: .fit)
                                 .frame(maxWidth: .infinity)
                                 .frame(maxHeight: 200)

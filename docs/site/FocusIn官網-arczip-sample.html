@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FocusIn — Share one screen, to every Mac</title>
+<meta name="description" content="FocusIn streams your Mac's display to any number of Macs on the same Wi-Fi in real time — beyond AirPlay.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e04e70'/%3E%3Ctext x='32' y='45' font-family='Helvetica' font-size='36' font-weight='700' fill='%23fff' text-anchor='middle'%3EF%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#ffffff; --bg-soft:#f6f6f8; --ink:#111114; --muted:#63636e; --subtle:#9a9aa6;
+  --line:#e8e8ee; --line-strong:#d4d4de; --brand:#e04e70; --brand-deep:#b8395a; --brand-soft:#f7d6df;
+  --ok:#1f9d55; --ok-soft:#e3f5ea; --card:#fafafc; --shadow:0 24px 60px -30px rgba(20,20,40,.25);
+  --font:"-apple-system","SF Pro Display","SF Pro Text","Helvetica Neue","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  --container:72rem; --radius:.75rem; --radius-l:1.25rem; --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+::selection{background:var(--brand);color:#fff}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit}
+.wrap{max-width:var(--container);margin:0 auto;padding:0 24px}
+@media(max-width:640px){.wrap{padding:0 18px}}
+
+/* ===== 頂欄 ===== */
+.nav{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.8);backdrop-filter:saturate(1.5) blur(16px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:24px;height:56px}
+.nav .logo{display:flex;align-items:center;gap:9px;font-weight:650;font-size:15.5px;letter-spacing:-.01em}
+.logo-ic{width:26px;height:26px;border-radius:8px;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:14px}
+.nav .links{display:flex;gap:22px;margin-left:4px}
+.nav .links a{font-size:14px;color:var(--muted);font-weight:500}
+.nav .links a:hover{color:var(--ink)}
+.nav .spacer{flex:1}
+.lang{display:flex;gap:2px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px;padding:2px}
+.lang button{border:0;background:transparent;font-size:12.5px;font-weight:600;color:var(--subtle);padding:4px 9px;border-radius:6px;cursor:pointer}
+.lang button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(17,17,17,.08)}
+.nav .cta{background:var(--brand);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-size:13.5px;font-weight:600;cursor:pointer}
+.nav .cta:hover{background:var(--brand-deep)}
+@media(max-width:800px){.nav .links{display:none}}
+
+/* ===== 視圖路由 ===== */
+section.view{display:none}
+section.view.active{display:block}
+
+/* ===== Hero ===== */
+.hero{padding:84px 0 30px;text-align:center}
+.hero .badge{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--muted);background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;padding:6px 14px;margin-bottom:24px}
+.hero .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--brand);animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero h1{font-weight:700;font-size:clamp(2.6rem,6.4vw,4.6rem);line-height:1.12;letter-spacing:-.028em;max-width:22ch;margin:0 auto 20px}
+.hero h1 .em{background:linear-gradient(120deg,var(--brand),#f291ab);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{font-size:clamp(1.02rem,1.6vw,1.2rem);color:var(--muted);max-width:64ch;margin:0 auto 34px;line-height:1.7}
+.hero .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:9px;border-radius:11px;padding:14px 26px;font-size:15px;font-weight:600;border:1px solid transparent;cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.btn:hover{transform:translateY(-1.5px)}
+.btn-brand{background:var(--brand);color:#fff}
+.btn-brand:hover{background:var(--brand-deep);box-shadow:0 10px 26px rgba(224,78,112,.3)}
+.btn-ghost{background:#fff;color:var(--ink);border-color:var(--line-strong)}
+.btn-ghost:hover{border-color:var(--ink)}
+.hero .meta{display:flex;gap:22px;justify-content:center;margin-top:22px;font-size:13px;color:var(--subtle);flex-wrap:wrap}
+
+/* ===== Hero 桌面場景 ===== */
+.stage{position:relative;margin:64px auto 0;max-width:1120px;padding:0 20px}
+.mac{position:relative;background:linear-gradient(165deg,#fdeef2 0%,#f8dbe4 42%,#f0b6c8 100%);border-radius:26px;padding:46px 44px 26px;box-shadow:var(--shadow);overflow:hidden}
+.mac::before{content:"";position:absolute;inset:0;background:radial-gradient(1200px 500px at 75% -10%,rgba(255,255,255,.7),transparent 60%),radial-gradient(900px 420px at 10% 110%,rgba(255,255,255,.45),transparent 60%);pointer-events:none}
+.mac-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px;align-items:end}
+@media(max-width:860px){.mac-grid{grid-template-columns:1fr}}
+.mac-title{position:absolute;top:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#5a5f8a;letter-spacing:.02em}
+.mac-title svg{width:13px;height:13px}
+.win{background:#fff;border-radius:13px;box-shadow:0 18px 44px -18px rgba(40,44,120,.35);overflow:hidden;text-align:left;border:1px solid rgba(255,255,255,.6)}
+.win-t{display:flex;align-items:center;gap:7px;padding:9px 13px;background:#f7f7fa;border-bottom:1px solid var(--line)}
+.win-t .d{width:10px;height:10px;border-radius:50%;background:#e3e3ea}
+.win-t .d:nth-child(1){background:#ff5f57}.win-t .d:nth-child(2){background:#febc2e}.win-t .d:nth-child(3){background:#28c840}
+.win-t .n{margin-left:8px;font-size:11.5px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:6px}
+.win-t .n svg{width:12px;height:12px}
+.win-b{padding:14px}
+.teacher{position:relative;z-index:2}
+.teacher .win-b{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px}
+.t-left .lb{font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.08em;margin-bottom:8px}
+.t-row{display:flex;align-items:center;gap:9px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:7px}
+.t-row .av{width:22px;height:22px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.t-row .nm{font-size:12px;font-weight:600;flex:1}
+.t-row .ms{font-size:10.5px;color:var(--ok)}
+.t-row .chk{width:16px;height:16px;border-radius:5px;background:var(--brand);display:flex;align-items:center;justify-content:center}
+.t-row .chk svg{width:10px;height:10px;stroke:#fff}
+.t-right .lb{font-size:10px;font-weight:700;color:var(--subtle);letter-spacing:.08em;margin-bottom:8px}
+.t-prev{position:relative;background:linear-gradient(140deg,#fdeef2,#f5d5e0);border-radius:9px;height:96px;overflow:hidden;border:1px solid var(--line)}
+.t-prev .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:7px;font-size:11px;color:#5a5f8a;font-weight:600}
+.t-prev .ph .li{width:22px;height:16px;border-radius:3px;background:rgba(224,78,112,.9);position:relative}
+.t-prev .ph .li::after{content:"";position:absolute;left:3px;right:3px;top:4px;height:3px;border-radius:2px;background:rgba(255,255,255,.75);box-shadow:0 4px 0 rgba(255,255,255,.5)}
+.t-btns{display:flex;gap:8px;margin-top:10px}
+.t-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;font-weight:600;padding:8px 0;border-radius:8px}
+.t-btn svg{width:12px;height:12px}
+.t-btn.on{background:var(--brand);color:#fff}
+.t-btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line-strong)}
+.students{display:flex;flex-direction:column;gap:14px;position:relative;z-index:2}
+.student{background:#fff;border-radius:13px;box-shadow:0 14px 34px -16px rgba(40,44,120,.3);overflow:hidden;border:1px solid rgba(255,255,255,.6)}
+.student .win-t .n{font-size:11px}
+.student .s-prev{position:relative;height:78px;background:linear-gradient(140deg,#fdeef2,#f5d5e0);margin:0 12px 10px;border-radius:9px;overflow:hidden}
+.student .s-prev .sc{position:absolute;inset:8px;border-radius:5px;background:linear-gradient(135deg,#e04e70,#f291ab);opacity:.92;display:flex;align-items:center;justify-content:center}
+.student .s-prev .sc::before{content:"";position:absolute;left:12px;right:12px;top:16px;height:4px;border-radius:3px;background:rgba(255,255,255,.8);box-shadow:0 7px 0 rgba(255,255,255,.55),0 14px 0 rgba(255,255,255,.32)}
+.student .s-prev .sc::after{content:"";position:absolute;left:12px;bottom:12px;width:34px;height:16px;border-radius:3px;background:rgba(255,255,255,.5)}
+.student .s-st{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px 11px;font-size:11px;font-weight:600;color:var(--muted)}
+.student .s-st .live{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:pulse 1.4s infinite}
+.stage .note{position:relative;display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 0 0;font-size:12px;color:#5a5f8a;font-weight:500}
+.stage .note span{display:flex;align-items:center;gap:6px}
+.stage .note svg{width:14px;height:14px}
+
+/* ===== 特性分屏 ===== */
+.sec{padding:88px 0}
+.sec.alt{background:var(--bg-soft)}
+.sec-head{max-width:62ch;margin-bottom:46px}
+.sec-head.center{margin-left:auto;margin-right:auto;text-align:center}
+.eyebrow{display:inline-block;font-size:13px;font-weight:700;color:var(--brand);letter-spacing:.06em;margin-bottom:12px}
+.sec-head h2{font-size:clamp(1.8rem,3.6vw,2.7rem);font-weight:700;letter-spacing:-.022em;line-height:1.22;margin-bottom:14px}
+.sec-head p{font-size:1.06rem;color:var(--muted);line-height:1.7}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:60px;align-items:center}
+@media(max-width:900px){.split{grid-template-columns:1fr;gap:34px}}
+.split .txt h3{font-size:clamp(1.4rem,2.6vw,2rem);font-weight:700;letter-spacing:-.018em;line-height:1.25;margin-bottom:14px}
+.split .txt p{color:var(--muted);font-size:1.03rem;line-height:1.7}
+.split .vis{position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--radius-l);padding:18px;box-shadow:0 18px 44px -26px rgba(20,20,40,.18)}
+.split .vis .cap{display:flex;align-items:center;gap:8px;padding:4px 2px 12px;font-size:12px;color:var(--muted);font-weight:600}
+.split .vis .cap svg{width:14px;height:14px}
+.split .vis .shot{border-radius:10px;overflow:hidden;border:1px solid var(--line);background:var(--card)}
+
+/* ===== 細節網格 ===== */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 24px;transition:border-color .18s var(--ease),transform .18s var(--ease)}
+.card:hover{border-color:var(--line-strong);transform:translateY(-2px)}
+.card .ic{width:40px;height:40px;border-radius:11px;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.card .ic svg{width:19px;height:19px}
+.card h4{font-size:15.5px;font-weight:650;margin-bottom:7px;letter-spacing:-.01em}
+.card p{font-size:13.8px;color:var(--muted);line-height:1.65}
+
+/* ===== 三步驟 ===== */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+.step{position:relative;background:#fff;border:1px solid var(--line);border-radius:18px;padding:30px 26px}
+.step .n{font-size:13px;font-weight:800;color:var(--brand);letter-spacing:.04em;margin-bottom:14px}
+.step h4{font-size:17px;font-weight:650;margin-bottom:8px}
+.step p{font-size:14px;color:var(--muted);line-height:1.65}
+.step .s-ic{width:46px;height:46px;border-radius:13px;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.step .s-ic svg{width:21px;height:21px}
+
+/* ===== 定價 ===== */
+.price-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;max-width:820px;margin:0 auto}
+@media(max-width:700px){.price-grid{grid-template-columns:1fr}}
+.plan{position:relative;background:#fff;border:1px solid var(--line);border-radius:20px;padding:32px 30px}
+.plan.pro{border:2px solid var(--brand);box-shadow:0 26px 60px -30px rgba(224,78,112,.4)}
+.plan .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--brand);color:#fff;font-size:11.5px;font-weight:700;padding:4px 14px;border-radius:999px;letter-spacing:.03em}
+.plan .p-name{font-size:14px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-bottom:10px}
+.plan .p-price{font-size:2.6rem;font-weight:750;letter-spacing:-.03em}
+.plan .p-price small{font-size:1rem;font-weight:500;color:var(--muted);letter-spacing:0}
+.plan .p-desc{font-size:13.5px;color:var(--muted);margin:6px 0 18px}
+.plan ul{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:26px}
+.plan ul li{display:flex;gap:10px;font-size:14px;line-height:1.5;align-items:flex-start}
+.plan ul li svg{width:16px;height:16px;flex:none;margin-top:2px;color:var(--ok)}
+.plan .btn{width:100%;justify-content:center}
+.price-note{max-width:820px;margin:22px auto 0;text-align:center;font-size:13px;color:var(--subtle)}
+
+/* ===== 下載 CTA ===== */
+.cta-sec{background:linear-gradient(150deg,#f0f1ff,#e6e9ff);border-radius:26px;text-align:center;padding:64px 28px;position:relative;overflow:hidden}
+.cta-sec::before{content:"";position:absolute;inset:0;background:radial-gradient(700px 300px at 80% -20%,rgba(255,255,255,.8),transparent 60%);pointer-events:none}
+.cta-sec h2{font-size:clamp(1.8rem,3.6vw,2.6rem);font-weight:700;letter-spacing:-.022em;line-height:1.2;margin-bottom:12px;position:relative}
+.cta-sec p{color:#5a5f8a;font-size:1.02rem;margin-bottom:30px;position:relative}
+.cta-sec .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
+.cta-sec .meta{display:flex;gap:18px;justify-content:center;margin-top:26px;font-size:12.5px;color:#5a5f8a;flex-wrap:wrap;position:relative}
+
+/* ===== FAQ ===== */
+.faq{max-width:760px;margin:0 auto}
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:first-child{border-top:1px solid var(--line)}
+.faq summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 4px;font-size:15.5px;font-weight:600;cursor:pointer;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .pm{width:22px;height:22px;border-radius:50%;background:var(--bg-soft);display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease);flex:none}
+.faq details[open] summary .pm{transform:rotate(45deg)}
+.faq summary .pm svg{width:11px;height:11px;stroke:var(--ink)}
+.faq .a{padding:0 4px 22px;font-size:14.5px;color:var(--muted);line-height:1.75}
+.faq .a code{background:var(--bg-soft);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px}
+.faq-more{text-align:center;margin-top:26px;font-size:14px;color:var(--muted)}
+.faq-more a{color:var(--brand);font-weight:600}
+
+/* ===== Footer ===== */
+.footer{border-top:1px solid var(--line);padding:52px 0 40px;margin-top:20px}
+.footer .cols{display:grid;grid-template-columns:1.4fr repeat(3,minmax(0,1fr));gap:32px}
+@media(max-width:760px){.footer .cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.footer .tag{font-size:14px;color:var(--muted);margin-top:14px;max-width:30ch;line-height:1.6}
+.footer h5{font-size:12px;font-weight:700;color:var(--subtle);letter-spacing:.06em;margin-bottom:14px}
+.footer a.l{display:block;font-size:13.5px;color:var(--muted);padding:3.5px 0}
+.footer a.l:hover{color:var(--ink)}
+.footer .bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:44px;padding-top:22px;border-top:1px solid var(--line);font-size:12.5px;color:var(--subtle);flex-wrap:wrap}
+.footer .bottom .b-links{display:flex;gap:18px}
+
+/* ===== 文件頁（Privacy / Terms） ===== */
+.doc{padding:60px 0 80px;max-width:720px;margin:0 auto}
+.doc .updated{font-size:13px;color:var(--subtle);margin-bottom:30px}
+.doc h2{font-size:2rem;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.doc h3{font-size:1.15rem;font-weight:650;margin:30px 0 10px}
+.doc p{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:10px}
+.doc ul{margin:8px 0 16px 20px}
+.doc li{font-size:14.5px;color:var(--muted);line-height:1.7;margin-bottom:8px}
+
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+
+/* ===== License Key ===== */
+.key-box{max-width:640px;margin:26px auto 0;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;text-align:left}
+.key-box h4{font-size:16px;font-weight:650;margin-bottom:6px}
+.key-box .kb-sub{font-size:13.5px;color:var(--muted);margin-bottom:16px}
+.key-row{display:flex;gap:10px}
+.key-row input{flex:1;border:1px solid var(--line-strong);border-radius:10px;padding:12px 14px;font-size:14px;outline:none}
+.key-row input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.key-row button{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:0 20px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.key-result{margin-top:16px;background:var(--ok-soft);border:1px solid #bfe6cd;border-radius:12px;padding:16px;display:none}
+.key-result.show{display:block}
+.key-result .kr-l{font-size:12px;font-weight:700;color:var(--ok);margin-bottom:6px}
+.key-result .kr-key{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all;background:#fff;border:1px solid #bfe6cd;border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.5}
+.key-result .kr-how{font-size:12.5px;color:var(--muted)}
+.key-result .kr-how li{margin:3px 0 3px 16px}
+.key-err{color:#d33;font-size:13px;margin-top:10px;display:none}
+
+/* ===== 場景動畫（影片感） ===== */
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(224,78,112,.4)}100%{box-shadow:0 0 0 16px rgba(224,78,112,0)}}
+@keyframes msBlink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes barMove{0%{transform:translateX(-14px)}50%{transform:translateX(14px)}100%{transform:translateX(-14px)}}
+@keyframes lineMove{0%{transform:translateY(0)}50%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+@keyframes scanDown{0%{transform:translateY(-120%)}100%{transform:translateY(420%)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@keyframes bgDrift{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+@keyframes spinSlow{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.floaty,.screen-anim *,.live-ms,.live-badge{animation:none!important}}
+
+/* 屏幕內動畫內容 */
+.student .s-prev .screen-anim{inset:8px;border-radius:5px;z-index:2}
+.screen-anim{position:absolute;inset:0;overflow:hidden;background:linear-gradient(135deg,#d84a6c,#e86d8e 55%,#f291ab);}
+.screen-anim .sa-bar{position:absolute;left:0;right:0;top:0;height:13px;background:rgba(255,255,255,.16)}
+.screen-anim .sa-dock{position:absolute;left:8%;right:8%;bottom:7px;height:9px;border-radius:5px;background:rgba(255,255,255,.28);display:flex;gap:4px;padding:2px 5px;box-sizing:border-box}
+.screen-anim .sa-dock i{flex:1;border-radius:3px;background:rgba(255,255,255,.5)}
+.screen-anim .sa-line{position:absolute;height:6px;border-radius:4px;background:rgba(255,255,255,.55);animation:lineMove 3.2s var(--ease) infinite}
+.screen-anim .sa-line.l1{left:12%;top:26%;width:34%}
+.screen-anim .sa-line.l2{left:12%;top:38%;width:52%;animation-delay:.4s}
+.screen-anim .sa-line.l3{left:12%;top:50%;width:42%;animation-delay:.8s}
+.screen-anim .sa-line.l4{left:12%;top:62%;width:58%;animation-delay:1.2s}
+.screen-anim .sa-card{position:absolute;right:9%;top:24%;width:24%;height:34%;border-radius:7px;background:rgba(255,255,255,.9);box-shadow:0 6px 14px rgba(184,57,90,.3);animation:floaty 4.4s var(--ease) infinite}
+.screen-anim .sa-card::before{content:"";position:absolute;left:12%;right:12%;top:22%;height:5px;border-radius:3px;background:rgba(224,78,112,.75)}
+.screen-anim .sa-card::after{content:"";position:absolute;left:12%;right:35%;top:40%;height:5px;border-radius:3px;background:rgba(224,78,112,.35)}
+.screen-anim .sa-scan{position:absolute;left:0;right:0;height:22%;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.14),rgba(255,255,255,0));animation:scanDown 2.8s linear infinite}
+.screen-anim .sa-wind{position:absolute;left:9%;top:18%;width:30%;height:44%;border-radius:8px;background:rgba(255,255,255,.94);box-shadow:0 8px 18px rgba(184,57,90,.28);animation:barMove 5.6s ease-in-out infinite;display:flex;flex-direction:column;padding:7px;box-sizing:border-box;gap:5px}
+.screen-anim .sa-wind b{height:5px;border-radius:3px;background:rgba(224,78,112,.2)}
+.screen-anim .sa-wind b.hi{width:70%;background:rgba(224,78,112,.55)}
+.screen-anim .sa-wind b.mid{width:52%}
+.screen-anim .sa-wind b.low{width:36%}
+
+.floaty{animation:floaty 5s var(--ease) infinite}
+.floaty.d1{animation-delay:.6s}
+.floaty.d2{animation-delay:1.3s}
+.live-ms{animation:msBlink 1.6s ease-in-out infinite}
+.live-badge{animation:ringPulse 2s var(--ease) infinite}
+
+/* 標題進場 */
+.hero h1{animation:slideIn .8s var(--ease) both}
+.hero .sub{animation:slideIn .8s .1s var(--ease) both}
+.hero .btns{animation:slideIn .8s .2s var(--ease) both}
+.hero .meta{animation:slideIn .8s .3s var(--ease) both}
+.mac{animation:slideIn .9s .15s var(--ease) both}
+
+/* ===== 互動 Live Demo ===== */
+.demo-live{position:relative;margin:70px auto 0;max-width:1080px;padding:0 20px}
+.demo-live .dl-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.demo-live .dl-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#5a5f8a;letter-spacing:.04em}
+.demo-live .dl-title .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);animation:pulse 1.4s infinite}
+.demo-live .dl-grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 24px 60px -30px rgba(20,20,40,.22)}
+@media(max-width:880px){.demo-live .dl-grid{grid-template-columns:1fr}}
+.dl-ctrl{border:1px solid var(--line);border-radius:16px;padding:18px}
+.dl-ctrl .lb{font-size:10.5px;font-weight:700;color:var(--subtle);letter-spacing:.08em;margin-bottom:12px}
+.dl-q{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.dl-q button{flex:1;min-width:56px;border:1px solid var(--line-strong);background:#fff;border-radius:9px;padding:8px 0;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s var(--ease)}
+.dl-q button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.dl-dev{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.dl-dev .dd{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;transition:border-color .15s var(--ease),background .15s var(--ease),opacity .15s var(--ease)}
+.dl-dev .dd:not(.on){opacity:.62}
+.dl-dev .dd.on{opacity:1}
+.dl-dev .dd:hover{border-color:var(--line-strong)}
+.dl-dev .dd.on{background:var(--brand-soft);border-color:var(--brand)}
+.dl-dev .dd .av{width:22px;height:22px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex:none}
+.dl-dev .dd.on .av{background:var(--brand);color:#fff}
+.dl-dev .dd .nm{font-size:12.5px;font-weight:600;flex:1}
+.dl-dev .dd .st{font-size:10.5px;color:var(--subtle)}
+.dl-start{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:11px;padding:12px 0;font-size:14px;font-weight:650;cursor:pointer;transition:all .18s var(--ease)}
+.dl-start.off{background:var(--brand);color:#fff}
+.dl-start.off:hover{background:var(--brand-deep)}
+.dl-start.on{background:#fff;color:var(--ink);border:1px solid var(--line-strong)}
+.dl-start svg{width:14px;height:14px}
+.dl-screen-wall{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:640px){.dl-screen-wall{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.dl-s{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px;transition:all .22s var(--ease);opacity:.72;filter:saturate(.5)}
+.dl-s.on{opacity:1;filter:none;border-color:var(--brand);border-width:2px;box-shadow:0 16px 38px -16px rgba(224,78,112,.55)}
+.dl-s .ds-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.dl-s .ds-top .dot{width:8px;height:8px;border-radius:50%;background:#d6d6de;flex:none}
+.dl-s.on .ds-top .dot{background:var(--ok);box-shadow:0 0 0 3px rgba(31,157,85,.16)}
+.dl-s .ds-top .name{font-size:11px;font-weight:600;color:var(--subtle);flex:1;transition:color .2s var(--ease)}
+.dl-s.on .ds-top .name{color:var(--ink)}
+.dl-s .ds-top .live{display:none;align-items:center;gap:5px;font-size:9.5px;font-weight:700;color:#fff;background:var(--brand);padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.dl-s.on .ds-top .live{display:inline-flex}
+.dl-s .ds-top .live .d{width:5px;height:5px;border-radius:50%;background:#fff;animation:pulse 1.2s infinite}
+.dl-s .ds-scr{position:relative;height:86px;border-radius:9px;overflow:hidden;background:#f3f3f7;border:1.5px dashed var(--line-strong);display:flex;align-items:center;justify-content:center;transition:border-color .2s var(--ease),background .2s var(--ease)}
+.dl-s.on .ds-scr{border-color:transparent;background:linear-gradient(135deg,#fdeef2,#f4cfdc)}
+.dl-s .ds-scr .idle{display:flex;align-items:center;gap:6px;font-size:10.5px;color:#b3b3be;font-weight:600;letter-spacing:.04em}
+.dl-s .ds-scr .idle svg{width:13px;height:13px}
+.dl-s.on .ds-scr .idle{display:none}
+.dl-s .ds-scr .screen-anim{display:none}
+.dl-s.on .ds-scr .screen-anim{display:block;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 0 26px rgba(255,255,255,.28)}
+.dl-s .ds-scr .screen-anim .sa-card{width:22%;height:30%}
+
+/* ===== Toast ===== */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13.5px;font-weight:500;padding:11px 20px;border-radius:999px;opacity:0;transition:opacity .25s var(--ease),transform .25s var(--ease);z-index:99;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ===== Toast ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== 頂欄 ===== -->
+<nav class="nav">
+  <div class="wrap">
+    <a class="logo" href="#home" data-route="home"><span class="logo-ic">F</span><span>FocusIn</span></a>
+    <div class="links">
+      <a href="#features" data-route="features" data-i18n="nav.features">Features</a>
+      <a href="#pricing" data-route="pricing" data-i18n="nav.pricing">Pricing</a>
+      <a href="#download" data-route="download" data-i18n="nav.download">Download</a>
+      <a href="#faq" data-route="faq" data-i18n="nav.faq">FAQ</a>
+    </div>
+    <div class="spacer"></div>
+    <div class="lang" id="lang-switch">
+      <button data-lang="en" class="on">EN</button>
+      <button data-lang="zh-Hant">繁</button>
+      <button data-lang="zh-Hans">简</button>
+    </div>
+    <a class="cta" href="#download" data-route="download" data-i18n="nav.downloadCta">Download</a>
+  </div>
+</nav>
+
+<!-- ===== 首頁 ===== -->
+<section class="view active" id="view-home">
+  <!-- Hero -->
+  <header class="hero">
+    <div class="wrap">
+      <span class="badge"><span class="dot"></span><span data-i18n="home.badge">v1.5.7 · macOS 14+</span></span>
+      <h1 data-i18n="home.h1">Share <em class="em">one screen</em>, to every Mac.</h1>
+      <p class="sub" data-i18n="home.sub">FocusIn turns your Mac into a live broadcast source. Stream your display to any number of Macs on the same Wi-Fi in real time — far beyond AirPlay, which only mirrors to one device at a time.</p>
+      <div class="btns">
+        <a class="btn btn-brand" href="#download" data-route="download"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="home.dlBtn">Download FocusIn</span></a>
+        <a class="btn btn-ghost" href="#download" data-route="download"><span data-i18n="home.brewBtn">Install with Homebrew</span></a>
+      </div>
+      <div class="meta">
+        <span data-i18n="home.meta1">Separate DMGs for Teacher &amp; Student</span>
+        <span data-i18n="home.meta2">Auto-discovery on the same Wi-Fi</span>
+        <span data-i18n="home.meta3">30fps low-latency stream</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero 桌面場景 -->
+  <div class="stage">
+    <div class="mac">
+      <div class="mac-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg><span data-i18n="demo.title">Broadcast studio — live demo</span></div>
+      <div class="mac-grid">
+        <div class="win teacher floaty">
+          <div class="win-t"><span class="d"></span><span class="d"></span><span class="d"></span><span class="n"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><circle cx="17" cy="10" r="1"/></svg>FocusIn Teacher</span></div>
+          <div class="win-b">
+            <div class="t-left">
+              <div class="lb">STUDENTS</div>
+              <div class="t-row"><span class="av">1</span><span class="nm">iMac 01</span><span class="ms live-ms">2 ms</span><span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+              <div class="t-row"><span class="av">2</span><span class="nm">iMac 02</span><span class="ms live-ms" style="animation-delay:.5s">3 ms</span><span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+              <div class="t-row"><span class="av">3</span><span class="nm">iMac 03</span><span class="ms live-ms" style="animation-delay:1s">4 ms</span><span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+              <div class="t-row"><span class="av">4</span><span class="nm">iMac 04</span><span class="ms live-ms" style="animation-delay:1.5s">5 ms</span><span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+            </div>
+            <div class="t-right">
+              <div class="lb">PREVIEW</div>
+              <div class="t-prev">
+                <span class="screen-anim">
+                  <span class="sa-bar"></span>
+                  <span class="sa-line l1"></span><span class="sa-line l2"></span><span class="sa-line l3"></span><span class="sa-line l4"></span>
+                  <span class="sa-card"></span>
+                  <span class="sa-scan"></span>
+                  <span class="sa-dock"><i></i><i></i><i></i><i></i></span>
+                </span>
+                <span class="ph"><span class="li"></span>LIVE</span>
+              </div>
+              <div class="t-btns">
+                <span class="t-btn on live-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Broadcast</span>
+                <span class="t-btn ghost">Lock</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="students">
+          <div class="student floaty d1">
+            <div class="win-t"><span class="d"></span><span class="d"></span><span class="d"></span><span class="n">FocusIn Student</span></div>
+            <div class="s-prev">
+              <span class="screen-anim">
+                <span class="sa-bar"></span>
+                <span class="sa-line l1"></span><span class="sa-line l2"></span><span class="sa-line l3"></span>
+                <span class="sa-card"></span>
+                <span class="sa-scan"></span>
+              </span>
+              <span class="sc"></span>
+            </div>
+            <div class="s-st"><span class="live"></span>Receiving broadcast</div>
+          </div>
+          <div class="student floaty d2">
+            <div class="win-t"><span class="d"></span><span class="d"></span><span class="d"></span><span class="n">FocusIn Student</span></div>
+            <div class="s-prev">
+              <span class="screen-anim">
+                <span class="sa-bar"></span>
+                <span class="sa-line l1"></span><span class="sa-line l2"></span><span class="sa-line l3"></span>
+                <span class="sa-card"></span>
+                <span class="sa-scan"></span>
+              </span>
+              <span class="sc"></span>
+            </div>
+            <div class="s-st"><span class="live"></span>Receiving broadcast</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M16 6l-4-4-4 4"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span data-i18n="demo.tech">ScreenCaptureKit · Network.framework · 30fps</span></span>
+    </div>
+  </div>
+
+  <!-- 互動 Live Demo -->
+  <div class="demo-live" id="demo">
+    <div class="dl-head">
+      <div class="dl-title"><span class="pulse-dot"></span><span data-i18n="demo.tryit">Try the live broadcast</span></div>
+    </div>
+    <div class="dl-grid">
+      <div class="dl-ctrl">
+        <div class="lb" data-i18n="demo.quality">Quality</div>
+        <div class="dl-q" id="dl-q">
+          <button data-q="auto" data-i18n="demo.qAuto">Auto</button>
+          <button data-q="low" data-i18n="demo.qLow">Low</button>
+          <button data-q="mid" data-i18n="demo.qMid">Mid</button>
+          <button data-q="high" class="on" data-i18n="demo.qHigh">High</button>
+        </div>
+        <div class="lb" data-i18n="demo.devices">Devices</div>
+        <div class="dl-dev" id="dl-dev"></div>
+        <button class="dl-start off" id="dl-start" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <span data-i18n="demo.start">Start broadcast</span>
+        </button>
+      </div>
+      <div class="dl-screen-wall" id="dl-wall"></div>
+    </div>
+  </div>
+
+  <!-- 超越 AirPlay -->
+  <section class="sec">
+    <div class="wrap">
+      <div class="split">
+        <div class="txt reveal">
+          <span class="eyebrow" data-i18n="air.eyebrow">Beyond AirPlay</span>
+          <h3 data-i18n="air.title">Screen sharing that actually scales.</h3>
+          <p data-i18n="air.sub">AirPlay mirrors to one screen at a time. FocusIn broadcasts to every Mac in the room, all at once, with no extra hardware.</p>
+        </div>
+        <div class="vis reveal">
+          <div class="cap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg><span data-i18n="demo.source">Broadcast source · your Mac</span></div>
+          <div class="shot" style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#fdeef2,#f4cfdc);">
+            <div style="display:flex;gap:14px;align-items:center;">
+              <div style="width:120px;height:76px;border-radius:9px;background:#fff;box-shadow:0 10px 26px -10px rgba(40,44,120,.35);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;font-size:11px;font-weight:650;color:#5a5f8a;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e04e70" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Teacher
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9aa0c8" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              <div style="width:120px;height:76px;border-radius:9px;background:#fff;box-shadow:0 10px 26px -10px rgba(40,44,120,.35);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;font-size:11px;font-weight:650;color:#5a5f8a;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e04e70" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>Student ×N
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 更多細節 -->
+  <section class="sec alt">
+    <div class="wrap">
+      <div class="sec-head center reveal">
+        <span class="eyebrow" data-i18n="feat.eyebrow">Everything included</span>
+        <h2 data-i18n="feat.title">A broadcast system, not just a mirror.</h2>
+        <p data-i18n="feat.sub">FocusIn pairs a powerful Teacher app with a lightweight Student app that runs on every screen.</p>
+      </div>
+      <div class="grid">
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="12" rx="2"/><path d="M8 20h8"/><line x1="12" y1="16" x2="12" y2="20"/></svg></div>
+          <h4 data-i18n="feat.f1t">Real-time broadcast</h4>
+          <p data-i18n="feat.f1d">Native ScreenCaptureKit capture at up to 30fps. A low-latency binary pipeline keeps motion smooth and text readable.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="7" r="3"/><circle cx="7" cy="17" r="3"/><path d="M8.5 8l7 7"/><path d="M9 14.5l7-7"/></svg></div>
+          <h4 data-i18n="feat.f2t">One-to-many sync</h4>
+          <p data-i18n="feat.f2d">Bonjour auto-discovery lists every online student device with live latency. Broadcast to all, or to a chosen few.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6v6H9z"/></svg></div>
+          <h4 data-i18n="feat.f3t">Fullscreen focus lock</h4>
+          <p data-i18n="feat.f3d">Optionally cover the screen and block local input during a broadcast. The lock window pins above fullscreen apps and Spaces.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
+          <h4 data-i18n="feat.f4t">Remote commands</h4>
+          <p data-i18n="feat.f4d">Shutdown, restart or launch any app on student Macs with one click — for all devices or individual ones.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></div>
+          <h4 data-i18n="feat.f5t">File cleanup</h4>
+          <p data-i18n="feat.f5d">Clear Documents &amp; Downloads on remote Macs. Requires typing DELETE to confirm — no accidental wipes.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          <h4 data-i18n="feat.f6t">Stable &amp; Lightweight</h4>
+          <p data-i18n="feat.f6d">A lean, low-footprint core with minimal CPU and memory usage — smooth, stable screen casting on everyday classroom Macs.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg></div>
+          <h4 data-i18n="feat.f7t">Auto update</h4>
+          <p data-i18n="feat.f7d">Checks GitHub Releases on launch. New versions download the DMG straight to your Mac — one click, no web page.</p>
+        </div>
+        <div class="card reveal">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <h4 data-i18n="feat.f8t">Quit protection</h4>
+          <p data-i18n="feat.f8d">One admin password guards quitting and emergency unlock — a broadcast session can't be interrupted by mistake.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 三步驟 -->
+  <section class="sec">
+    <div class="wrap">
+      <div class="sec-head center reveal">
+        <span class="eyebrow" data-i18n="how.eyebrow">How it works</span>
+        <h2 data-i18n="how.title">Broadcasting in three steps.</h2>
+        <p data-i18n="how.sub">No servers, no accounts, no cloud. Just your Wi-Fi and two apps.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16"/><path d="M6 20V8l6-4 6 4v12"/><path d="M10 20v-6h4v6"/></svg></div>
+          <div class="n">01</div>
+          <h4 data-i18n="how.s1t">Install both apps</h4>
+          <p data-i18n="how.s1d">Put FocusIn Teacher on your Mac, and FocusIn Student on every screen you want to reach.</p>
+        </div>
+        <div class="step reveal">
+          <div class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg></div>
+          <div class="n">02</div>
+          <h4 data-i18n="how.s2t">Join the same Wi-Fi</h4>
+          <p data-i18n="how.s2d">Devices find each other automatically via Bonjour. Online students appear in the Teacher list with latency.</p>
+        </div>
+        <div class="step reveal">
+          <div class="s-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 5v14l11-7z"/></svg></div>
+          <div class="n">03</div>
+          <h4 data-i18n="how.s3t">Press broadcast</h4>
+          <p data-i18n="how.s3d">Your screen streams to every selected device in real time. Adjust quality, lock, or send commands anytime.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ===== 定價 ===== -->
+<section class="view" id="view-pricing">
+  <div class="sec" style="padding-bottom:30px">
+    <div class="wrap">
+      <div class="sec-head center">
+        <span class="eyebrow" data-i18n="price.eyebrow">Pricing</span>
+        <h2 data-i18n="price.title">Simple pricing, no surprises.</h2>
+        <p data-i18n="price.sub">Buy on this page and get an instant License Key. Enter it in the app to unlock Pro. 7-day free trial included.</p>
+      </div>
+      <div class="price-grid">
+        <div class="plan reveal">
+          <div class="p-name" data-i18n="price.freeName">Free</div>
+          <div class="p-price">$0</div>
+          <div class="p-desc" data-i18n="price.freeDesc">Everything you need to broadcast</div>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.f1">Real-time screen broadcast (HD)</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.f2">One-to-many streaming</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.f3">Focus lock &amp; remote commands</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.f4">File cleanup (DELETE confirm)</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.f5">Auto update &amp; Homebrew</span></li>
+          </ul>
+          <a class="btn btn-ghost" href="#download" data-route="download"><span data-i18n="price.freeBtn">Download Free</span></a>
+        </div>
+        <div class="plan pro reveal">
+          <span class="tag" data-i18n="price.popular">Popular</span>
+          <div class="p-name" data-i18n="price.proName">Pro</div>
+          <div class="p-price">$12.99<small data-i18n="price.monthly">/ month</small></div>
+          <div class="p-desc" data-i18n="price.proDesc">Unlock everything</div>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.p1">Everything in Free</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.p2">Stable &amp; lightweight core</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.p3">Early access to new features</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.p4">Priority support</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><span data-i18n="price.p5">Monthly License Key, unlock all Pro</span></li>
+          </ul>
+          <a class="btn btn-brand" href="#key" data-route="pricing"><span data-i18n="price.proBtn">Buy Pro</span></a>
+        </div>
+      </div>
+      <p class="price-note" data-i18n="price.note">Pro is $12.99 USD per month, with a 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.</p>
+
+      <!-- License Key -->
+      <div class="key-box" id="key">
+        <h4 data-i18n="key.title">Get your Pro License Key</h4>
+        <p class="kb-sub" data-i18n="key.sub">Enter your email to generate a License Key instantly. Paste it into the "Upgrade to Pro" section in FocusIn.</p>
+        <div class="key-row">
+          <input type="email" id="key-email" data-i18n-placeholder="key.emailPlaceholder" placeholder="you@example.com">
+          <button id="key-gen" data-i18n="key.genBtn">Generate License Key</button>
+        </div>
+        <div class="key-err" id="key-err" data-i18n="key.err">Please enter a valid email address.</div>
+        <div class="key-result" id="key-result">
+          <div class="kr-l" data-i18n="key.resultLabel">Your Pro License Key (save it)</div>
+          <div class="kr-key" id="key-value"></div>
+          <button class="btn btn-ghost" id="key-copy" style="padding:8px 16px;font-size:13px;"><span data-i18n="key.copy">Copy Key</span></button>
+          <div class="kr-how" data-i18n="key.how">How to use:</div>
+          <ul class="kr-how">
+            <li data-i18n="key.step1">Download and open FocusIn (Teacher or Student)</li>
+            <li data-i18n="key.step2">Enter this Key in "Upgrade to Pro"</li>
+            <li data-i18n="key.step3">Pro features unlock instantly</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 下載 ===== -->
+<section class="view" id="view-download">
+  <div class="sec" style="padding-bottom:30px">
+    <div class="wrap">
+      <div class="sec-head center">
+        <span class="eyebrow" data-i18n="dl.eyebrow">Download</span>
+        <h2 data-i18n="dl.title">Get started with FocusIn.</h2>
+        <p data-i18n="dl.sub">Two ways to install: grab the DMGs directly, or use Homebrew.</p>
+      </div>
+      <div class="cta-sec">
+        <h2 data-i18n="dl.title">Get started with FocusIn.</h2>
+        <p data-i18n="dl.sub">Two ways to install: grab the DMGs directly, or use Homebrew.</p>
+        <div class="btns">
+          <a class="btn btn-brand" href="https://github.com/marco-crypto-debug/focusin/releases/latest" target="_blank"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span data-i18n="dl.teacherDmg">FocusIn-Teacher.dmg</span></a>
+          <a class="btn btn-ghost" href="https://github.com/marco-crypto-debug/focusin/releases/latest" target="_blank"><span data-i18n="dl.studentDmg">FocusIn-Student.dmg</span></a>
+        </div>
+        <div class="meta">
+          <span data-i18n="dl.teacherVer">Stable v1.5.7 · macOS 14+</span>
+          <span data-i18n="dl.brew">Homebrew</span>
+        </div>
+      </div>
+      <p class="price-note" data-i18n="dl.note">On first launch, grant the permissions shown: Teacher needs Screen Recording, Student needs Accessibility. The apps are available in English, Traditional Chinese and Simplified Chinese.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="view" id="view-faq">
+  <div class="sec" style="padding-bottom:30px">
+    <div class="wrap">
+      <div class="sec-head center">
+        <span class="eyebrow" data-i18n="faq.eyebrow">Support</span>
+        <h2 data-i18n="faq.title">Questions you might have.</h2>
+        <p data-i18n="faq.sub">Check the FAQ first; if you can't find an answer, DM us.</p>
+      </div>
+      <div class="faq">
+        <details>
+          <summary><span data-i18n="faq.q1">What permissions does FocusIn need?</span><span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="a" data-i18n="faq.a1">Teacher: System Settings → Privacy &amp; Security → Screen Recording, enable FocusIn. If you previously chose "Decline", uncheck and re-check. Student: System Settings → Privacy &amp; Security → Accessibility, enable FocusIn for lock and input blocking.</div>
+        </details>
+        <details>
+          <summary><span data-i18n="faq.q2">Does Homebrew update work with auto-update?</span><span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="a" data-i18n="faq.a2">Yes. You can update either way: <code>brew upgrade --cask focusin-teacher focusin-student</code>, or press "Check for updates" in the app, which downloads the latest DMG directly.</div>
+        </details>
+        <details>
+          <summary><span data-i18n="faq.q3">Devices can't find each other?</span><span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="a" data-i18n="faq.a3">Make sure both apps are on the same Wi-Fi / subnet, the Student app is running, and the firewall allows Network.framework (mDNS 5353 / WebSocket).</div>
+        </details>
+        <details>
+          <summary><span data-i18n="faq.q4">What is the emergency unlock password?</span><span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="a" data-i18n="faq.a4">The same admin password set in the Teacher app — it is pushed to all connected students. Press ⌘⇧U on the student Mac and enter it, even offline.</div>
+        </details>
+        <details>
+          <summary><span data-i18n="faq.q5">Where do I enter my Pro Key?</span><span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="a" data-i18n="faq.a5">In the "Upgrade to Pro" section of the Teacher or Student app. Keys are generated on this site's Pricing page. No key yet? Enjoy the 7-day free trial.</div>
+        </details>
+        <details>
+          <summary><span data-i18n="faq.q6">Can I use FocusIn outside a classroom?</span><span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+          <div class="a" data-i18n="faq.a6">Absolutely. It's a general-purpose screen broadcaster: demos, presentations, code reviews, events — anywhere you need one screen visible on many Macs at once.</div>
+        </details>
+      </div>
+      <div class="faq-more">support: <a href="https://instagram.com/marco.tsk_smile" target="_blank" data-i18n="faq.c1t">Bug reports</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 隱私 ===== -->
+<section class="view" id="view-privacy">
+  <div class="doc">
+    <h2 data-i18n="privacy.title">Privacy Policy</h2>
+    <div class="updated" data-i18n="privacy.updated">Last updated: October 2026</div>
+    <h3 data-i18n="privacy.h1">1. Information we collect</h3>
+    <p data-i18n="privacy.p1">FocusIn is designed to work entirely over your local Wi-Fi. We collect the minimum needed to run the service:</p>
+    <ul>
+      <li data-i18n="privacy.li1">App usage and diagnostics: crash logs and error reports that you choose to send, to improve stability.</li>
+      <li data-i18n="privacy.li2">Email address and purchase details, only if you buy a Pro license or create a License Key on our website.</li>
+      <li data-i18n="privacy.li3">Device display names, only for showing which devices are online during a broadcast session. This data stays on your local network.</li>
+    </ul>
+    <h3 data-i18n="privacy.h2">2. What we never collect</h3>
+    <p data-i18n="privacy.p2">We never collect or store your screen content, audio streams, keystrokes, file contents, or anything displayed through FocusIn. All broadcasts flow directly between devices on your network and are never routed through our servers.</p>
+    <h3 data-i18n="privacy.h3">3. How we use your information</h3>
+    <p data-i18n="privacy.p3">We use collected information solely to operate the product, deliver license keys, handle support requests, and improve FocusIn. We do not sell your personal information.</p>
+    <h3 data-i18n="privacy.h4">4. Third-party services</h3>
+    <p data-i18n="privacy.p4">Our website is hosted on Cloudflare Pages and the app is distributed via GitHub Releases and Homebrew. Payments, when live, are processed by our Merchant of Record (currently planned: Dodo Payments). Each provider processes data under its own privacy policy.</p>
+    <h3 data-i18n="privacy.h5">5. Children's privacy</h3>
+    <p data-i18n="privacy.p5">FocusIn is commonly used in schools. We do not knowingly collect personal information from children under 13. School administrators are responsible for consent where required by local law.</p>
+    <h3 data-i18n="privacy.h6">6. Data retention &amp; deletion</h3>
+    <p data-i18n="privacy.p6">Diagnostic data is kept only as long as needed to resolve issues. You may request deletion of any data we hold by contacting us at the address below.</p>
+    <h3 data-i18n="privacy.h7">7. Contact</h3>
+    <p data-i18n="privacy.p7">Questions about this policy? Message us on Instagram: @marco.tsk_smile, or open an issue on our GitHub repository.</p>
+  </div>
+</section>
+
+<!-- ===== 條款 ===== -->
+<section class="view" id="view-terms">
+  <div class="doc">
+    <h2 data-i18n="terms.title">Terms of Service</h2>
+    <div class="updated" data-i18n="terms.updated">Last updated: October 2026</div>
+    <h3 data-i18n="terms.h1">1. Acceptance</h3>
+    <p data-i18n="terms.p1">By downloading, installing or using FocusIn ("the Software"), you agree to these Terms. If you are using the Software on behalf of a school or organization, you confirm you have authority to bind that organization.</p>
+    <h3 data-i18n="terms.h2">2. License to use</h3>
+    <p data-i18n="terms.p2">The Software is provided under a free tier and a paid Pro subscription. The free tier grants a personal, non-exclusive, non-transferable license to use the Software for its intended purpose. A paid Pro subscription grants the same license for all features included in Pro during the subscription period.</p>
+    <h3 data-i18n="terms.h3">3. Pro subscription &amp; billing</h3>
+    <p data-i18n="terms.p3">Pro is billed monthly at US$12.99 (or your local equivalent), with a 7-day free trial. Subscriptions renew automatically until cancelled. You may cancel anytime; access continues until the end of the paid period. Payments are processed by our Merchant of Record, who handles billing inquiries and refunds.</p>
+    <h3 data-i18n="terms.h4">4. License Keys</h3>
+    <p data-i18n="terms.p4">A License Key unlocks Pro features in the app. Keys are personal to the purchaser; sharing, reselling or distributing keys is prohibited. Misuse may result in revocation without refund.</p>
+    <h3 data-i18n="terms.h5">5. Acceptable use</h3>
+    <p data-i18n="terms.p5">You agree not to use the Software to: violate any law or school policy; intercept or tamper with others' data without authorization; or distribute malware. The Software is a legitimate classroom and screen-sharing tool, and must be used with the consent of the device owner.</p>
+    <h3 data-i18n="terms.h6">6. No warranty</h3>
+    <p data-i18n="terms.p6">The Software is provided "as is" without warranty of any kind. We do not guarantee uninterrupted or error-free operation.</p>
+    <h3 data-i18n="terms.h7">7. Limitation of liability</h3>
+    <p data-i18n="terms.p7">To the maximum extent permitted by law, the developers shall not be liable for indirect, incidental or consequential damages, including loss of data, arising from use of the Software.</p>
+    <h3 data-i18n="terms.h8">8. Changes</h3>
+    <p data-i18n="terms.p8">We may update these Terms from time to time. Continued use of the Software after changes constitutes acceptance of the revised Terms.</p>
+    <h3 data-i18n="terms.h9">9. Governing law</h3>
+    <p data-i18n="terms.p9">These Terms are governed by the laws of the Hong Kong Special Administrative Region.</p>
+    <h3 data-i18n="terms.h10">10. Contact</h3>
+    <p data-i18n="terms.p10">Questions? Message us on Instagram: @marco.tsk_smile, or open an issue on GitHub.</p>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <a class="logo" href="#home" data-route="home"><span class="logo-ic">F</span><span>FocusIn</span></a>
+        <p class="tag" data-i18n="footer.tag">One screen, every Mac. — built for macOS.</p>
+      </div>
+      <div>
+        <h5 data-i18n="footer.product">Product</h5>
+        <a class="l" href="#features" data-route="features" data-i18n="nav.features">Features</a>
+        <a class="l" href="#pricing" data-route="pricing" data-i18n="nav.pricing">Pricing</a>
+        <a class="l" href="#faq" data-route="faq" data-i18n="nav.faq">FAQ</a>
+      </div>
+      <div>
+        <h5 data-i18n="footer.install">Install</h5>
+        <a class="l" href="#download" data-route="download" data-i18n="footer.dmg">DMG</a>
+        <a class="l" href="#download" data-route="download" data-i18n="footer.brew">Homebrew</a>
+      </div>
+      <div>
+        <h5 data-i18n="footer.resources">Resources</h5>
+        <a class="l" href="#privacy" data-route="privacy" data-i18n="nav.privacy">Privacy</a>
+        <a class="l" href="#terms" data-route="terms" data-i18n="nav.terms">Terms</a>
+        <a class="l" href="https://github.com/marco-crypto-debug/focusin" target="_blank">GitHub</a>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© 2026 Marco TSK · <span data-i18n="footer.rights">All rights reserved</span></span>
+      <span class="b-links">
+        <a href="#privacy" data-route="privacy" data-i18n="nav.privacy">Privacy</a>
+        <a href="#terms" data-route="terms" data-i18n="nav.terms">Terms</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ===== 三語字典 ===== */
+var I18N = {
+"en": {
+  "nav.features":"Features","nav.pricing":"Pricing","nav.download":"Download","nav.faq":"FAQ","nav.privacy":"Privacy","nav.terms":"Terms","nav.downloadCta":"Download",
+  "home.badge":"v1.5.7 · macOS 14+",
+  "home.h1":"Share <em class=\"em\">one screen</em>, to every Mac.",
+  "home.sub":"FocusIn turns your Mac into a live broadcast source. Stream your display to any number of Macs on the same Wi-Fi in real time — far beyond AirPlay, which only mirrors to one device at a time.",
+  "home.dlBtn":"Download FocusIn","home.brewBtn":"Install with Homebrew",
+  "home.meta1":"Separate DMGs for Teacher & Student","home.meta2":"Auto-discovery on the same Wi-Fi","home.meta3":"30fps low-latency stream",
+  "demo.title":"Broadcast studio — live demo","demo.source":"Broadcast source · your Mac","demo.tech":"ScreenCaptureKit · Network.framework · 30fps",
+  "demo.tryit":"Try the live broadcast","demo.quality":"Quality","demo.devices":"Devices","demo.start":"Start broadcast","demo.stop":"Stop broadcast",
+  "demo.qAuto":"Auto","demo.qLow":"Low","demo.qMid":"Mid","demo.qHigh":"High","demo.online":"Online","demo.idle":"Idle","demo.device":"iMac","demo.broadcasting":"Broadcasting","demo.needSel":"Select at least one device first","toast.start":"Broadcasting to all selected devices","toast.stop":"Broadcast stopped","toast.quality":"Quality switched to",
+  "air.eyebrow":"Beyond AirPlay","air.title":"Screen sharing that actually scales.","air.sub":"AirPlay mirrors to one screen at a time. FocusIn broadcasts to every Mac in the room, all at once, with no extra hardware.",
+  "feat.eyebrow":"Everything included","feat.title":"A broadcast system, not just a mirror.","feat.sub":"FocusIn pairs a powerful Teacher app with a lightweight Student app that runs on every screen.",
+  "feat.f1t":"Real-time broadcast","feat.f1d":"Native ScreenCaptureKit capture at up to 30fps. A low-latency binary pipeline keeps motion smooth and text readable.",
+  "feat.f2t":"One-to-many sync","feat.f2d":"Bonjour auto-discovery lists every online student device with live latency. Broadcast to all, or to a chosen few.",
+  "feat.f3t":"Fullscreen focus lock","feat.f3d":"Optionally cover the screen and block local input during a broadcast. The lock window pins above fullscreen apps and Spaces.",
+  "feat.f4t":"Remote commands","feat.f4d":"Shutdown, restart or launch any app on student Macs with one click — for all devices or individual ones.",
+  "feat.f5t":"File cleanup","feat.f5d":"Clear Documents & Downloads on remote Macs. Requires typing DELETE to confirm — no accidental wipes.",
+  "feat.f6t":"Stable & Lightweight","feat.f6d":"A lean, low-footprint core with minimal CPU and memory usage — smooth, stable screen casting on everyday classroom Macs.",
+  "feat.f7t":"Auto update","feat.f7d":"Checks GitHub Releases on launch. New versions download the DMG straight to your Mac — one click, no web page.",
+  "feat.f8t":"Quit protection","feat.f8d":"One admin password guards quitting and emergency unlock — a broadcast session can't be interrupted by mistake.",
+  "how.eyebrow":"How it works","how.title":"Broadcasting in three steps.","how.sub":"No servers, no accounts, no cloud. Just your Wi-Fi and two apps.",
+  "how.s1t":"Install both apps","how.s1d":"Put FocusIn Teacher on your Mac, and FocusIn Student on every screen you want to reach.",
+  "how.s2t":"Join the same Wi-Fi","how.s2d":"Devices find each other automatically via Bonjour. Online students appear in the Teacher list with latency.",
+  "how.s3t":"Press broadcast","how.s3d":"Your screen streams to every selected device in real time. Adjust quality, lock, or send commands anytime.",
+  "price.eyebrow":"Pricing","price.title":"Simple pricing, no surprises.","price.sub":"Buy on this page and get an instant License Key. Enter it in the app to unlock Pro. 7-day free trial included.",
+  "price.freeName":"Free","price.freeDesc":"Everything you need to broadcast",
+  "price.f1":"Real-time screen broadcast (HD)","price.f2":"One-to-many streaming","price.f3":"Focus lock & remote commands","price.f4":"File cleanup (DELETE confirm)","price.f5":"Auto update & Homebrew",
+  "price.freeBtn":"Download Free","price.popular":"Popular","price.proName":"Pro","price.proDesc":"Unlock everything","price.monthly":"/ month","price.trial":"7-day free trial · cancel anytime",
+  "price.p1":"Everything in Free","price.p2":"Stable & lightweight core","price.p3":"Early access to new features","price.p4":"Priority support","price.p5":"Monthly License Key, unlock all Pro",
+  "price.proBtn":"Buy Pro",
+  "price.note":"Pro is $12.99 USD per month, with a 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.",
+  "key.title":"Get your Pro License Key","key.sub":"Enter your email to generate a License Key instantly. Paste it into the \"Upgrade to Pro\" section in FocusIn.",
+  "key.emailPlaceholder":"you@example.com","key.genBtn":"Generate License Key","key.err":"Please enter a valid email address.",
+  "key.resultLabel":"Your Pro License Key (save it)","key.copy":"Copy Key","key.how":"How to use:",
+  "key.step1":"Download and open FocusIn (Teacher or Student)","key.step2":"Enter this Key in \"Upgrade to Pro\"","key.step3":"Pro features unlock instantly",
+  "privacy.title":"Privacy Policy","privacy.updated":"Last updated: October 2026","privacy.h1":"1. Information we collect","privacy.p1":"FocusIn is designed to work entirely over your local Wi-Fi. We collect the minimum needed to run the service:","privacy.li1":"App usage and diagnostics: crash logs and error reports that you choose to send, to improve stability.","privacy.li2":"Email address and purchase details, only if you buy a Pro license or create a License Key on our website.","privacy.li3":"Device display names, only for showing which devices are online during a broadcast session. This data stays on your local network.","privacy.h2":"2. What we never collect","privacy.p2":"We never collect or store your screen content, audio streams, keystrokes, file contents, or anything displayed through FocusIn. All broadcasts flow directly between devices on your network and are never routed through our servers.","privacy.h3":"3. How we use your information","privacy.p3":"We use collected information solely to operate the product, deliver license keys, handle support requests, and improve FocusIn. We do not sell your personal information.","privacy.h4":"4. Third-party services","privacy.p4":"Our website is hosted on Cloudflare Pages and the app is distributed via GitHub Releases and Homebrew. Payments, when live, are processed by our Merchant of Record (currently planned: Dodo Payments). Each provider processes data under its own privacy policy.","privacy.h5":"5. Children's privacy","privacy.p5":"FocusIn is commonly used in schools. We do not knowingly collect personal information from children under 13. School administrators are responsible for consent where required by local law.","privacy.h6":"6. Data retention & deletion","privacy.p6":"Diagnostic data is kept only as long as needed to resolve issues. You may request deletion of any data we hold by contacting us at the address below.","privacy.h7":"7. Contact","privacy.p7":"Questions about this policy? Message us on Instagram: @marco.tsk_smile, or open an issue on our GitHub repository.",
+  "terms.title":"Terms of Service","terms.updated":"Last updated: October 2026","terms.h1":"1. Acceptance","terms.p1":"By downloading, installing or using FocusIn (\"the Software\"), you agree to these Terms. If you are using the Software on behalf of a school or organization, you confirm you have authority to bind that organization.","terms.h2":"2. License to use","terms.p2":"The Software is provided under a free tier and a paid Pro subscription. The free tier grants a personal, non-exclusive, non-transferable license to use the Software for its intended purpose. A paid Pro subscription grants the same license for all features included in Pro during the subscription period.","terms.h3":"3. Pro subscription & billing","terms.p3":"Pro is billed monthly at US$12.99 (or your local equivalent), with a 7-day free trial. Subscriptions renew automatically until cancelled. You may cancel anytime; access continues until the end of the paid period. Payments are processed by our Merchant of Record, who handles billing inquiries and refunds.","terms.h4":"4. License Keys","terms.p4":"A License Key unlocks Pro features in the app. Keys are personal to the purchaser; sharing, reselling or distributing keys is prohibited. Misuse may result in revocation without refund.","terms.h5":"5. Acceptable use","terms.p5":"You agree not to use the Software to: violate any law or school policy; intercept or tamper with others' data without authorization; or distribute malware. The Software is a legitimate classroom and screen-sharing tool, and must be used with the consent of the device owner.","terms.h6":"6. No warranty","terms.p6":"The Software is provided \"as is\" without warranty of any kind. We do not guarantee uninterrupted or error-free operation.","terms.h7":"7. Limitation of liability","terms.p7":"To the maximum extent permitted by law, the developers shall not be liable for indirect, incidental or consequential damages, including loss of data, arising from use of the Software.","terms.h8":"8. Changes","terms.p8":"We may update these Terms from time to time. Continued use of the Software after changes constitutes acceptance of the revised Terms.","terms.h9":"9. Governing law","terms.p9":"These Terms are governed by the laws of the Hong Kong Special Administrative Region.","terms.h10":"10. Contact","terms.p10":"Questions? Message us on Instagram: @marco.tsk_smile, or open an issue on GitHub.",
+  "dl.eyebrow":"Download","dl.title":"Get started with FocusIn.","dl.sub":"Two ways to install: grab the DMGs directly, or use Homebrew.",
+  "dl.teacherVer":"Stable v1.5.7 · macOS 14+","dl.teacherDmg":"FocusIn-Teacher.dmg","dl.studentDmg":"FocusIn-Student.dmg",
+  "dl.note":"On first launch, grant the permissions shown: Teacher needs Screen Recording, Student needs Accessibility. The apps are available in English, Traditional Chinese and Simplified Chinese.",
+  "faq.eyebrow":"Support","faq.title":"Questions you might have.","faq.sub":"Check the FAQ first; if you can't find an answer, DM us.",
+  "faq.q1":"What permissions does FocusIn need?","faq.a1":"Teacher: System Settings → Privacy & Security → Screen Recording, enable FocusIn. If you previously chose \"Decline\", uncheck and re-check. Student: System Settings → Privacy & Security → Accessibility, enable FocusIn for lock and input blocking.",
+  "faq.q2":"Does Homebrew update work with auto-update?","faq.a2":"Yes. You can update either way: <code>brew upgrade --cask focusin-teacher focusin-student</code>, or press \"Check for updates\" in the app, which downloads the latest DMG directly.",
+  "faq.q3":"Devices can't find each other?","faq.a3":"Make sure both apps are on the same Wi-Fi / subnet, the Student app is running, and the firewall allows Network.framework (mDNS 5353 / WebSocket).",
+  "faq.q4":"What is the emergency unlock password?","faq.a4":"The same admin password set in the Teacher app — it is pushed to all connected students. Press ⌘⇧U on the student Mac and enter it, even offline.",
+  "faq.q5":"Where do I enter my Pro Key?","faq.a5":"In the \"Upgrade to Pro\" section of the Teacher or Student app. Keys are generated on this site's Pricing page. No key yet? Enjoy the 7-day free trial.",
+  "faq.q6":"Can I use FocusIn outside a classroom?","faq.a6":"Absolutely. It's a general-purpose screen broadcaster: demos, presentations, code reviews, events — anywhere you need one screen visible on many Macs at once.",
+  "faq.c1t":"Bug reports","faq.c1d":"Screenshot + version + device model",
+  "footer.tag":"One screen, every Mac. — built for macOS.","footer.product":"Product","footer.install":"Install","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"Resources","footer.rights":"All rights reserved",
+  "toast.copied":"License Key copied to clipboard"
+},
+"zh-Hant": {
+  "nav.features":"功能","nav.pricing":"定價","nav.download":"下載","nav.faq":"常見問題","nav.privacy":"隱私政策","nav.terms":"服務條款","nav.downloadCta":"下載",
+  "home.badge":"v1.5.7 · macOS 14 或以上",
+  "home.h1":"一個畫面，<em class=\"em\">同時送達</em>每一部 Mac。",
+  "home.sub":"FocusIn 把你的 Mac 變成即時廣播源。在同一 Wi-Fi 下，把屏幕即時串流到任意數量的 Mac —— 遠超 AirPlay（一次只能鏡像到一台裝置）。",
+  "home.dlBtn":"下載 FocusIn","home.brewBtn":"用 Homebrew 安裝",
+  "home.meta1":"教師端／學生端分開的 DMG","home.meta2":"同一 Wi-Fi 自動發現","home.meta3":"30fps 低延遲串流",
+  "demo.title":"廣播工作室 —— 即時示範","demo.source":"廣播來源 · 你的 Mac","demo.tech":"ScreenCaptureKit · Network.framework · 30fps",
+  "demo.tryit":"試玩即時廣播","demo.quality":"畫質","demo.devices":"裝置","demo.start":"開始廣播","demo.stop":"停止廣播",
+  "demo.qAuto":"自動","demo.qLow":"低","demo.qMid":"中","demo.qHigh":"高","demo.online":"在線","demo.idle":"待機","demo.device":"iMac","demo.broadcasting":"廣播中","demo.needSel":"請先選擇至少一部裝置","toast.start":"正在廣播到所有選定裝置","toast.stop":"廣播已停止","toast.quality":"畫質已切換至",
+  "air.eyebrow":"超越 AirPlay","air.title":"真正可以擴展的屏幕共享。","air.sub":"AirPlay 一次只能鏡像到一台屏幕。FocusIn 一次廣播到課室內每一部 Mac，不需要任何額外硬件。",
+  "feat.eyebrow":"全部內建","feat.title":"這是一套廣播系統，不是單純鏡像。","feat.sub":"FocusIn 結合強大的教師端與輕量的學生端，運行在每一部屏幕上。",
+  "feat.f1t":"即時廣播","feat.f1d":"原生 ScreenCaptureKit 採集，最高 30fps。低延遲二進制管線讓動態流暢、文字清晰。",
+  "feat.f2t":"一對多同步","feat.f2d":"Bonjour 自動發現列出每一部在線學生機與即時延遲。廣播給全部，或只給選定的幾部。",
+  "feat.f3t":"全屏專注鎖定","feat.f3d":"可選擇在廣播期間覆蓋屏幕並封鎖本機輸入。鎖定視窗會壓在全屏 App 與 Space 之上。",
+  "feat.f4t":"遠端指令","feat.f4d":"一鍵關機、重啟或在學生機上開啟任何 App —— 全部裝置或個別裝置皆可。",
+  "feat.f5t":"檔案清理","feat.f5d":"遠端清除文件與下載。需要輸入 DELETE 確認 —— 不會誤刪。",
+  "feat.f6t":"穩定輕量","feat.f6d":"精簡核心，極低 CPU 與記憶體佔用 —— 在一般課室 Mac 上流暢穩定地廣播畫面。",
+  "feat.f7t":"自動更新","feat.f7d":"啟動時檢查 GitHub Releases。新版本直接把 DMG 下載到你的 Mac —— 一鍵完成，不用開網頁。",
+  "feat.f8t":"退出保護","feat.f8d":"一個管理員密碼守護退出與緊急解鎖 —— 廣播不會被誤按中斷。",
+  "how.eyebrow":"運作方式","how.title":"三步完成廣播。","how.sub":"沒有伺服器、沒有帳戶、沒有雲端。只要你的 Wi-Fi 和兩個 App。",
+  "how.s1t":"安裝兩個 App","how.s1d":"在你的 Mac 安裝 FocusIn 教師端，在每部目標屏幕安裝 FocusIn 學生端。",
+  "how.s2t":"連上同一個 Wi-Fi","how.s2d":"裝置透過 Bonjour 自動互找。在線學生會出現在教師端清單並顯示延遲。",
+  "how.s3t":"按下廣播","how.s3d":"你的屏幕即時串流到每一部選定的裝置。隨時調整畫質、鎖定或發送指令。",
+  "price.eyebrow":"定價","price.title":"簡單定價，沒有意外。","price.sub":"在本頁購買即時取得 License Key。在 App 輸入即可解鎖 Pro。包含 7 天免費試用。",
+  "price.freeName":"免費版","price.freeDesc":"廣播所需的一切",
+  "price.f1":"即時屏幕廣播（HD）","price.f2":"一對多串流","price.f3":"專注鎖定與遠端指令","price.f4":"檔案清理（DELETE 確認）","price.f5":"自動更新與 Homebrew",
+  "price.freeBtn":"下載免費版","price.popular":"熱門","price.proName":"Pro","price.proDesc":"解鎖全部功能","price.monthly":"／月","price.trial":"7 天免費試用 · 隨時取消",
+  "price.p1":"包含免費版全部","price.p2":"穩定輕量核心","price.p3":"搶先使用新功能","price.p4":"優先支援","price.p5":"每月 License Key，解鎖全部 Pro",
+  "price.proBtn":"購買 Pro",
+  "price.note":"Pro 每月 US$12.99，包含 7 天免費試用。付款閘道即將上線；目前 License Key 在此頁即時生成作測試用途。",
+  "key.title":"取得你的 Pro License Key","key.sub":"輸入電郵即時生成 License Key。貼到 FocusIn 的「升級至 Pro」欄位即可。",
+  "key.emailPlaceholder":"you@example.com","key.genBtn":"生成 License Key","key.err":"請輸入有效的電郵地址。",
+  "key.resultLabel":"你的 Pro License Key（請保存）","key.copy":"複製 Key","key.how":"使用方式：",
+  "key.step1":"下載並開啟 FocusIn（教師端或學生端）","key.step2":"在「升級至 Pro」輸入此 Key","key.step3":"Pro 功能即時解鎖",
+  "privacy.title":"隱私政策","privacy.updated":"最後更新：2026 年 10 月","privacy.h1":"1. 我們收集的資訊","privacy.p1":"FocusIn 設計為完全在你的本地 Wi-Fi 上運作。我們只收集營運服務所需的最少資料：","privacy.li1":"App 使用與診斷：你選擇發送的崩潰記錄與錯誤報告，用於改善穩定性。","privacy.li2":"電郵地址與購買資料，僅在你購買 Pro 授權或在網站生成 License Key 時。","privacy.li3":"裝置顯示名稱，僅用於廣播期間顯示哪些裝置在線。此資料留在你的本地網絡。","privacy.h2":"2. 我們絕不收集","privacy.p2":"我們絕不收集或儲存你的屏幕內容、音訊串流、按鍵、檔案內容或任何經 FocusIn 顯示的內容。所有廣播直接在網絡中的裝置間傳送，絕不經我們伺服器轉發。","privacy.h3":"3. 我們如何使用你的資訊","privacy.p3":"我們僅將收集的資訊用於營運產品、交付 License Key、處理支援請求與改善 FocusIn。我們不會出售你的個人資料。","privacy.h4":"4. 第三方服務","privacy.p4":"我們的網站由 Cloudflare Pages 托管，App 經 GitHub Releases 與 Homebrew 發布。付款（上線後）由我們的 Merchant of Record（計劃為 Dodo Payments）處理。每個服務商按各自的隱私政策處理資料。","privacy.h5":"5. 兒童隱私","privacy.p5":"FocusIn 常用於學校。我們不會故意收集 13 歲以下兒童的個人資訊。學校管理員負責在當地法律要求下取得同意。","privacy.h6":"6. 資料保留與刪除","privacy.p6":"診斷資料僅保留解決問題所需時間。你可以按下方地址聯絡我們要求刪除任何資料。","privacy.h7":"7. 聯絡","privacy.p7":"對本政策有疑問？Instagram 聯絡 @marco.tsk_smile，或在我們的 GitHub 開 issue。",
+  "terms.title":"服務條款","terms.updated":"最後更新：2026 年 10 月","terms.h1":"1. 接受條款","terms.p1":"下載、安裝或使用 FocusIn（「本軟件」）即表示你同意這些條款。若你代表學校或機構使用本軟件，你確認有權代表該機構。","terms.h2":"2. 使用授權","terms.p2":"本軟件提供免費層與付費 Pro 訂閱。免費層授予個人、非獨家、不可轉讓的授權，僅供其預定用途。付費 Pro 訂閱在訂閱期間授予包含 Pro 全部功能的相同授權。","terms.h3":"3. Pro 訂閱與收費","terms.p3":"Pro 每月收費 US$12.99（或當地等值），包含 7 天免費試用。訂閱自動續期直至取消。你隨時可以取消；存取權持續至付費期結束。付款由我們的 Merchant of Record 處理，負責帳單查詢與退款。","terms.h4":"4. License Key","terms.p4":"License Key 在 App 中解鎖 Pro 功能。Key 專屬於購買者；禁止分享、轉售或分發。濫用可能導致撤銷且不退款。","terms.h5":"5. 可接受使用","terms.p5":"你同意不將本軟件用於：違反任何法律或學校政策；未經授權攔截或篡改他人資料；或散佈惡意軟件。本軟件是正當的課室與屏幕共享工具，必須在裝置擁有者同意下使用。","terms.h6":"6. 無保證","terms.p6":"本軟件按「現狀」提供，不附任何保證。我們不保證不間斷或無錯誤運作。","terms.h7":"7. 責任限制","terms.p7":"在法律允許的最大範圍內，開發者不對因使用本軟件而產生的間接、附帶或後果性損害（包括資料損失）負責。","terms.h8":"8. 變更","terms.p8":"我們可能不時更新這些條款。變更後繼續使用本軟件即構成接受修訂條款。","terms.h9":"9. 管轄法律","terms.p9":"這些條款受香港特別行政區法律管轄。","terms.h10":"10. 聯絡","terms.p10":"有疑問？Instagram 聯絡 @marco.tsk_smile，或在 GitHub 開 issue。",
+  "dl.eyebrow":"下載","dl.title":"開始使用 FocusIn。","dl.sub":"兩種安裝方式：直接下載 DMG，或使用 Homebrew。",
+  "dl.teacherVer":"穩定版 v1.5.7 · macOS 14 或以上","dl.teacherDmg":"FocusIn-Teacher.dmg","dl.studentDmg":"FocusIn-Student.dmg",
+  "dl.note":"首次啟動時，授予顯示的權限：教師端需要屏幕錄製，學生端需要輔助功能。App 支援英文、繁體中文與簡體中文。",
+  "faq.eyebrow":"支援","faq.title":"你可能想知道的問題。","faq.sub":"先查常見問題；找不到答案就 DM 我們。",
+  "faq.q1":"FocusIn 需要什麼權限？","faq.a1":"教師端：系統設定 → 私隱與安全 → 屏幕錄製，啟用 FocusIn。若你之前按了「拒絕」，先取消勾選再重新勾選。學生端：系統設定 → 私隱與安全 → 輔助功能，啟用 FocusIn 以使用鎖定與輸入封鎖。",
+  "faq.q2":"Homebrew 更新與自動更新相容嗎？","faq.a2":"相容。你可以任選其一：<code>brew upgrade --cask focusin-teacher focusin-student</code>，或在 App 內按「檢查更新」直接下載最新 DMG。",
+  "faq.q3":"裝置互相找不到？","faq.a3":"確認兩個 App 在同一 Wi-Fi／子網，學生端正在運行，且防火牆允許 Network.framework（mDNS 5353／WebSocket）。",
+  "faq.q4":"緊急解鎖密碼是什麼？","faq.a4":"與教師端設定的管理員密碼相同 —— 會推送給所有已連線學生。在學生機按 ⌘⇧U 並輸入，即使在離線狀態也可以。",
+  "faq.q5":"在哪裡輸入 Pro Key？","faq.a5":"在教師端或學生端的「升級至 Pro」欄位。Key 在本網站定價頁生成。還沒有 Key？享受 7 天免費試用。",
+  "faq.q6":"課室以外可以用 FocusIn 嗎？","faq.a6":"當然可以。它是通用的屏幕廣播工具：示範、簡報、程式碼審查、活動 —— 任何需要一個畫面同時顯示在許多 Mac 上的場合。",
+  "faq.c1t":"Bug 回報","faq.c1d":"截圖＋版本＋裝置型號",
+  "footer.tag":"一個畫面，每一部 Mac。 — 專為 macOS 打造。","footer.product":"產品","footer.install":"安裝","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"資源","footer.rights":"版權所有",
+  "toast.copied":"License Key 已複製到剪貼簿"
+},
+"zh-Hans": {
+  "nav.features":"功能","nav.pricing":"定价","nav.download":"下载","nav.faq":"常见问题","nav.privacy":"隐私政策","nav.terms":"服务条款","nav.downloadCta":"下载",
+  "home.badge":"v1.5.7 · macOS 14 或以上",
+  "home.h1":"一个画面，<em class=\"em\">同时送达</em>每一台 Mac。",
+  "home.sub":"FocusIn 把你的 Mac 变成即时广播源。在同一 Wi-Fi 下，把屏幕即时串流到任意数量的 Mac —— 远超 AirPlay（一次只能镜像到一台设备）。",
+  "home.dlBtn":"下载 FocusIn","home.brewBtn":"用 Homebrew 安装",
+  "home.meta1":"教师端／学生端分开的 DMG","home.meta2":"同一 Wi-Fi 自动发现","home.meta3":"30fps 低延迟串流",
+  "demo.title":"广播工作室 —— 即时演示","demo.source":"广播来源 · 你的 Mac","demo.tech":"ScreenCaptureKit · Network.framework · 30fps",
+  "demo.tryit":"试玩即时广播","demo.quality":"画质","demo.devices":"设备","demo.start":"开始广播","demo.stop":"停止广播",
+  "demo.qAuto":"自动","demo.qLow":"低","demo.qMid":"中","demo.qHigh":"高","demo.online":"在线","demo.idle":"待机","demo.device":"iMac","demo.broadcasting":"广播中","demo.needSel":"请先选择至少一台设备","toast.start":"正在广播到所有选定设备","toast.stop":"广播已停止","toast.quality":"画质已切换至",
+  "air.eyebrow":"超越 AirPlay","air.title":"真正可以扩展的屏幕共享。","air.sub":"AirPlay 一次只能镜像到一台屏幕。FocusIn 一次广播到教室里每一台 Mac，不需要任何额外硬件。",
+  "feat.eyebrow":"全部内置","feat.title":"这是一套广播系统，不是单纯镜像。","feat.sub":"FocusIn 结合强大的教师端与轻量的学生端，运行在每一块屏幕上。",
+  "feat.f1t":"即时广播","feat.f1d":"原生 ScreenCaptureKit 采集，最高 30fps。低延迟二进制管线让动态流畅、文字清晰。",
+  "feat.f2t":"一对多同步","feat.f2d":"Bonjour 自动发现列出每一台在线学生机与即时延迟。广播给全部，或只给选定的几台。",
+  "feat.f3t":"全屏专注锁定","feat.f3d":"可选择在广播期间覆盖屏幕并封锁本机输入。锁定窗口会压在全屏 App 与 Space 之上。",
+  "feat.f4t":"远程指令","feat.f4d":"一键关机、重启或在学生机上打开任何 App —— 全部设备或个别设备皆可。",
+  "feat.f5t":"文件清理","feat.f5d":"远程清除文稿与下载。需要输入 DELETE 确认 —— 不会误删。",
+  "feat.f6t":"稳定轻量","feat.f6d":"精简核心，极低 CPU 与内存占用 —— 在一般教室 Mac 上流畅稳定地广播画面。",
+  "feat.f7t":"自动更新","feat.f7d":"启动时检查 GitHub Releases。新版本直接把 DMG 下载到你的 Mac —— 一键完成，不用开网页。",
+  "feat.f8t":"退出保护","feat.f8d":"一个管理员密码守护退出与紧急解锁 —— 广播不会被误按中断。",
+  "how.eyebrow":"运作方式","how.title":"三步完成广播。","how.sub":"没有服务器、没有账户、没有云端。只要你的 Wi-Fi 和两个 App。",
+  "how.s1t":"安装两个 App","how.s1d":"在你的 Mac 安装 FocusIn 教师端，在每台目标屏幕安装 FocusIn 学生端。",
+  "how.s2t":"连上同一个 Wi-Fi","how.s2d":"设备通过 Bonjour 自动互找。在线学生会出现在教师端列表并显示延迟。",
+  "how.s3t":"按下广播","how.s3d":"你的屏幕即时串流到每一台选定的设备。随时调整画质、锁定或发送指令。",
+  "price.eyebrow":"定价","price.title":"简单定价，没有意外。","price.sub":"在本页购买即时取得 License Key。在 App 输入即可解锁 Pro。包含 7 天免费试用。",
+  "price.freeName":"免费版","price.freeDesc":"广播所需的一切",
+  "price.f1":"即时屏幕广播（HD）","price.f2":"一对多串流","price.f3":"专注锁定与远程指令","price.f4":"文件清理（DELETE 确认）","price.f5":"自动更新与 Homebrew",
+  "price.freeBtn":"下载免费版","price.popular":"热门","price.proName":"Pro","price.proDesc":"解锁全部功能","price.monthly":"／月","price.trial":"7 天免费试用 · 随时取消",
+  "price.p1":"包含免费版全部","price.p2":"稳定轻量核心","price.p3":"抢先使用新功能","price.p4":"优先支持","price.p5":"每月 License Key，解锁全部 Pro",
+  "price.proBtn":"购买 Pro",
+  "price.note":"Pro 每月 US$12.99，包含 7 天免费试用。付款网关即将上线；目前 License Key 在此页即时生成作测试用途。",
+  "key.title":"获取你的 Pro License Key","key.sub":"输入邮箱即时生成 License Key。粘贴到 FocusIn 的「升级至 Pro」栏位即可。",
+  "key.emailPlaceholder":"you@example.com","key.genBtn":"生成 License Key","key.err":"请输入有效的邮箱地址。",
+  "key.resultLabel":"你的 Pro License Key（请保存）","key.copy":"复制 Key","key.how":"使用方式：",
+  "key.step1":"下载并打开 FocusIn（教师端或学生端）","key.step2":"在「升级至 Pro」输入此 Key","key.step3":"Pro 功能即时解锁",
+  "privacy.title":"隐私政策","privacy.updated":"最后更新：2026 年 10 月","privacy.h1":"1. 我们收集的信息","privacy.p1":"FocusIn 设计为完全在你的本地 Wi-Fi 上运作。我们只收集运营服务所需的最少数据：","privacy.li1":"App 使用与诊断：你选择发送的崩溃记录与错误报告，用于改善稳定性。","privacy.li2":"邮箱地址与购买资料，仅在你购买 Pro 授权或在网站生成 License Key 时。","privacy.li3":"设备显示名称，仅用于广播期间显示哪些设备在线。此数据留在你的本地网络。","privacy.h2":"2. 我们绝不收集","privacy.p2":"我们绝不收集或存储你的屏幕内容、音频串流、按键、文件内容或任何经 FocusIn 显示的内容。所有广播直接在网络中的设备间传送，绝不经我们服务器转发。","privacy.h3":"3. 我们如何使用你的信息","privacy.p3":"我们仅将收集的信息用于运营产品、交付 License Key、处理支持请求与改善 FocusIn。我们不会出售你的个人资料。","privacy.h4":"4. 第三方服务","privacy.p4":"我们的网站由 Cloudflare Pages 托管，App 经 GitHub Releases 与 Homebrew 发布。付款（上线后）由我们的 Merchant of Record（计划为 Dodo Payments）处理。每个服务商按各自的隐私政策处理数据。","privacy.h5":"5. 儿童隐私","privacy.p5":"FocusIn 常用于学校。我们不会故意收集 13 岁以下儿童的个人信息。学校管理员负责在当地法律要求下取得同意。","privacy.h6":"6. 数据保留与删除","privacy.p6":"诊断数据仅保留解决问题所需时间。你可以按下方地址联系我们要求删除任何数据。","privacy.h7":"7. 联系","privacy.p7":"对本政策有疑问？Instagram 联系 @marco.tsk_smile，或在我们的 GitHub 开 issue。",
+  "terms.title":"服务条款","terms.updated":"最后更新：2026 年 10 月","terms.h1":"1. 接受条款","terms.p1":"下载、安装或使用 FocusIn（「本软件」）即表示你同意这些条款。若你代表学校或机构使用本软件，你确认有权代表该机构。","terms.h2":"2. 使用授权","terms.p2":"本软件提供免费层与付费 Pro 订阅。免费层授予个人、非独家、不可转让的授权，仅供其预定用途。付费 Pro 订阅在订阅期间授予包含 Pro 全部功能的相同授权。","terms.h3":"3. Pro 订阅与收费","terms.p3":"Pro 每月收费 US$12.99（或当地等值），包含 7 天免费试用。订阅自动续期直至取消。你随时可以取消；访问权持续至付费期结束。付款由我们的 Merchant of Record 处理，负责账单查询与退款。","terms.h4":"4. License Key","terms.p4":"License Key 在 App 中解锁 Pro 功能。Key 专属于购买者；禁止分享、转售或分发。滥用可能导致撤销且不退款。","terms.h5":"5. 可接受使用","terms.p5":"你同意不将本软件用于：违反任何法律或学校政策；未经授权拦截或篡改他人数据；或散布恶意软件。本软件是正当的教室与屏幕共享工具，必须在设备所有者同意下使用。","terms.h6":"6. 无保证","terms.p6":"本软件按「现状」提供，不附任何保证。我们不保证不间断或无错误运作。","terms.h7":"7. 责任限制","terms.p7":"在法律允许的最大范围内，开发者不对因使用本软件而产生的间接、附带或后果性损害（包括数据损失）负责。","terms.h8":"8. 变更","terms.p8":"我们可能不时更新这些条款。变更后继续使用本软件即构成接受修订条款。","terms.h9":"9. 管辖法律","terms.p9":"这些条款受香港特别行政区法律管辖。","terms.h10":"10. 联系","terms.p10":"有疑问？Instagram 联系 @marco.tsk_smile，或在 GitHub 开 issue。",
+  "dl.eyebrow":"下载","dl.title":"开始使用 FocusIn。","dl.sub":"两种安装方式：直接下载 DMG，或使用 Homebrew。",
+  "dl.teacherVer":"稳定版 v1.5.7 · macOS 14 或以上","dl.teacherDmg":"FocusIn-Teacher.dmg","dl.studentDmg":"FocusIn-Student.dmg",
+  "dl.note":"首次启动时，授予显示的权限：教师端需要屏幕录制，学生端需要辅助功能。App 支持英文、繁体中文与简体中文。",
+  "faq.eyebrow":"支持","faq.title":"你可能想知道的问题。","faq.sub":"先查常见问题；找不到答案就 DM 我们。",
+  "faq.q1":"FocusIn 需要什么权限？","faq.a1":"教师端：系统设置 → 隐私与安全 → 屏幕录制，启用 FocusIn。若你之前按了「拒绝」，先取消勾选再重新勾选。学生端：系统设置 → 隐私与安全 → 辅助功能，启用 FocusIn 以使用锁定与输入封锁。",
+  "faq.q2":"Homebrew 更新与自动更新兼容吗？","faq.a2":"兼容。你可以任选其一：<code>brew upgrade --cask focusin-teacher focusin-student</code>，或在 App 内按「检查更新」直接下载最新 DMG。",
+  "faq.q3":"设备互相找不到？","faq.a3":"确认两个 App 在同一 Wi-Fi／子网，学生端正在运行，且防火墙允许 Network.framework（mDNS 5353／WebSocket）。",
+  "faq.q4":"紧急解锁密码是什么？","faq.a4":"与教师端设置的管理员密码相同 —— 会推送给所有已连接学生。在学生机按 ⌘⇧U 并输入，即使离线也可以。",
+  "faq.q5":"在哪里输入 Pro Key？","faq.a5":"在教师端或学生端的「升级至 Pro」栏位。Key 在本网站定价页生成。还没有 Key？享受 7 天免费试用。",
+  "faq.q6":"教室以外可以用 FocusIn 吗？","faq.a6":"当然可以。它是通用的屏幕广播工具：演示、简报、代码审查、活动 —— 任何需要一个画面同时显示在许多 Mac 上的场合。",
+  "faq.c1t":"Bug 反馈","faq.c1d":"截图＋版本＋设备型号",
+  "footer.tag":"一个画面，每一台 Mac。 — 专为 macOS 打造。","footer.product":"产品","footer.install":"安装","footer.dmg":"DMG","footer.brew":"Homebrew","footer.resources":"资源","footer.rights":"版权所有",
+  "toast.copied":"License Key 已复制到剪贴板"
+}
+};
+var CURRENT_LANG = localStorage.getItem("focusin-lang") || "en";
+function t(key){ return (I18N[CURRENT_LANG] && I18N[CURRENT_LANG][key]) || (I18N["en"][key]) || key; }
+function applyI18n(){
+  document.documentElement.lang = CURRENT_LANG === "en" ? "en" : (CURRENT_LANG === "zh-Hans" ? "zh-CN" : "zh-Hant");
+  document.querySelectorAll("[data-i18n]").forEach(function(el){
+    var key = el.getAttribute("data-i18n");
+    var val = t(key);
+    if (val.indexOf("<") >= 0){ el.innerHTML = val; return; }
+    if (el.tagName === "SUMMARY"){
+      var pm = el.querySelector(".pm");
+      el.textContent = "";
+      el.appendChild(document.createTextNode(val));
+      if (pm) el.appendChild(pm);
+    } else {
+      el.textContent = val;
+    }
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(function(el){
+    el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
+  });
+  document.querySelectorAll("#lang-switch button").forEach(function(b){
+    b.classList.toggle("on", b.getAttribute("data-lang") === CURRENT_LANG);
+  });
+  if (typeof renderDemo === "function") renderDemo();
+}
+document.querySelectorAll("#lang-switch button").forEach(function(b){
+  b.addEventListener("click", function(){
+    CURRENT_LANG = b.getAttribute("data-lang");
+    localStorage.setItem("focusin-lang", CURRENT_LANG);
+    applyI18n();
+  });
+});
+
+/* ===== 路由 ===== */
+var routes = ["home","features","pricing","download","faq","privacy","terms"];
+var sections = {home:"view-home", features:"view-features", pricing:"view-pricing", download:"view-download", faq:"view-faq", privacy:"view-privacy", terms:"view-terms"};
+function currentRoute(){
+  var h = location.hash.replace(/^#\/?/, "");
+  return routes.indexOf(h) >= 0 ? h : "home";
+}
+function render(){
+  var r = currentRoute();
+  for (var k in sections){
+    var el = document.getElementById(sections[k]);
+    if (el) el.classList.toggle("active", k === r);
+  }
+  document.title = (r === "home" ? "" : t("nav." + r) + " — ") + "FocusIn";
+  window.scrollTo({top:0, behavior:"auto"});
+  initReveal();
+}
+window.addEventListener("hashchange", render);
+document.addEventListener("click", function(e){
+  var a = e.target.closest("a[data-route]");
+  if (a){
+    var r = a.getAttribute("data-route");
+    if (routes.indexOf(r) >= 0){
+      if (location.hash === "#" + r){ window.scrollTo({top:0, behavior:"smooth"}); }
+      else { location.hash = r; }
+      e.preventDefault();
+    }
+  }
+});
+var revealObs = null;
+function initReveal(){
+  var els = document.querySelectorAll(".reveal:not(.in)");
+  if (!els.length) return;
+  if (!("IntersectionObserver" in window)){ els.forEach(function(el){ el.classList.add("in"); }); return; }
+  if (revealObs) revealObs.disconnect();
+  revealObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add("in"); revealObs.unobserve(en.target); }
+    });
+  }, {threshold:.12, rootMargin:"0px 0px -40px 0px"});
+  els.forEach(function(el){ revealObs.observe(el); });
+}
+
+/* ===== Toast ===== */
+var toastTimer = null;
+function toast(msg){
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2600);
+}
+
+/* ===== 互動 Live Demo ===== */
+var dlState = {on:false, quality:"high", sel:new Set()};
+var DL_NAMES = ["iMac 01","iMac 02","iMac 03","iMac 04","iMac 05","iMac 06"];
+function renderDemo(){
+  var devBox = document.getElementById("dl-dev");
+  var wall = document.getElementById("dl-wall");
+  if (!devBox || !wall) return;
+  devBox.innerHTML = "";
+  wall.innerHTML = "";
+  DL_NAMES.forEach(function(n, i){
+    var dd = document.createElement("div");
+    dd.className = "dd" + (dlState.sel.has(i) ? " on" : "");
+    dd.setAttribute("role","checkbox"); dd.setAttribute("aria-checked", dlState.sel.has(i) ? "true" : "false"); dd.setAttribute("tabindex","0");
+    dd.innerHTML = '<span class="av">' + (i+1) + '</span><span class="nm">' + n + '</span><span class="st">' + t("demo.online") + '</span>';
+    dd.addEventListener("click", function(){
+      if (dlState.sel.has(i)) dlState.sel.delete(i); else dlState.sel.add(i);
+      renderDemo();
+    });
+    dd.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); dd.click(); } });
+    devBox.appendChild(dd);
+
+    var ds = document.createElement("div");
+    ds.className = "dl-s" + (dlState.sel.has(i) ? " on" : "");
+    ds.id = "dl-s-" + i;
+    ds.innerHTML =
+      '<div class="ds-top"><span class="dot"></span><span class="name">' + n + '</span><span class="live"><span class="d"></span>' + t("demo.broadcasting") + '</span></div>' +
+      '<div class="ds-scr"><span class="idle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M8 22h8"/><line x1="12" y1="20" x2="12" y2="16"/></svg>' + t("demo.idle") + '</span><span class="screen-anim"><span class="sa-bar"></span><span class="sa-line l1"></span><span class="sa-line l2"></span><span class="sa-line l3"></span><span class="sa-card"></span><span class="sa-scan"></span></span></div>';
+    wall.appendChild(ds);
+  });
+  var btn = document.getElementById("dl-start");
+  var lbl = btn.querySelector("span");
+  btn.classList.toggle("on", dlState.on);
+  btn.setAttribute("aria-pressed", dlState.on ? "true" : "false");
+  lbl.textContent = t(dlState.on ? "demo.stop" : "demo.start");
+}
+document.getElementById("dl-q").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-q]");
+  if (!b) return;
+  dlState.quality = b.getAttribute("data-q");
+  document.querySelectorAll("#dl-q button").forEach(function(x){ x.classList.toggle("on", x === b); });
+  var q = t("demo.q" + dlState.quality.charAt(0).toUpperCase() + dlState.quality.slice(1));
+  toast(t("toast.quality") + " " + q);
+});
+document.getElementById("dl-start").addEventListener("click", function(){
+  if (dlState.sel.size === 0){
+    toast(t("demo.needSel"));
+    return;
+  }
+  dlState.on = !dlState.on;
+  renderDemo();
+  toast(t(dlState.on ? "toast.start" : "toast.stop"));
+});
+renderDemo();
+
+/* ===== License Key ===== */
+var KEY_ENDPOINT = "https://focusin-license.marcoattck.workers.dev/api/license/gen";
+document.getElementById("key-gen").addEventListener("click", genKey);
+document.getElementById("key-email").addEventListener("keydown", function(e){
+  if (e.key === "Enter") genKey();
+});
+document.getElementById("key-copy").addEventListener("click", function(){
+  var val = document.getElementById("key-value").textContent;
+  if (!val) return;
+  if (navigator.clipboard){ navigator.clipboard.writeText(val); }
+  toast(t("toast.copied"));
+});
+function genKey(){
+  var email = document.getElementById("key-email").value.trim();
+  var err = document.getElementById("key-err");
+  err.style.display = "none";
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+    err.style.display = "block";
+    return;
+  }
+  var btn = document.getElementById("key-gen");
+  btn.disabled = true;
+  var old = btn.textContent;
+  btn.textContent = "...";
+  fetch(KEY_ENDPOINT + "?email=" + encodeURIComponent(email))
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j && j.key){
+        document.getElementById("key-value").textContent = j.key;
+        document.getElementById("key-result").classList.add("show");
+      } else {
+        err.textContent = (j && j.error) || "Error";
+        err.style.display = "block";
+      }
+    })
+    .catch(function(){
+      err.textContent = "Network error";
+      err.style.display = "block";
+    })
+    .finally(function(){
+      btn.disabled = false;
+      btn.textContent = old;
+    });
+}
+
+applyI18n();
+render();
+</script>
+</body>
+</html>

@@ -207,12 +207,20 @@ final class CommandListener: ObservableObject {
             }
 #endif
 
+        case .setBrightness:
+            if let payload = message.payload, let value = Float(payload) {
+                BrightnessManager.shared.set(value)
+                appendLog("收到亮度指令：\(Int(value * 100))%")
+            }
+
         case .wipeResult:
             break   // 教師端使用
 
         case .streamStart:
             isBroadcasting = true
             kiosk.clearBroadcastImage()
+            // 防熄屏：廣播接收期間停用 idle display/system sleep，避免被投影的學生機自動熄屏
+            DisplayKeepAlive.shared.engage()
 #if FOCUSIN_DELTA
             // Delta：教師端 payload 標記通道——"multicast" 組播 / "unicast" 單播
             if message.payload == "multicast" {
@@ -236,6 +244,7 @@ final class CommandListener: ObservableObject {
         case .streamStop:
             isBroadcasting = false
             kiosk.clearBroadcastImage()
+            DisplayKeepAlive.shared.release()
 #if FOCUSIN_DELTA
             stopUnicastVideo()
             stopMulticastVideo()

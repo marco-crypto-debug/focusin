@@ -53,14 +53,14 @@ final class ScreenBroadcaster: NSObject {
 
 #if FOCUSIN_BETA
     /// beta：依畫質決定的 H.264 目標碼率（bps）。
-    /// 提高基準碼率，靜態文字/細線更清晰；組播單流下 1 份流量複製給所有學生。
+    /// 提高基準碼率（≈1080p/2K 觀看級），靜態文字/細線更清晰；組播單流下 1 份流量複製給所有學生。
     private func h264Bitrate(displayWidth: Int) -> Int {
         let base: Double
         switch quality {
-        case .high: base = 14_000_000
-        case .mid:  base = 8_000_000
-        case .low:  base = 4_500_000
-        case .auto: base = displayWidth > 3840 ? 10_000_000 : 14_000_000
+        case .high: base = 20_000_000
+        case .mid:  base = 10_000_000
+        case .low:  base = 5_000_000
+        case .auto: base = displayWidth > 3840 ? 12_000_000 : 20_000_000
         }
         return Int(base)
     }

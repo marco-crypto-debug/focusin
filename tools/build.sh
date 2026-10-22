@@ -36,6 +36,7 @@ SHARED_SRC=(
   "$ROOT/Shared/Utility/FocusInTheme.swift"
   "$ROOT/Shared/Utility/QuitGuard.swift"
   "$ROOT/Shared/Utility/UpdateChecker.swift"
+  "$ROOT/Shared/Utility/DisplayKeepAlive.swift"
 )
 TEACHER_SRC=(
   "$ROOT/TeacherApp/TeacherApp.swift"
@@ -47,6 +48,7 @@ TEACHER_SRC=(
 STUDENT_SRC=(
   "$ROOT/StudentApp/StudentApp.swift"
   "$ROOT/StudentApp/CommandListener.swift"
+  "$ROOT/StudentApp/BrightnessManager.swift"
   "$ROOT/StudentApp/H264Decoder.swift"
   "$ROOT/StudentApp/AudioPlayer.swift"
   "$ROOT/StudentApp/FileWipeManager.swift"

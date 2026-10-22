@@ -9,6 +9,7 @@ struct DeviceListView: View {
     @ObservedObject private var appState = FocusInAppState.shared
     @State private var launchBundleID = "com.apple.Safari"
     @State private var allSelected = false
+    @State private var brightness = 1.0
     @State private var autoStartError = ""
     @State private var showingWipeConfirm = false
     @State private var wipeConfirmText = ""
@@ -247,6 +248,40 @@ struct DeviceListView: View {
                     }
                     actionButton("解鎖屏幕", icon: "lock.open", tint: .blue) {
                         viewModel.sendUnlock()
+                    }
+                }
+            }
+
+            // 學生端亮度調節
+            FocusInTheme.sectionLabel("Brightness")
+            FocusInTheme.card {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sun.max.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                        Text("調節學生端屏幕亮度")
+                            .font(.system(size: 12, weight: .medium))
+                        Spacer()
+                        Button("恢復 100%") {
+                            brightness = 1.0
+                            viewModel.sendBrightness(1.0)
+                        }
+                        .controlSize(.small)
+                    }
+                    Slider(value: $brightness, in: 0.1...1.0) { editing in
+                        if !editing {
+                            viewModel.sendBrightness(brightness)
+                        }
+                    }
+                    HStack {
+                        Text("亮度 \(Int(brightness * 100))%")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("需先勾選學生")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }

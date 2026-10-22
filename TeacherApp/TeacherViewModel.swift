@@ -332,6 +332,13 @@ final class TeacherViewModel: ObservableObject {
         appendLog("已下發清空文件指令（Documents + Downloads）")
     }
 
+    /// 一鍵調節所選學生端屏幕亮度（0.0 – 1.0）。
+    func sendBrightness(_ value: Double) {
+        let payload = String(format: "%.2f", value)
+        send(CommandMessage(type: .setBrightness, payload: payload))
+        appendLog("已下發亮度指令：\(Int(value * 100))%")
+    }
+
 #if FOCUSIN_STABLE || FOCUSIN_BETA
     /// 下發管理員密碼給**所有已連線**學生端（即使未勾選）。
     /// 同一密碼用於學生端退出保護與緊急解鎖。
