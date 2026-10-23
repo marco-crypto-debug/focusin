@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FocusIn — One screen. Every Mac.</title>
+  <meta name="description" content="FocusIn is a live classroom broadcast system for Mac. Share one screen with every student Mac on your local network, lock the room, and send commands — no dongles, accounts, or cloud.">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="assets/focusin-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/focusin-icon.svg">
+  <meta property="og:title" content="FocusIn — One screen. Every Mac.">
+  <meta property="og:description" content="A live classroom broadcast system for Mac. Share one screen with every Mac on your local network.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="scroll-progress" aria-hidden="true"><span id="scrollProgress"></span></div>
+
+  <header class="site-header" id="siteHeader">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="FocusIn home">
+        <img src="assets/focusin-icon.svg" alt="" width="26" height="26">
+        <span>FocusIn</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#demo" data-i18n="nav.demo">Live demo</a>
+        <a href="#features" data-i18n="nav.features">Features</a>
+        <a href="#focus" data-i18n="nav.focus">Focus lock</a>
+        <a href="#download" data-i18n="nav.download">Download</a>
+      </nav>
+
+      <div class="nav-actions">
+        <div class="lang-switch" role="group" aria-label="Language selector">
+          <button type="button" class="lang-btn is-active" data-lang="en">EN</button>
+          <button type="button" class="lang-btn" data-lang="zh-Hant">繁</button>
+          <button type="button" class="lang-btn" data-lang="zh-Hans">简</button>
+        </div>
+        <a class="nav-github" href="https://github.com/marco-crypto-debug/focusin" target="_blank" rel="noopener" aria-label="FocusIn on GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.24.77-.54v-2.1c-3.12.68-3.78-1.32-3.78-1.32-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.68.08-.68 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.49-.28-5.11-1.24-5.11-5.54 0-1.22.44-2.22 1.16-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.08 1.15a10.7 10.7 0 0 1 5.6 0c2.14-1.45 3.08-1.15 3.08-1.15.61 1.54.23 2.68.11 2.96.72.78 1.16 1.78 1.16 3 0 4.31-2.63 5.26-5.13 5.53.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.78.54A11.2 11.2 0 0 0 12 .8Z"/></svg>
+        </a>
+        <a class="nav-cta" href="#download" data-i18n="nav.cta">Download</a>
+        <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="mobile-lang-row">
+        <span>Language:</span>
+        <div class="lang-switch" role="group" aria-label="Language selector">
+          <button type="button" class="lang-btn is-active" data-lang="en">EN</button>
+          <button type="button" class="lang-btn" data-lang="zh-Hant">繁體</button>
+          <button type="button" class="lang-btn" data-lang="zh-Hans">简体</button>
+        </div>
+      </div>
+      <nav aria-label="Mobile">
+        <a href="#demo">Live demo <span>→</span></a>
+        <a href="#features">Features <span>→</span></a>
+        <a href="#focus">Focus lock <span>→</span></a>
+        <a href="#faq">FAQ <span>→</span></a>
+        <a href="#download">Download <span>→</span></a>
+      </nav>
+      <a class="mobile-github" href="https://github.com/marco-crypto-debug/focusin" target="_blank" rel="noopener">View on GitHub ↗</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============================================================
+         HERO
+    ============================================================= -->
+    <section class="hero" id="top">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
+        <div class="grid-veil"></div>
+      </div>
+
+      <div class="container hero-copy">
+        <a class="announce" href="#download" data-reveal="fade">
+          <span class="announce-dot"></span>
+          <span data-i18n="hero.announce">FocusIn Delta 1.5.9 is here</span>
+          <span class="announce-arrow" aria-hidden="true">→</span>
+        </a>
+
+        <h1 class="hero-title" data-reveal="up" data-i18n="hero.title">One screen.<br><span class="text-gradient">Every Mac.</span></h1>
+
+        <p class="hero-sub" data-reveal="up" style="--d:.06s" data-i18n="hero.sub">
+          FocusIn turns your Mac into a live classroom broadcast studio. Share your screen, guide every student, and keep the whole room in sync — over your own Wi-Fi.
+        </p>
+
+        <div class="hero-actions" data-reveal="up" style="--d:.12s">
+          <a class="btn btn-primary btn-lg" href="#download">
+            <span data-i18n="hero.dl">Download for Mac</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 20h16"/></svg>
+          </a>
+          <a class="btn btn-link btn-lg" href="#demo">
+            <span data-i18n="hero.demo">Try the live demo</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+          </a>
+        </div>
+
+        <p class="hero-note" data-reveal="up" style="--d:.18s" data-i18n="hero.note">Free · macOS 14+ · Apple silicon &amp; Intel</p>
+      </div>
+
+      <div class="hero-visual" data-reveal="scale" style="--d:.16s">
+        <div class="hero-stage" id="heroStage">
+          <div class="stage-glow" aria-hidden="true"></div>
+          <div class="pulse-ring ring-a" aria-hidden="true"></div>
+          <div class="pulse-ring ring-b" aria-hidden="true"></div>
+
+          <div class="teacher-window">
+            <div class="tw-titlebar">
+              <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="tw-app"><img src="assets/focusin-icon.svg" alt="" width="17" height="17"> FocusIn Teacher</span>
+              <span class="tw-status"><i></i> Broadcasting</span>
+            </div>
+            <div class="tw-body">
+              <aside class="tw-side">
+                <div class="tw-room">iMac Lab <span>Room 204</span></div>
+                <div class="tw-side-label">Students <span>6 online</span></div>
+                <div class="tw-device"><span class="dot"></span><span>iMac 01</span><span class="ms">12 ms</span></div>
+                <div class="tw-device"><span class="dot"></span><span>iMac 02</span><span class="ms">14 ms</span></div>
+                <div class="tw-device"><span class="dot"></span><span>iMac 03</span><span class="ms">11 ms</span></div>
+                <div class="tw-device"><span class="dot"></span><span>iMac 04</span><span class="ms">18 ms</span></div>
+                <div class="tw-device tw-device--muted"><span class="dot"></span><span>iMac 05</span><span class="ms">22 ms</span></div>
+                <div class="tw-side-foot">All students selected</div>
+              </aside>
+              <div class="tw-main">
+                <div class="tw-preview-head">
+                  <span class="tw-preview-title"><span class="window-dot"></span> Screen preview</span>
+                  <span class="live-pill"><i></i> Live</span>
+                  <span class="tw-timer">00:42</span>
+                </div>
+                <div class="tw-screen">
+                  <div class="slide" aria-hidden="true">
+                    <div class="slide-top"><span class="slide-kicker">Science · Period 3</span><span class="slide-clock">10:42</span></div>
+                    <div class="slide-art">
+                      <div class="sun"></div>
+                      <div class="cloud cloud-a"></div>
+                      <div class="cloud cloud-b"></div>
+                      <div class="rain"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                      <div class="hill hill-a"></div>
+                      <div class="hill hill-b"></div>
+                    </div>
+                    <div class="slide-copy">
+                      <span class="slide-label">Today's lesson</span>
+                      <h3>The water cycle</h3>
+                      <p>Evaporation · Condensation · Precipitation</p>
+                      <div class="slide-progress"><span></span></div>
+                    </div>
+                    <div class="slide-eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                  </div>
+                  <div class="tw-cursor" aria-hidden="true"></div>
+                  <div class="tw-live-flag"><i></i> LIVE</div>
+                </div>
+                <div class="tw-controls">
+                  <span class="tw-btn tw-btn-primary">Stop broadcast</span>
+                  <span class="tw-btn tw-btn-secondary">Lock screens</span>
+                  <span class="tw-quality">Auto · 30 fps</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="float-card fc-a" aria-hidden="true">
+            <div class="fc-bar"><span class="fc-dot"></span><span>iMac 04</span><span class="fc-live">Live</span></div>
+            <div class="fc-screen">
+              <div class="mini-scene"><div class="mini-sun"></div><div class="mini-hill"></div><div class="mini-cloud"></div></div>
+            </div>
+          </div>
+
+          <div class="float-card fc-b" aria-hidden="true">
+            <div class="fc-bar"><span class="fc-dot"></span><span>iMac 05</span><span class="fc-live fc-lock">Locked</span></div>
+            <div class="fc-screen">
+              <div class="mini-scene mini-scene--dim"><div class="mini-sun"></div><div class="mini-hill"></div></div>
+              <div class="mini-lock"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+            </div>
+          </div>
+
+          <div class="float-chip chip-a" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            6 Macs in sync
+          </div>
+          <div class="float-chip chip-b" aria-hidden="true">
+            <span class="chip-dot"></span> 18 ms · Local
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="hero-stats" data-reveal="up">
+          <div class="stat"><strong data-count="1">1</strong><span>click to go live</span></div>
+          <div class="stat"><strong data-count="30">30</strong><span>frames per second</span></div>
+          <div class="stat"><strong>∞</strong><span>Macs in one room</span></div>
+          <div class="stat"><strong data-count="0">0</strong><span>cloud servers</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <div class="marquee-group">
+          <span>ScreenCaptureKit</span><i></i><span>Bonjour discovery</span><i></i><span>Kiosk lock</span><i></i><span>Remote commands</span><i></i><span>Local-first</span><i></i><span>Apple silicon ready</span><i></i><span>macOS 14+</span><i></i><span>No cloud</span><i></i>
+        </div>
+        <div class="marquee-group">
+          <span>ScreenCaptureKit</span><i></i><span>Bonjour discovery</span><i></i><span>Kiosk lock</span><i></i><span>Remote commands</span><i></i><span>Local-first</span><i></i><span>Apple silicon ready</span><i></i><span>macOS 14+</span><i></i><span>No cloud</span><i></i>
+        </div>
+      </div>
+    </div>
+
+        <!-- ============================================================
+         LIVE DEMO
+    ============================================================= -->
+    <section class="demo-section section-dark" id="demo">
+      <div class="demo-glow" aria-hidden="true"></div>
+      <div class="container">
+        <header class="section-head section-head--dark" data-reveal="up">
+          <span class="eyebrow" data-i18n="demo.eyebrow">Live demo</span>
+          <h2 data-i18n="demo.h2">The whole classroom.<br><span class="text-gradient">One click away.</span></h2>
+          <p data-i18n="demo.sub">This is a working simulation of FocusIn Teacher. Start a broadcast, switch quality, lock a few screens — everything responds live. No install required.</p>
+        </header>
+
+        <div class="demo-window" id="demoApp" data-reveal="scale">
+          <div class="demo-titlebar">
+            <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="demo-app-title"><img src="assets/focusin-icon.svg" alt="" width="17" height="17"> FocusIn Teacher <span class="demo-chip">Interactive demo</span></span>
+            <span class="demo-status"><i></i><span id="demoStatus" aria-live="polite">Ready</span></span>
+          </div>
+
+          <div class="demo-body">
+            <aside class="demo-sidebar">
+              <div class="sidebar-head">
+                <div>
+                  <span class="room-name">iMac Lab</span>
+                  <span class="room-sub">Room 204 · Local network</span>
+                </div>
+                <span class="online-pill"><i></i><span id="onlineCount">6</span> online</span>
+              </div>
+
+              <label class="select-all">
+                <span class="check-wrap">
+                  <input type="checkbox" id="selectAll" checked>
+                  <span class="check-box" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg>
+                  </span>
+                </span>
+                <span class="select-all-text" data-i18n="demo.all">All students</span>
+                <span class="select-count" id="selectedCountLabel">6 selected</span>
+              </label>
+
+              <div class="device-list" id="deviceList"></div>
+
+              <div class="sidebar-foot"><span class="pulse-dot"></span> <span data-i18n="demo.bonjour">Bonjour discovery active</span></div>
+            </aside>
+
+            <div class="demo-main">
+              <div class="demo-topbar">
+                <div class="quality-control">
+                  <span class="control-label" data-i18n="demo.quality">Quality</span>
+                  <div class="segmented" id="qualityGroup" role="group" aria-label="Broadcast quality">
+                    <button type="button" data-quality="auto" class="is-active" aria-pressed="true">Auto</button>
+                    <button type="button" data-quality="low" aria-pressed="false">Low</button>
+                    <button type="button" data-quality="medium" aria-pressed="false">Mid</button>
+                    <button type="button" data-quality="high" aria-pressed="false">High</button>
+                  </div>
+                </div>
+                <div class="metrics">
+                  <span class="metric"><span class="metric-label" data-i18n="demo.latency">Latency</span><strong id="avgLatency">— ms</strong></span>
+                  <span class="metric"><span class="metric-label">FPS</span><strong id="fpsReadout">30</strong></span>
+                  <span class="metric"><span class="metric-label" data-i18n="demo.bitrate">Bitrate</span><strong id="bitrateReadout">Auto</strong></span>
+                </div>
+              </div>
+
+              <div class="demo-grid">
+                <div class="preview-card">
+                  <div class="preview-head">
+                    <span class="preview-title"><span class="window-dot"></span> <span data-i18n="demo.previewTitle">Screen preview</span></span>
+                    <span class="preview-meta">
+                      <span class="live-badge" id="demoLiveBadge"><i></i><span>Preview</span></span>
+                      <span class="demo-timer" id="demoTimer">00:00</span>
+                    </span>
+                  </div>
+                  <div class="preview-screen">
+                    <div class="slide" id="previewSlide">
+                      <div class="slide-top"><span class="slide-kicker">Science · Period 3</span><span class="slide-clock">10:42</span></div>
+                      <div class="slide-art">
+                        <div class="sun"></div>
+                        <div class="cloud cloud-a"></div>
+                        <div class="cloud cloud-b"></div>
+                        <div class="rain"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                        <div class="hill hill-a"></div>
+                        <div class="hill hill-b"></div>
+                      </div>
+                      <div class="slide-copy">
+                        <span class="slide-label" data-i18n="demo.lessonLabel">Today's lesson</span>
+                        <h3 data-i18n="demo.lessonTitle">The water cycle</h3>
+                        <p data-i18n="demo.lessonSub">Evaporation · Condensation · Precipitation</p>
+                        <div class="slide-progress"><span></span></div>
+                      </div>
+                      <div class="slide-eq" id="previewEq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                    </div>
+                    <div class="preview-cursor" aria-hidden="true"></div>
+                    <div class="preview-scanline" aria-hidden="true"></div>
+                  </div>
+                  <div class="preview-bar">
+                    <div class="preview-actions">
+                      <button type="button" class="demo-btn demo-btn-primary" id="broadcastToggle" aria-pressed="false">
+                        <span class="btn-icon" id="broadcastIcon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>
+                        </span>
+                        <span id="broadcastLabel" data-i18n="demo.start">Start broadcast</span>
+                      </button>
+                      <button type="button" class="demo-btn demo-btn-secondary" id="lockToggle" aria-pressed="false">
+                        <span class="btn-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                        </span>
+                        <span id="lockLabel" data-i18n="demo.lock">Lock screens</span>
+                      </button>
+                      <button type="button" class="demo-btn demo-btn-secondary" id="audioToggle" aria-pressed="false" title="Toggle audio streaming">
+                        <span class="btn-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+                        </span>
+                        <span id="audioLabel">Audio</span>
+                      </button>
+                    </div>
+                    <span class="preview-hint" id="selectedHint">Ready to broadcast to 6 Macs</span>
+                  </div>
+                </div>
+
+                <div class="demo-side">
+                  <div class="side-stat">
+                    <span class="side-stat-label" data-i18n="demo.connected">Connected</span>
+                    <strong id="connectedStat">6</strong>
+                    <small data-i18n="demo.connectedSub">Macs on this network</small>
+                  </div>
+                  <div class="side-stat">
+                    <span class="side-stat-label" data-i18n="demo.avgLatency">Average latency</span>
+                    <strong id="latencyStat">— ms</strong>
+                    <svg class="sparkline" viewBox="0 0 140 40" preserveAspectRatio="none" aria-hidden="true">
+                      <defs>
+                        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" stop-color="#ff6b8a" stop-opacity=".28"/>
+                          <stop offset="1" stop-color="#ff6b8a" stop-opacity="0"/>
+                        </linearGradient>
+                      </defs>
+                      <path id="latencyArea" fill="url(#sparkGrad)" d=""></path>
+                      <polyline id="latencyLine" fill="none" stroke="#ff6b8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points=""></polyline>
+                    </svg>
+                  </div>
+                  <div class="side-stat side-stat--list">
+                    <span class="side-stat-label">Stream</span>
+                    <span class="stream-row"><span data-i18n="demo.res">Resolution</span><strong id="resolutionReadout">Native</strong></span>
+                    <span class="stream-row"><span data-i18n="demo.trans">Transport</span><strong>WebSocket</strong></span>
+                    <span class="stream-row"><span data-i18n="demo.net">Network</span><strong data-i18n="demo.local">Local</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="students-head">
+                <span class="students-title" data-i18n="demo.students">Students</span>
+                <span class="students-hint" data-i18n="demo.clickHint">Click a screen to include it</span>
+              </div>
+              <div class="student-grid" id="studentGrid"></div>
+
+              <div class="activity">
+                <div class="activity-head">
+                  <span data-i18n="demo.activity">Activity</span>
+                  <button type="button" class="reset-btn" id="resetDemo" data-i18n="demo.reset">Reset demo</button>
+                </div>
+                <ol class="activity-log" id="demoLog" role="log" aria-live="off"></ol>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="demo-caption" data-i18n="demo.caption">A simulation, not a screencast. Every control is live.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         BEYOND AIRPLAY
+    ============================================================= -->
+    <section class="statement">
+      <div class="container">
+        <header class="statement-head" data-reveal="up">
+          <span class="eyebrow">Beyond AirPlay</span>
+          <h2>AirPlay mirrors to one screen.<br><span class="muted">FocusIn teaches to all of them.</span></h2>
+          <p>No Apple TV. No switching targets. No cloud. Just every Mac in the room, seeing the same thing at the same time.</p>
+        </header>
+
+        <div class="compare">
+          <article class="compare-card compare-card--air" data-reveal="up">
+            <span class="compare-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            </span>
+            <span class="compare-tag">AirPlay</span>
+            <h3>One screen at a time.</h3>
+            <ul>
+              <li><span class="x">✕</span>Mirrors to a single display</li>
+              <li><span class="x">✕</span>Needs an Apple TV or receiver</li>
+              <li><span class="x">✕</span>No classroom controls</li>
+              <li><span class="x">✕</span>Switching targets breaks the flow</li>
+            </ul>
+          </article>
+
+          <article class="compare-card compare-card--focus" data-reveal="up" style="--d:.08s">
+            <span class="compare-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M7 21h10M12 17v4"/><path d="M7 9h4M7 12h7"/></svg>
+            </span>
+            <span class="compare-tag">FocusIn</span>
+            <h3>Every Mac. All at once.</h3>
+            <ul>
+              <li><span class="check">✓</span>Broadcasts to any number of Macs</li>
+              <li><span class="check">✓</span>Zero extra hardware</li>
+              <li><span class="check">✓</span>Kiosk lock and remote commands built in</li>
+              <li><span class="check">✓</span>Auto-discovery over Bonjour</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="statement-points">
+          <div data-reveal="up">
+            <span class="point-num">01</span>
+            <h3>One stream. Every screen.</h3>
+            <p>Your display reaches every connected Mac simultaneously — not one mirror at a time.</p>
+          </div>
+          <div data-reveal="up" style="--d:.06s">
+            <span class="point-num">02</span>
+            <h3>Nothing to plug in.</h3>
+            <p>The Student app runs on the Macs you already have. Same Wi-Fi is the only requirement.</p>
+          </div>
+          <div data-reveal="up" style="--d:.12s">
+            <span class="point-num">03</span>
+            <h3>Built for the room.</h3>
+            <p>Lock screens, launch apps, restart, or clean up student files — without leaving the teacher window.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FEATURES / BENTO
+    ============================================================= -->
+    <section class="features" id="features">
+      <div class="container">
+        <header class="section-head" data-reveal="up">
+          <span class="eyebrow">Everything included</span>
+          <h2>A broadcast studio.<br><span class="muted">A classroom remote.</span></h2>
+          <p>FocusIn pairs a fast native Teacher app with a lightweight Student app that runs on every screen.</p>
+        </header>
+
+        <div class="bento">
+          <article class="bento-card bento-card--wide bento-card--broadcast" data-reveal="up">
+            <div class="bento-copy">
+              <span class="bento-kicker">Live broadcast</span>
+              <h3>Thirty frames. Zero drama.</h3>
+              <p>Native ScreenCaptureKit capture and a binary frame pipeline keep motion smooth and text sharp — even in a room full of Macs.</p>
+            </div>
+            <div class="broadcast-viz" aria-hidden="true">
+              <div class="bv-source">
+                <div class="bv-screen"><div class="mini-scene"><div class="mini-sun"></div><div class="mini-hill"></div><div class="mini-cloud"></div></div></div>
+                <span>Teacher</span>
+              </div>
+              <div class="bv-beam"><i></i><i></i><i></i></div>
+              <div class="bv-receivers">
+                <div class="bv-recv"><div class="mini-scene"><div class="mini-sun"></div><div class="mini-hill"></div></div></div>
+                <div class="bv-recv"><div class="mini-scene"><div class="mini-sun"></div><div class="mini-hill"></div></div></div>
+                <div class="bv-recv"><div class="mini-scene"><div class="mini-sun"></div><div class="mini-hill"></div></div></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--dark bento-card--lock" data-reveal="up" style="--d:.06s">
+            <div class="bento-copy">
+              <span class="bento-kicker">Focus lock</span>
+              <h3>The room stays on task.</h3>
+              <p>Cover every display and block the shortcuts that break focus. One click to lock, one to unlock.</p>
+            </div>
+            <div class="lock-viz" aria-hidden="true">
+              <div class="lock-badge">
+                <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              </div>
+              <div class="key-row"><span>⌘Q</span><span>⌘⇥</span><span>⌘⌥⎋</span><span>⌘⇧3</span></div>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--radar" data-reveal="up">
+            <div class="bento-copy">
+              <span class="bento-kicker">Auto-discovery</span>
+              <h3>They just appear.</h3>
+              <p>Bonjour finds every Student app on the network. No IP addresses, no pairing, no setup.</p>
+            </div>
+            <div class="radar" aria-hidden="true">
+              <span class="radar-ring r1"></span><span class="radar-ring r2"></span><span class="radar-ring r3"></span>
+              <span class="radar-sweep"></span>
+              <span class="radar-dot d1"></span><span class="radar-dot d2"></span><span class="radar-dot d3"></span><span class="radar-dot d4"></span><span class="radar-dot d5"></span>
+              <span class="radar-core"></span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--commands" data-reveal="up" style="--d:.06s">
+            <div class="bento-copy">
+              <span class="bento-kicker">Remote commands</span>
+              <h3>One click. Every Mac.</h3>
+              <p>Shut down, restart, launch an app, or wipe student files from the teacher window.</p>
+            </div>
+            <div class="cmd-chips" aria-hidden="true">
+              <span class="cmd-chip"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></svg>Restart</span>
+              <span class="cmd-chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>Launch</span>
+              <span class="cmd-chip"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M5 11a7 7 0 1 0 14 0"/></svg>Shut down</span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--local" data-reveal="up" style="--d:.12s">
+            <div class="bento-copy">
+              <span class="bento-kicker">Local-first</span>
+              <h3>Your room. Your network.</h3>
+              <p>No accounts, no cloud relay, no internet dependency. FocusIn stays on your local Wi-Fi.</p>
+            </div>
+            <div class="local-viz" aria-hidden="true">
+              <div class="shield">
+                <svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.4 3 7.9 7.5 9.5 4.5-1.6 7.5-5.1 7.5-9.5V6L12 3Z"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg>
+              </div>
+              <span class="local-node n1"></span><span class="local-node n2"></span><span class="local-node n3"></span><span class="local-node n4"></span>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--audio" data-reveal="up">
+            <div class="bento-copy">
+              <span class="bento-kicker">Audio · Alpha</span>
+              <h3>Sound, when you need it.</h3>
+              <p>48 kHz stereo audio travels with the broadcast on supported builds — on its own channel, with a jitter buffer.</p>
+            </div>
+            <div class="waveform" aria-hidden="true">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </article>
+
+          <article class="bento-card bento-card--efficient" data-reveal="up" style="--d:.06s">
+            <div class="bento-copy">
+              <span class="bento-kicker">Quietly efficient</span>
+              <h3>Light on the Mac.</h3>
+              <p>A lean native core, automatic updates, and launch-at-login so the room is ready before the bell.</p>
+            </div>
+            <div class="gauge" aria-hidden="true">
+              <div class="gauge-ring"><span>~12%</span></div>
+              <span class="gauge-label">CPU while broadcasting</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FOCUS LOCK
+    ============================================================= -->
+    <section class="focus section-dark" id="focus">
+      <div class="focus-glow" aria-hidden="true"></div>
+      <div class="container focus-grid">
+        <div class="focus-copy" data-reveal="up">
+          <span class="eyebrow">Focus lock</span>
+          <h2>The room,<br><span class="text-gradient">in focus.</span></h2>
+          <p class="focus-lede">When it's time to focus, FocusIn covers every display, blocks the shortcuts, and keeps the broadcast front and center. The teacher unlocks with one click. A local admin can always get out with <span class="inline-key">⌘⇧U</span>.</p>
+
+          <ul class="focus-list">
+            <li>
+              <span class="focus-num">01</span>
+              <div><strong>Full-screen kiosk.</strong><span>A borderless window above every Space, display, and full-screen app.</span></div>
+            </li>
+            <li>
+              <span class="focus-num">02</span>
+              <div><strong>Input interception.</strong><span>Keyboard and mouse events are caught at the system level — no app switching, no escape shortcuts.</span></div>
+            </li>
+            <li>
+              <span class="focus-num">03</span>
+              <div><strong>Self-healing window.</strong><span>Display changes and stolen focus rebuild the lock automatically. The room stays locked.</span></div>
+            </li>
+          </ul>
+
+          <button class="btn btn-quiet-light" id="replayLock" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+            Replay lock
+          </button>
+        </div>
+
+        <div class="focus-visual" id="focusVisual" data-reveal="scale">
+          <div class="lock-display">
+            <div class="lock-display-bar">
+              <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="lock-display-title">iMac 05 · Student</span>
+              <span class="lock-display-status">Locked</span>
+            </div>
+            <div class="lock-wallpaper">
+              <div class="mini-scene mini-scene--large"><div class="mini-sun"></div><div class="mini-hill"></div><div class="mini-cloud"></div></div>
+              <div class="lock-overlay" id="lockOverlay">
+                <div class="lock-icon">
+                  <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                </div>
+                <strong>Locked by FocusIn</strong>
+                <span>Focus on the lesson.</span>
+                <div class="lock-key">⌘ ⇧ U <em>Emergency unlock</em></div>
+              </div>
+            </div>
+            <div class="lock-shortcuts" aria-hidden="true">
+              <span>⌘Q</span><span>⌘⇥</span><span>⌘⌥⎋</span><span>⌘⇧3</span>
+            </div>
+          </div>
+          <div class="float-chip chip-lock" aria-hidden="true"><i></i> Input blocked</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         HOW IT WORKS
+    ============================================================= -->
+    <section class="how" id="how">
+      <div class="container">
+        <header class="section-head" data-reveal="up">
+          <span class="eyebrow">How it works</span>
+          <h2>Broadcasting in three steps.</h2>
+          <p>No servers, no accounts, no cloud. Just your Wi-Fi and two small apps.</p>
+        </header>
+
+        <div class="steps" id="steps">
+          <div class="steps-line" aria-hidden="true"><span></span></div>
+          <div class="step" data-reveal="up">
+            <div class="step-num">01</div>
+            <h3>Install both apps.</h3>
+            <p>FocusIn Teacher on your Mac. FocusIn Student on every iMac you want to reach.</p>
+          </div>
+          <div class="step" data-reveal="up" style="--d:.08s">
+            <div class="step-num">02</div>
+            <h3>Join the same Wi-Fi.</h3>
+            <p>Devices find each other automatically with Bonjour. No IPs, pairing, or network setup.</p>
+          </div>
+          <div class="step" data-reveal="up" style="--d:.16s">
+            <div class="step-num">03</div>
+            <h3>Press broadcast.</h3>
+            <p>Your screen appears on every selected Mac in real time. Lock, launch, or shut down from one window.</p>
+          </div>
+        </div>
+
+        <div class="setup-note" data-reveal="up">
+          <span class="setup-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/></svg>
+          </span>
+          <p><strong>About two minutes to set up.</strong> Grant Screen Recording to Teacher and Accessibility to Student on first launch. Then the room is ready.</p>
+          <a href="#faq">Permissions &amp; FAQ <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         DOWNLOAD
+    ============================================================= -->
+    <section class="download" id="download">
+      <div class="download-glow" aria-hidden="true"></div>
+      <div class="container">
+        <header class="section-head" data-reveal="up">
+          <span class="eyebrow">Download</span>
+          <h2>Ready when you are.</h2>
+          <p>Two apps. One classroom. Download the latest Delta build and put every Mac on the same page.</p>
+        </header>
+
+        <div class="download-grid">
+          <article class="download-card" data-reveal="up">
+            <div class="download-top">
+              <div class="app-icon app-icon--teacher" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h6M7 11h9"/></svg>
+              </div>
+              <span class="download-badge">For teachers</span>
+            </div>
+            <h3>FocusIn Teacher</h3>
+            <p>The control room. Discover students, broadcast your screen, and send commands from one window.</p>
+            <ul class="download-list">
+              <li><span>✓</span>Screen broadcast &amp; quality modes</li>
+              <li><span>✓</span>Kiosk lock and remote commands</li>
+              <li><span>✓</span>Bonjour auto-discovery</li>
+            </ul>
+            <a class="btn btn-primary btn-block" href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.5.9-delta/FocusIn-Delta-Teacher.dmg">
+              Download Teacher
+              <span class="btn-file">DMG</span>
+            </a>
+            <span class="download-meta">v1.5.9 · Universal · macOS 14+</span>
+          </article>
+
+          <article class="download-card" data-reveal="up" style="--d:.08s">
+            <div class="download-top">
+              <div class="app-icon app-icon--student" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M9 8h6M9 11h4"/></svg>
+              </div>
+              <span class="download-badge download-badge--alt">For students</span>
+            </div>
+            <h3>FocusIn Student</h3>
+            <p>The receiving end. Shows the live broadcast, follows remote commands, and keeps the screen focused.</p>
+            <ul class="download-list">
+              <li><span>✓</span>Full-screen broadcast view</li>
+              <li><span>✓</span>Kiosk lock &amp; emergency unlock</li>
+              <li><span>✓</span>Launch at login</li>
+            </ul>
+            <a class="btn btn-secondary btn-block" href="https://github.com/marco-crypto-debug/focusin/releases/download/v1.5.9-delta/FocusIn-Delta-Student.dmg">
+              Download Student
+              <span class="btn-file">DMG</span>
+            </a>
+            <span class="download-meta">v1.5.9 · Universal · macOS 14+</span>
+          </article>
+        </div>
+
+        <!-- Homebrew Install Option -->
+        <div class="brew-card" data-reveal="up">
+          <div class="brew-header">
+            <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="brew-title">Terminal · Homebrew</span>
+            <button type="button" class="brew-copy-btn" id="copyBrewBtn" aria-label="Copy brew command">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <pre class="brew-cmd"><code>brew install --cask marco-crypto-debug/focusin/focusin-teacher focusin-student</code></pre>
+        </div>
+
+        <div class="download-notes" data-reveal="up">
+          <div>
+            <strong>First launch</strong>
+            <span>macOS may ask you to confirm. Right-click the app → Open, then allow the requested permission.</span>
+          </div>
+          <div>
+            <strong>Permissions</strong>
+            <span>Teacher needs Screen Recording. Student needs Accessibility for focus lock and input blocking.</span>
+          </div>
+          <div>
+            <strong>Also available</strong>
+            <span><a href="https://github.com/marco-crypto-debug/focusin/releases/tag/v1.4.3" target="_blank" rel="noopener">Stable v1.4.3</a> · <a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">All releases</a> · <a href="https://github.com/marco-crypto-debug/focusin" target="_blank" rel="noopener">GitHub</a></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         FAQ
+    ============================================================= -->
+    <section class="faq" id="faq">
+      <div class="container faq-grid">
+        <div class="faq-head" data-reveal="up">
+          <span class="eyebrow">FAQ</span>
+          <h2>Good questions.</h2>
+          <p>Everything you need to know before the first bell.</p>
+          <a class="btn btn-link" href="https://github.com/marco-crypto-debug/focusin/issues" target="_blank" rel="noopener">Ask on GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <div class="faq-list" data-reveal="up" style="--d:.06s">
+          <div class="faq-item is-open">
+            <button class="faq-q" type="button" aria-expanded="true" aria-controls="faq-a1" id="faq-q1">
+              <span>What permissions does FocusIn need?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a1" role="region" aria-labelledby="faq-q1">
+              <div class="faq-a-inner"><p>Teacher needs <strong>Screen Recording</strong> to capture your display. Student needs <strong>Accessibility</strong> to intercept input during focus lock. On first shutdown or restart, macOS may also ask for <strong>Automation</strong> permission. All of these live in System Settings → Privacy &amp; Security.</p></div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a2" id="faq-q2">
+              <span>Do I need an internet connection?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a2" role="region" aria-labelledby="faq-q2">
+              <div class="faq-a-inner"><p>No. FocusIn runs entirely on your local network. Teacher and Student discover each other with Bonjour and connect directly over WebSocket. The internet is only used when you check for updates.</p></div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a3" id="faq-q3">
+              <span>How many Macs can I broadcast to?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a3" role="region" aria-labelledby="faq-q3">
+              <div class="faq-a-inner"><p>Any number of Macs running FocusIn Student on the same subnet. The practical limit is your Wi-Fi access point, not the app. Use a network that allows multicast and client-to-client traffic for the best experience.</p></div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a4" id="faq-q4">
+              <span>What if the network drops while screens are locked?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a4" role="region" aria-labelledby="faq-q4">
+              <div class="faq-a-inner"><p>A local admin can press <strong>⌘⇧U</strong> on the locked Mac and enter the admin password to unlock it. Set the password in the Student app first. The teacher can also unlock remotely as soon as the Mac is back online.</p></div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a5" id="faq-q5">
+              <span>Does FocusIn support audio?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a5" role="region" aria-labelledby="faq-q5">
+              <div class="faq-a-inner"><p>Audio broadcasting is available on the Alpha build: 48 kHz stereo, sent on a dedicated channel with a jitter buffer. The stable build is video-only by design, which avoids the audio path entirely. Use the Alpha build to test audio and report issues.</p></div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a6" id="faq-q6">
+              <span>Does it run on Apple silicon and Intel Macs?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a6" role="region" aria-labelledby="faq-q6">
+              <div class="faq-a-inner"><p>Yes. FocusIn is a universal macOS app and runs on macOS 14 or later. It is built with Swift, SwiftUI, Network.framework, and ScreenCaptureKit — no browser engine, no Electron.</p></div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a7" id="faq-q7">
+              <span>macOS says the app can't be verified. What now?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a7" role="region" aria-labelledby="faq-q7">
+              <div class="faq-a-inner"><p>FocusIn is signed with a self-signed certificate, not a paid Apple Developer ID, so Gatekeeper may block the first launch. Right-click the app → <strong>Open</strong> → <strong>Open</strong> again. For lab deployment, install the FocusIn signing certificate from the repository's <code>tools</code> folder once per Mac.</p></div>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-q" type="button" aria-expanded="false" aria-controls="faq-a8" id="faq-q8">
+              <span>Can I use FocusIn outside a classroom?</span>
+              <span class="faq-icon" aria-hidden="true"></span>
+            </button>
+            <div class="faq-a" id="faq-a8" role="region" aria-labelledby="faq-q8">
+              <div class="faq-a-inner"><p>Absolutely. It is a general-purpose local screen broadcaster: workshops, demos, code reviews, events — anywhere one screen needs to be visible on many Macs at once.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-cta" data-reveal="up">
+        <p>One screen. Every Mac.</p>
+        <a class="btn btn-primary btn-lg" href="#download">Download FocusIn</a>
+      </div>
+
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="#top" aria-label="FocusIn home">
+            <img src="assets/focusin-icon.svg" alt="" width="30" height="30">
+            <span>FocusIn</span>
+          </a>
+          <p>A live classroom broadcast system for Mac. Local-first, low-latency, and built for the room.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <a href="#demo">Live demo</a>
+          <a href="#features">Features</a>
+          <a href="#focus">Focus lock</a>
+          <a href="#download">Download</a>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <a href="https://github.com/marco-crypto-debug/focusin" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/marco-crypto-debug/focusin/releases" target="_blank" rel="noopener">Releases</a>
+          <a href="https://github.com/marco-crypto-debug/focusin/issues" target="_blank" rel="noopener">Issues</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <a href="https://instagram.com/marco.tsk_smile" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://github.com/marco-crypto-debug" target="_blank" rel="noopener">GitHub profile</a>
+          <span class="footer-muted">Bug reports: DM @marco.tsk_smile</span>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Marco TSK. All rights reserved.</span>
+        <span class="footer-fine">FocusIn is an independent project. Not affiliated with Apple Inc. macOS is a trademark of Apple Inc.</span>
+        <span>Made for Mac. Built for classrooms.</span>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
