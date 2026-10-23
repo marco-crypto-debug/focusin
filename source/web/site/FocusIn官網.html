@@ -3735,6 +3735,49 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
 }
 
 
+/* ==== Animate.css v4.1.1 (extracted) — FocusIn ==== */
+:root{--animate-duration:1s;--animate-delay:1s;--animate-repeat:1}
+.animate__animated{-webkit-animation-duration:1s;animation-duration:1s;-webkit-animation-duration:var(--animate-duration);animation-duration:var(--animate-duration);-webkit-animation-fill-mode:both;animation-fill-mode:both}
+.animate__delay-1s{-webkit-animation-delay:1s;animation-delay:1s;-webkit-animation-delay:var(--animate-delay);animation-delay:var(--animate-delay)}
+.animate__delay-2s{-webkit-animation-delay:2s;animation-delay:2s;-webkit-animation-delay:calc(var(--animate-delay)*2);animation-delay:calc(var(--animate-delay)*2)}
+.animate__delay-3s{-webkit-animation-delay:3s;animation-delay:3s;-webkit-animation-delay:calc(var(--animate-delay)*3);animation-delay:calc(var(--animate-delay)*3)}
+@-webkit-keyframes fadeInDown{0%{opacity:0;-webkit-transform:translate3d(0,-100%,0);transform:translate3d(0,-100%,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+@keyframes fadeInDown{0%{opacity:0;-webkit-transform:translate3d(0,-100%,0);transform:translate3d(0,-100%,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+.animate__fadeInDown{-webkit-animation-name:fadeInDown;animation-name:fadeInDown}
+@-webkit-keyframes fadeInUp{0%{opacity:0;-webkit-transform:translate3d(0,100%,0);transform:translate3d(0,100%,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+@keyframes fadeInUp{0%{opacity:0;-webkit-transform:translate3d(0,100%,0);transform:translate3d(0,100%,0)}to{opacity:1;-webkit-transform:translateZ(0);transform:translateZ(0)}}
+.animate__fadeInUp{-webkit-animation-name:fadeInUp;animation-name:fadeInUp}
+@-webkit-keyframes fadeIn{0%{opacity:0}to{opacity:1}}
+@keyframes fadeIn{0%{opacity:0}to{opacity:1}}
+.animate__fadeIn{-webkit-animation-name:fadeIn;animation-name:fadeIn}
+@-webkit-keyframes zoomIn{0%{opacity:0;-webkit-transform:scale3d(.3,.3,.3);transform:scale3d(.3,.3,.3)}50%{opacity:1}}
+@keyframes zoomIn{0%{opacity:0;-webkit-transform:scale3d(.3,.3,.3);transform:scale3d(.3,.3,.3)}50%{opacity:1}}
+.animate__zoomIn{-webkit-animation-name:zoomIn;animation-name:zoomIn}
+@-webkit-keyframes pulse{0%{-webkit-transform:scaleX(1);transform:scaleX(1)}50%{-webkit-transform:scale3d(1.05,1.05,1.05);transform:scale3d(1.05,1.05,1.05)}to{-webkit-transform:scaleX(1);transform:scaleX(1)}}
+@keyframes pulse{0%{-webkit-transform:scaleX(1);transform:scaleX(1)}50%{-webkit-transform:scale3d(1.05,1.05,1.05);transform:scale3d(1.05,1.05,1.05)}to{-webkit-transform:scaleX(1);transform:scaleX(1)}}
+.animate__pulse{-webkit-animation-name:pulse;animation-name:pulse;-webkit-animation-timing-function:ease-in-out;animation-timing-function:ease-in-out}
+@-webkit-keyframes tada{0%{-webkit-transform:scaleX(1);transform:scaleX(1)}10%,20%{-webkit-transform:scale3d(.9,.9,.9) rotate(-3deg);transform:scale3d(.9,.9,.9) rotate(-3deg)}30%,50%,70%,90%{-webkit-transform:scale3d(1.1,1.1,1.1) rotate(3deg);transform:scale3d(1.1,1.1,1.1) rotate(3deg)}40%,60%,80%{-webkit-transform:scale3d(1.1,1.1,1.1) rotate(-3deg);transform:scale3d(1.1,1.1,1.1) rotate(-3deg)}to{-webkit-transform:scaleX(1);transform:scaleX(1)}}
+@keyframes tada{0%{-webkit-transform:scaleX(1);transform:scaleX(1)}10%,20%{-webkit-transform:scale3d(.9,.9,.9) rotate(-3deg);transform:scale3d(.9,.9,.9) rotate(-3deg)}30%,50%,70%,90%{-webkit-transform:scale3d(1.1,1.1,1.1) rotate(3deg);transform:scale3d(1.1,1.1,1.1) rotate(3deg)}40%,60%,80%{-webkit-transform:scale3d(1.1,1.1,1.1) rotate(-3deg);transform:scale3d(1.1,1.1,1.1) rotate(-3deg)}to{-webkit-transform:scaleX(1);transform:scaleX(1)}}
+.animate__tada{-webkit-animation-name:tada;animation-name:tada}
+@media (prefers-reduced-motion:reduce),print{.animate__animated{-webkit-animation-duration:1ms!important;animation-duration:1ms!important;-webkit-transition-duration:1ms!important;transition-duration:1ms!important;-webkit-animation-iteration-count:1!important;animation-iteration-count:1!important}.animate__animated[class*=Out]{opacity:0}}
+@-webkit-keyframes heartBeat{0%{-webkit-transform:scale(1);transform:scale(1)}14%{-webkit-transform:scale(1.3);transform:scale(1.3)}28%{-webkit-transform:scale(1);transform:scale(1)}42%{-webkit-transform:scale(1.3);transform:scale(1.3)}70%{-webkit-transform:scale(1);transform:scale(1)}}
+@keyframes heartBeat{0%{-webkit-transform:scale(1);transform:scale(1)}14%{-webkit-transform:scale(1.3);transform:scale(1.3)}28%{-webkit-transform:scale(1);transform:scale(1)}42%{-webkit-transform:scale(1.3);transform:scale(1.3)}70%{-webkit-transform:scale(1);transform:scale(1)}}
+.animate__heartBeat{-webkit-animation-name:heartBeat;animation-name:heartBeat;-webkit-animation-duration:1.3s;animation-duration:1.3s;-webkit-animation-duration:calc(var(--animate-duration)*1.3);animation-duration:calc(var(--animate-duration)*1.3);-webkit-animation-timing-function:ease-in-out;animation-timing-function:ease-in-out}
+
+/* ==== FocusIn animation enhancements (Animate.css-driven) ==== */
+/* CTA hover pulse */
+.btn-primary:hover { animation: pulse 1.3s var(--ease-out) infinite; }
+/* Bento command chips — playful on hover */
+.bento-card:hover .cmd-chip { animation: tada 0.8s both; }
+.bento-card:hover .cmd-chip:nth-child(2) { animation-delay: 0.06s; }
+/* Download card app icon */
+.download-card:hover .app-icon { animation: tada 0.8s both; }
+/* Live demo titlebar chip */
+.demo-chip { animation: heartBeat 2.4s ease-in-out infinite; }
+/* scroll-animate (Animate.css skill standard) */
+.scroll-animate { opacity: 0; }
+.scroll-animate.animate__animated { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -3803,20 +3846,20 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
         <div class="grid-veil"></div>
       </div>
 
-      <div class="container hero-copy">
-        <a class="announce" href="#download" data-reveal="fade">
+      <div class="container hero-copy" style="--animate-delay:.35s">
+        <a class="announce animate__animated animate__fadeInDown" href="#download">
           <span class="announce-dot"></span>
           <span data-i18n="hero.announce">FocusIn Delta 1.5.9 is here</span>
           <span class="announce-arrow" aria-hidden="true">→</span>
         </a>
 
-        <h1 class="hero-title" data-reveal="up" data-i18n="hero.title">One screen.<br><span class="text-gradient">Every Mac.</span></h1>
+        <h1 class="hero-title animate__animated animate__fadeInDown animate__delay-1s" data-i18n="hero.title">One screen.<br><span class="text-gradient">Every Mac.</span></h1>
 
-        <p class="hero-sub" data-reveal="up" style="--d:.06s" data-i18n="hero.sub">
+        <p class="hero-sub animate__animated animate__fadeInUp animate__delay-2s" data-i18n="hero.sub">
           FocusIn turns your Mac into a live classroom broadcast studio. Share your screen, guide every student, and keep the whole room in sync — over your own Wi-Fi.
         </p>
 
-        <div class="hero-actions" data-reveal="up" style="--d:.12s">
+        <div class="hero-actions animate__animated animate__fadeInUp animate__delay-2s">
           <a class="btn btn-primary btn-lg" href="#download">
             <span data-i18n="hero.dl">Download for Mac</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M4 20h16"/></svg>
@@ -3827,10 +3870,10 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
           </a>
         </div>
 
-        <p class="hero-note" data-reveal="up" style="--d:.18s" data-i18n="hero.note">Free · macOS 14+ · Apple silicon &amp; Intel</p>
+        <p class="hero-note animate__animated animate__fadeIn animate__delay-3s" data-i18n="hero.note">Free · macOS 14+ · Apple silicon &amp; Intel</p>
       </div>
 
-      <div class="hero-visual" data-reveal="scale" style="--d:.16s">
+      <div class="hero-visual animate__animated animate__zoomIn animate__delay-1s" style="--animate-delay:.35s">
         <div class="hero-stage" id="heroStage">
           <div class="stage-glow" aria-hidden="true"></div>
           <div class="pulse-ring ring-a" aria-hidden="true"></div>
@@ -4568,7 +4611,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
         <a class="btn btn-primary btn-lg" href="#download">Download FocusIn</a>
       </div>
 
-      <div class="footer-grid">
+      <div class="footer-grid scroll-animate" data-animate="fadeInUp">
         <div class="footer-brand">
           <a class="brand" href="#top" aria-label="FocusIn home">
             <img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%20role%3D%22img%22%20aria-label%3D%22FocusIn%20app%20icon%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22bg%22%20x1%3D%2288%22%20y1%3D%2256%22%20x2%3D%22436%22%20y2%3D%22456%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%20%20%20%20%20%20%3Cstop%20stop-color%3D%22%23FF9AAF%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22.46%22%20stop-color%3D%22%23E0416A%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%238B3DFF%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22shine%22%20x1%3D%22256%22%20y1%3D%2216%22%20x2%3D%22256%22%20y2%3D%22320%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%20%20%20%20%20%20%3Cstop%20stop-color%3D%22%23FFFFFF%22%20stop-opacity%3D%22.28%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFFFFF%22%20stop-opacity%3D%220%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22halo%22%20cx%3D%220%22%20cy%3D%220%22%20r%3D%221%22%20gradientTransform%3D%22translate%28360%20120%29%20rotate%28128%29%20scale%28290%29%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%20%20%20%20%20%20%3Cstop%20stop-color%3D%22%23FFFFFF%22%20stop-opacity%3D%22.22%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23FFFFFF%22%20stop-opacity%3D%220%22%2F%3E%0A%20%20%20%20%3C%2FradialGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Crect%20x%3D%2216%22%20y%3D%2216%22%20width%3D%22480%22%20height%3D%22480%22%20rx%3D%22112%22%20fill%3D%22url%28%23bg%29%22%2F%3E%0A%20%20%3Crect%20x%3D%2216%22%20y%3D%2216%22%20width%3D%22480%22%20height%3D%22480%22%20rx%3D%22112%22%20fill%3D%22url%28%23halo%29%22%2F%3E%0A%20%20%3Crect%20x%3D%2216%22%20y%3D%2216%22%20width%3D%22480%22%20height%3D%22480%22%20rx%3D%22112%22%20fill%3D%22url%28%23shine%29%22%2F%3E%0A%20%20%3Crect%20x%3D%2228%22%20y%3D%2228%22%20width%3D%22456%22%20height%3D%22456%22%20rx%3D%22100%22%20fill%3D%22none%22%20stroke%3D%22%23FFFFFF%22%20stroke-opacity%3D%22.22%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M180%20372V164M180%20164h176M180%20260h132%22%20fill%3D%22none%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%2244%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%22370%22%20cy%3D%22164%22%20r%3D%2223%22%20fill%3D%22%23FFFFFF%22%20fill-opacity%3D%22.92%22%2F%3E%0A%3C%2Fsvg%3E%0A" alt="" width="30" height="30">
@@ -4598,7 +4641,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
         </div>
       </div>
 
-      <div class="footer-bottom">
+      <div class="footer-bottom scroll-animate" data-animate="fadeInUp" data-threshold="0.5">
         <span>© 2026 Marco TSK. All rights reserved.</span>
         <span class="footer-fine">FocusIn is an independent project. Not affiliated with Apple Inc. macOS is a trademark of Apple Inc.</span>
         <span>Made for Mac. Built for classrooms.</span>
@@ -4609,6 +4652,39 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   
+  <script>
+  /* FocusIn — Animate.css scroll trigger */
+  (function () {
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var isRtl = document.documentElement.dir === 'rtl' || document.body.dir === 'rtl';
+    var rtlFlip = {
+      fadeInLeft: 'fadeInRight', fadeInRight: 'fadeInLeft',
+      slideInLeft: 'slideInRight', slideInRight: 'slideInLeft',
+      backInLeft: 'backInRight', backInRight: 'backInLeft',
+      bounceInLeft: 'bounceInRight', bounceInRight: 'bounceInLeft',
+      lightSpeedInLeft: 'lightSpeedInRight', lightSpeedInRight: 'lightSpeedInLeft'
+    };
+    document.querySelectorAll('.scroll-animate').forEach(function (el) {
+      var threshold = parseFloat(el.dataset.threshold || 0.15);
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var anim = el.dataset.animate;
+          if (isRtl && rtlFlip[anim]) anim = rtlFlip[anim];
+          if (reducedMotion) {
+            el.style.opacity = 1;
+          } else {
+            setTimeout(function () {
+              el.classList.add('animate__animated', 'animate__' + anim, 'animate__fast');
+            }, parseInt(el.dataset.delay || 0));
+          }
+          observer.unobserve(el);
+        });
+      }, { threshold: threshold });
+      observer.observe(el);
+    });
+  })();
+  </script>
 <script>
 /* ============================================================
    FocusIn — Apple-style product site
