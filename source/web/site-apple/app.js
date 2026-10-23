@@ -772,7 +772,53 @@
       "demo.clickHint": "點擊任何屏幕以加入或移出廣播",
       "demo.activity": "即時紀錄",
       "demo.reset": "重設示範",
-      "demo.caption": "即時模擬運作，非錄製視頻。每個控制元件均可實際操作。"
+      "demo.caption": "即時模擬運作，非錄製視頻。每個控制元件均可實際操作。",
+      "nav.pricing": "定價",
+      "price.eyebrow": "定價",
+      "price.title": "簡單定價，沒有驚喜。",
+      "price.sub": "在本頁即時取得 License Key，於 App 輸入即可解鎖 Pro。附送 7 天免費試用。",
+      "price.freeName": "免費版",
+      "price.freeDesc": "廣播所需的一切",
+      "price.freePer": "· 永久免費",
+      "price.popular": "熱門",
+      "price.freeBtn": "免費下載",
+      "price.f1": "即時屏幕廣播（高清）",
+      "price.f2": "一對多串流",
+      "price.f3": "專注鎖定與遠端指令",
+      "price.f4": "檔案清理（DELETE 確認）",
+      "price.f5": "自動更新與 Homebrew",
+      "price.proName": "Pro",
+      "price.proDesc": "解鎖全部功能",
+      "price.monthly": "/ 月",
+      "price.trial": "7 天免費試用 · 隨時取消",
+      "price.p1": "包含免費版全部功能",
+      "price.p2": "穩定輕量化核心",
+      "price.p3": "新功能優先體驗",
+      "price.p4": "優先支援",
+      "price.p5": "每月 License Key，解鎖全部 Pro",
+      "price.proBtn": "購買 Pro",
+      "price.schoolName": "學校",
+      "price.schoolDesc": "全校部署",
+      "price.custom": "自訂",
+      "price.schoolPer": "批量定價 · 聯絡我們",
+      "price.s1": "包含 Pro 全部功能",
+      "price.s2": "不限教師人數",
+      "price.s3": "多課室管理",
+      "price.s4": "優先支援",
+      "price.schoolBtn": "聯絡",
+      "price.note": "Pro 每月 US$12.99，7 天免費試用。付款渠道即將上線；目前本頁即時生成 License Key 供測試。",
+      "key.title": "取得你的 Pro License Key",
+      "key.sub": "輸入管理員 Key 與電郵，即時生成 License Key。貼到 App 即可解鎖 Pro。",
+      "key.emailPlaceholder": "you@example.com",
+      "key.adminPlaceholder": "管理員 Key（開發者）",
+      "key.months": "月數",
+      "key.genBtn": "生成 License Key",
+      "key.err": "請輸入有效電郵地址。",
+      "key.errAdmin": "需要管理員 Key 才能生成。",
+      "key.errServer": "生成失敗，請稍後再試。",
+      "key.resultLabel": "你的 License Key",
+      "key.copy": "複製",
+      "key.copied": "已複製！"
     },
     "zh-Hans": {
       "nav.demo": "在线演示",
@@ -811,7 +857,53 @@
       "demo.clickHint": "点击任意屏幕以加入或移出广播",
       "demo.activity": "动态日志",
       "demo.reset": "重置演示",
-      "demo.caption": "真实交互模拟，非录屏视频。所有控件均可实时操作。"
+      "demo.caption": "真实交互模拟，非录屏视频。所有控件均可实时操作。",
+      "nav.pricing": "定价",
+      "price.eyebrow": "定价",
+      "price.title": "简单定价，没有意外。",
+      "price.sub": "在本页即时获取 License Key，在 App 中输入即可解锁 Pro。附赠 7 天免费试用。",
+      "price.freeName": "免费版",
+      "price.freeDesc": "广播所需的一切",
+      "price.freePer": "· 永久免费",
+      "price.popular": "热门",
+      "price.freeBtn": "免费下载",
+      "price.f1": "实时屏幕广播（高清）",
+      "price.f2": "一对多串流",
+      "price.f3": "专注锁定与远程指令",
+      "price.f4": "文件清理（DELETE 确认）",
+      "price.f5": "自动更新与 Homebrew",
+      "price.proName": "Pro",
+      "price.proDesc": "解锁全部功能",
+      "price.monthly": "/ 月",
+      "price.trial": "7 天免费试用 · 随时取消",
+      "price.p1": "包含免费版全部功能",
+      "price.p2": "稳定轻量化核心",
+      "price.p3": "新功能优先体验",
+      "price.p4": "优先支持",
+      "price.p5": "每月 License Key，解锁全部 Pro",
+      "price.proBtn": "购买 Pro",
+      "price.schoolName": "学校",
+      "price.schoolDesc": "全校部署",
+      "price.custom": "自定义",
+      "price.schoolPer": "批量定价 · 联系我们",
+      "price.s1": "包含 Pro 全部功能",
+      "price.s2": "不限教师人数",
+      "price.s3": "多教室管理",
+      "price.s4": "优先支持",
+      "price.schoolBtn": "联系",
+      "price.note": "Pro 每月 US$12.99，7 天免费试用。支付渠道即将上线；目前本页即时生成 License Key 供测试。",
+      "key.title": "获取你的 Pro License Key",
+      "key.sub": "输入管理员 Key 与邮箱，即时生成 License Key。粘贴到 App 即可解锁 Pro。",
+      "key.emailPlaceholder": "you@example.com",
+      "key.adminPlaceholder": "管理员 Key（开发者）",
+      "key.months": "月数",
+      "key.genBtn": "生成 License Key",
+      "key.err": "请输入有效邮箱地址。",
+      "key.errAdmin": "需要管理员 Key 才能生成。",
+      "key.errServer": "生成失败，请稍后重试。",
+      "key.resultLabel": "你的 License Key",
+      "key.copy": "复制",
+      "key.copied": "已复制！"
     }
   };
 
@@ -832,6 +924,15 @@
         if (defaultStrings[key]) el.innerHTML = defaultStrings[key];
       } else if (DICT[lang] && DICT[lang][key]) {
         el.innerHTML = DICT[lang][key];
+      }
+    });
+
+    $$('[data-i18n-placeholder]').forEach((el) => {
+      const key = el.dataset.i18nPlaceholder;
+      if (lang !== 'en' && DICT[lang] && DICT[lang][key]) {
+        el.setAttribute('placeholder', DICT[lang][key]);
+      } else if (defaultStrings[key]) {
+        el.setAttribute('placeholder', defaultStrings[key]);
       }
     });
   }
@@ -856,6 +957,75 @@
     }).catch(() => {
       toastMessage('Command: ' + cmd);
     });
+  });
+
+  /* ------------------------------------------------------------------
+     License Key Generation (worker backend)
+  ------------------------------------------------------------------ */
+  const LICENSE_WORKER_URL = 'https://focusin-license.marcoattck.workers.dev';
+  const licenseErr = $('#license-err');
+  const licenseRes = $('#license-res');
+  const licenseKeyText = $('#license-key-text');
+
+  function showLicenseErr(msg) {
+    licenseErr.textContent = msg;
+    licenseErr.style.display = msg ? 'block' : 'none';
+  }
+  function i18nOf(key) {
+    const lang = document.documentElement.lang === 'zh-Hant' || document.documentElement.lang === 'zh-Hans'
+      ? document.documentElement.lang : 'en';
+    if (lang !== 'en') {
+      const v = DICT[lang] && DICT[lang][key];
+      if (v) return v;
+    }
+    return defaultStrings[key] || key;
+  }
+
+  $('#license-gen')?.addEventListener('click', async () => {
+    const email = $('#license-email').value.trim();
+    const admin = $('#license-admin').value.trim();
+    const months = parseInt($('#license-months').value, 10) || 1;
+    licenseRes.hidden = true;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      showLicenseErr(i18nOf('key.err'));
+      return;
+    }
+    if (!admin) {
+      showLicenseErr(i18nOf('key.errAdmin'));
+      return;
+    }
+    showLicenseErr('');
+    const btn = $('#license-gen');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const r = await fetch(LICENSE_WORKER_URL + '/api/license/gen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': admin },
+        body: JSON.stringify({ email, months })
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error(data.error || 'HTTP ' + r.status);
+      licenseKeyText.textContent = data.key;
+      licenseRes.hidden = false;
+      showLicenseErr('');
+      licenseRes.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+      showLicenseErr(i18nOf('key.errServer') + ' (' + e.message + ')');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  });
+
+  $('#license-copy')?.addEventListener('click', () => {
+    const key = licenseKeyText.textContent;
+    navigator.clipboard?.writeText(key).then(() => {
+      toastMessage(i18nOf('key.copied'));
+      $('#license-copy').textContent = i18nOf('key.copied');
+      setTimeout(() => { $('#license-copy').textContent = i18nOf('key.copy'); }, 2000);
+    }).catch(() => toastMessage(key));
   });
 
 })();

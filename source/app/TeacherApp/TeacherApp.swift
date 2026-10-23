@@ -7,9 +7,7 @@ struct TeacherApp: App {
     @NSApplicationDelegateAdaptor(TeacherAppDelegate.self) private var appDelegate
 
     init() {
-        // Pro License：啟動時檢查到期（每月 1 號自動停用）+ 每 6 小時重查
-        LicenseManager.shared.checkExpiry()
-        LicenseManager.shared.startAutoCheck()
+        // （Pro License 已移除：不再於啟動時檢查授權）
     }
 
     var body: some Scene {

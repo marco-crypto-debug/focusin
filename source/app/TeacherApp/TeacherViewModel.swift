@@ -400,12 +400,8 @@ final class TeacherViewModel: ObservableObject {
         // 穩定版：不傳聲音，只傳畫面
         broadcaster.withAudio = false
 #else
-        // 聲音廣播為 Pro 功能：非 Pro 時自動降級為僅畫面
-        if broadcastWithAudio && !LicenseManager.shared.isProActive {
-            broadcastWithAudio = false
-            appendLog("聲音廣播需要 FocusIn Pro，已自動切換為僅畫面")
-        }
-        broadcaster.withAudio = broadcastWithAudio && LicenseManager.shared.isProActive
+        // 聲音廣播已全開放：依用戶開關直接決定
+        broadcaster.withAudio = broadcastWithAudio
 #endif
 #if FOCUSIN_BETA
         // 組播模式：廣播開始時建立發送 socket（畫面 + 聲音各一），避免每幀重建
@@ -422,8 +418,8 @@ final class TeacherViewModel: ObservableObject {
         // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
         let targets = selectedIDs.compactMap { connections[$0] }
 #if !FOCUSIN_STABLE
-        // 音訊連線只在「實際會傳聲音」時建立（Pro 且開啟聲音）：
-        // 免費版/僅畫面時不開多餘連線，降低負載與崩潰面
+        // 音訊連線只在「實際會傳聲音」時建立：
+        // 僅畫面時不開多餘連線，降低負載與崩潰面
         let audioTargets: [PeerConnection] = (broadcaster.withAudio ? selectedIDs : []).compactMap { id in
             guard let peer = peers.first(where: { $0.id == id }) else { return nil }
             let audioConn = PeerConnection(connectTo: peer.endpoint)

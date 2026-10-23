@@ -1,16 +1,17 @@
 import Foundation
 
 // ============================================================
-// Delta 版裝置上限管理（v1.5.3+ 簡化版）
+// 裝置上限與傳輸方式（v1.5.10+）
 //
-//  免費版（普通）→ 最多 5 台，WebSocket 單播，無聲音廣播
-//  Pro（高級）  → 最多 50 台，UDP 組播 + 聲音廣播
+//  Pro 功能已移除：不再區分免費 / 高級版。
+//  統一上限 50 台；傳輸方式（WebSocket 單播 / UDP 組播）任何人可自選。
+//  聲音廣播亦已開放（見 TeacherViewModel）。
 //
-// 只有 Delta 版（FOCUSIN_DELTA）會編譯此邏輯；stable/alpha/beta
-// 不受影響（beta 與 delta 共用 FOCUSIN_BETA，但上限只掛在 delta）。
+//  只有 Delta 版（FOCUSIN_DELTA）會編譯此邏輯；stable/alpha/beta
+//  不受影響（beta 與 delta 共用 FOCUSIN_BETA，但此檔案只掛在 delta）。
 // ============================================================
 
-/// Delta 版傳輸方式（僅 Pro 可自行選擇；免費版鎖定 WebSocket 單播）。
+/// Delta 版傳輸方式（所有用戶均可自選）。
 enum TransportMode: String, CaseIterable, Identifiable {
     case websocket = "websocket"
     case udp = "udp"
@@ -30,28 +31,19 @@ enum TransportMode: String, CaseIterable, Identifiable {
 
 /// 裝置上限查詢（僅 Delta 版可用；其他版本編譯時此類不存在）。
 enum DeviceLimit {
-    /// 免費版上限（固定 5 台）。
-    static let freeLimit = 5
-
-    /// Pro（高級）上限（50 台）。
+    /// 統一上限（50 台）。
     static let proLimit = 50
 
-    /// 目前可用的裝置上限：Pro 有效時 50 台，否則免費 5 台。
+    /// 目前可用的裝置上限（固定 50 台）。
     static var currentLimit: Int {
-        LicenseManager.shared.isProActive ? proLimit : freeLimit
+        proLimit
     }
 
-    /// 是否為高級模式：Pro 解鎖即為高級（決定 50 台上限與聲音廣播）。
-    static var isAdvanced: Bool {
-        LicenseManager.shared.isProActive
-    }
-
-    /// 傳輸方式：免費版鎖定 WebSocket 單播；Pro 可自選。
+    /// 傳輸方式：所有用戶均可自選（不再鎖定）。
     private static let transportKey = "focusin.delta.transport"
 
     static var transportMode: TransportMode {
         get {
-            guard LicenseManager.shared.isProActive else { return .websocket }
             if let raw = UserDefaults.standard.string(forKey: transportKey),
                let mode = TransportMode(rawValue: raw) {
                 return mode
@@ -59,7 +51,6 @@ enum DeviceLimit {
             return .websocket
         }
         set {
-            guard LicenseManager.shared.isProActive else { return }
             UserDefaults.standard.set(newValue.rawValue, forKey: transportKey)
         }
     }
@@ -76,8 +67,6 @@ enum DeviceLimit {
     static func check(count: Int) -> String? {
         let limit = currentLimit
         guard count > limit else { return nil }
-        return LicenseManager.shared.isProActive
-            ? "已選 \(count) 台，超過高級版上限（\(proLimit) 台）。"
-            : "已選 \(count) 台，超過免費版上限（\(freeLimit) 台）。\n啟用 FocusIn Pro 後可升級至最多 \(proLimit) 台並解鎖聲音廣播。"
+        return "已選 \(count) 台，超過上限（\(proLimit) 台）。"
     }
 }

@@ -3778,6 +3778,153 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
 .scroll-animate { opacity: 0; }
 .scroll-animate.animate__animated { opacity: 1; }
 
+/* ===== Pricing & License ===== */
+.pricing { padding: 120px 0 130px; }
+.pricing .section-head p { color: #a1a1a6; }
+
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1020px;
+  margin: 0 auto;
+}
+.pcard {
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 22px;
+  padding: 34px 30px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+  transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
+}
+.pcard:hover { transform: translateY(-5px); box-shadow: 0 26px 52px rgba(0, 0, 0, 0.30); }
+.pcard h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; }
+.pcard-desc { font-size: 14px; color: #6e6e73; margin: 0; }
+.pcard-price {
+  font-size: clamp(2.2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 18px 0 4px;
+}
+.pcard-per { font-size: 15px; font-weight: 400; color: #6e6e73; letter-spacing: 0; }
+.pcard-trial { font-size: 13px; font-weight: 600; color: var(--accent); margin: 6px 0 0; }
+.pcard-list {
+  list-style: none;
+  margin: 22px 0 26px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.pcard-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: #3a3a3c; line-height: 1.35; }
+.pcard-list svg {
+  width: 16px; height: 16px; flex: none;
+  stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round;
+  fill: none; margin-top: 1px;
+}
+.pcard .btn { margin-top: auto; }
+
+.pcard-pop { position: relative; border: 2px solid var(--accent); }
+.pcard-tag {
+  position: absolute;
+  top: -13px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pcard-pop:hover { box-shadow: 0 26px 56px rgba(0, 113, 227, 0.30); }
+
+.price-note {
+  max-width: 680px;
+  margin: 26px auto 0;
+  text-align: center;
+  font-size: 13px;
+  color: #a1a1a6;
+}
+
+.license-box {
+  max-width: 760px;
+  margin: 72px auto 0;
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 24px;
+  padding: 46px 42px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
+}
+.license-box h3 { font-size: clamp(1.5rem, 2.4vw, 1.9rem); font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.license-sub { color: #6e6e73; font-size: 14.5px; margin: 10px auto 26px; max-width: 520px; line-height: 1.5; }
+.license-fields { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.license-fields input,
+.license-fields select {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  min-width: 0;
+}
+.license-fields input#license-admin { max-width: 230px; }
+.license-fields input#license-email { max-width: 250px; }
+.license-fields select { cursor: pointer; }
+.license-fields input:focus,
+.license-fields select:focus { border-color: var(--accent); }
+.license-err { color: #d33; font-size: 12.5px; margin-top: 14px; }
+.license-res {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.license-res-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #6e6e73;
+}
+.license-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-all;
+  background: #f5f5f7;
+  border: 1px dashed rgba(0, 0, 0, 0.20);
+  border-radius: 12px;
+  padding: 14px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  user-select: all;
+}
+.license-res .btn-sm { padding: 9px 18px; font-size: 13px; }
+
+@media (max-width: 820px) {
+  .price-grid { grid-template-columns: 1fr; max-width: 460px; }
+  .license-box { padding: 36px 24px; }
+  .license-fields { flex-direction: column; align-items: stretch; }
+  .license-fields input#license-admin,
+  .license-fields input#license-email,
+  .license-fields select { max-width: 100%; }
+}
+
 </style>
 </head>
 <body>
@@ -3795,6 +3942,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
         <a href="#demo" data-i18n="nav.demo">Live demo</a>
         <a href="#features" data-i18n="nav.features">Features</a>
         <a href="#focus" data-i18n="nav.focus">Focus lock</a>
+        <a href="#pricing" data-i18n="nav.pricing">Pricing</a>
         <a href="#download" data-i18n="nav.download">Download</a>
       </nav>
 
@@ -3827,6 +3975,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
         <a href="#demo">Live demo <span>→</span></a>
         <a href="#features">Features <span>→</span></a>
         <a href="#focus">Focus lock <span>→</span></a>
+        <a href="#pricing">Pricing <span>→</span></a>
         <a href="#faq">FAQ <span>→</span></a>
         <a href="#download">Download <span>→</span></a>
       </nav>
@@ -4417,6 +4566,89 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
           </span>
           <p><strong>About two minutes to set up.</strong> Grant Screen Recording to Teacher and Accessibility to Student on first launch. Then the room is ready.</p>
           <a href="#faq">Permissions &amp; FAQ <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         PRICING & LICENSE KEY
+    ============================================================= -->
+    <section class="pricing section-dark" id="pricing">
+      <div class="container">
+        <header class="section-head" data-reveal="up">
+          <span class="eyebrow" data-i18n="price.eyebrow">Pricing</span>
+          <h2 data-i18n="price.title">Simple pricing, no surprises.</h2>
+          <p data-i18n="price.sub">Generate your License Key on this page, then paste it into the app to unlock Pro. 7-day free trial included.</p>
+        </header>
+
+        <div class="price-grid" data-reveal="up">
+          <div class="pcard">
+            <h3 data-i18n="price.freeName">Free</h3>
+            <p class="pcard-desc" data-i18n="price.freeDesc">Everything you need to broadcast</p>
+            <div class="pcard-price">$0<span class="pcard-per" data-i18n="price.freePer">· Free forever</span></div>
+            <ul class="pcard-list">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.f1">Real-time screen broadcast (HD)</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.f2">One-to-many streaming</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.f3">Focus lock &amp; remote commands</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.f4">File cleanup (DELETE confirm)</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.f5">Auto update &amp; Homebrew</span></li>
+            </ul>
+            <a class="btn btn-ghost" href="#download" data-i18n="price.freeBtn">Download Free</a>
+          </div>
+
+          <div class="pcard pcard-pop" data-reveal="up" style="--d:.08s">
+            <span class="pcard-tag" data-i18n="price.popular">Popular</span>
+            <h3 data-i18n="price.proName">Pro</h3>
+            <p class="pcard-desc" data-i18n="price.proDesc">Unlock everything</p>
+            <div class="pcard-price">$12.99<span class="pcard-per" data-i18n="price.monthly">/ month</span></div>
+            <div class="pcard-trial" data-i18n="price.trial">7-day free trial · cancel anytime</div>
+            <ul class="pcard-list">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.p1">Everything in Free</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.p2">Stable &amp; lightweight core</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.p3">Early access to new features</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.p4">Priority support</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.p5">Monthly License Key, unlock all Pro</span></li>
+            </ul>
+            <a class="btn btn-brand" href="#license-box" data-i18n="price.proBtn">Buy Pro</a>
+          </div>
+
+          <div class="pcard" data-reveal="up" style="--d:.16s">
+            <h3 data-i18n="price.schoolName">School</h3>
+            <p class="pcard-desc" data-i18n="price.schoolDesc">Whole-school deployment</p>
+            <div class="pcard-price" data-i18n="price.custom">Custom</div>
+            <div class="pcard-trial" data-i18n="price.schoolPer">Volume pricing · contact us</div>
+            <ul class="pcard-list">
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.s1">Everything in Pro</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.s2">Unlimited teachers</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.s3">Multi-room management</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/></svg><span data-i18n="price.s4">Priority support</span></li>
+            </ul>
+            <a class="btn btn-ghost" href="https://instagram.com/marco.tsk_smile" target="_blank" rel="noopener" data-i18n="price.schoolBtn">Contact</a>
+          </div>
+        </div>
+
+        <p class="price-note" data-reveal="up" data-i18n="price.note">Pro is $12.99 USD per month, 7-day free trial. Payment gateway is coming soon; License Keys are currently generated instantly on this page for testing.</p>
+
+        <div class="license-box" id="license-box" data-reveal="up">
+          <h3 data-i18n="key.title">Get your Pro License Key</h3>
+          <p class="license-sub" data-i18n="key.sub">Enter your email to generate a License Key instantly. Paste it into FocusIn to unlock Pro.</p>
+          <div class="license-fields">
+            <input type="password" id="license-admin" placeholder="Admin key (developers)" aria-label="Admin key">
+            <input type="email" id="license-email" placeholder="you@example.com" data-i18n-placeholder="key.emailPlaceholder" aria-label="Email">
+            <select id="license-months" aria-label="Months">
+              <option value="1">1 month</option>
+              <option value="3">3 months</option>
+              <option value="6">6 months</option>
+              <option value="12">12 months</option>
+            </select>
+            <button class="btn btn-brand" id="license-gen" data-i18n="key.genBtn">Generate License Key</button>
+          </div>
+          <div class="license-err" id="license-err" aria-live="polite"></div>
+          <div class="license-res" id="license-res" hidden>
+            <span class="license-res-label" data-i18n="key.resultLabel">Your License Key</span>
+            <div class="license-key" id="license-key-text">FI-PRO-0000-0000-0000-0000-0000</div>
+            <button class="btn btn-ghost btn-sm" id="license-copy" data-i18n="key.copy">Copy</button>
+          </div>
         </div>
       </div>
     </section>
@@ -5460,7 +5692,53 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
       "demo.clickHint": "點擊任何屏幕以加入或移出廣播",
       "demo.activity": "即時紀錄",
       "demo.reset": "重設示範",
-      "demo.caption": "即時模擬運作，非錄製視頻。每個控制元件均可實際操作。"
+      "demo.caption": "即時模擬運作，非錄製視頻。每個控制元件均可實際操作。",
+      "nav.pricing": "定價",
+      "price.eyebrow": "定價",
+      "price.title": "簡單定價，沒有驚喜。",
+      "price.sub": "在本頁即時取得 License Key，於 App 輸入即可解鎖 Pro。附送 7 天免費試用。",
+      "price.freeName": "免費版",
+      "price.freeDesc": "廣播所需的一切",
+      "price.freePer": "· 永久免費",
+      "price.popular": "熱門",
+      "price.freeBtn": "免費下載",
+      "price.f1": "即時屏幕廣播（高清）",
+      "price.f2": "一對多串流",
+      "price.f3": "專注鎖定與遠端指令",
+      "price.f4": "檔案清理（DELETE 確認）",
+      "price.f5": "自動更新與 Homebrew",
+      "price.proName": "Pro",
+      "price.proDesc": "解鎖全部功能",
+      "price.monthly": "/ 月",
+      "price.trial": "7 天免費試用 · 隨時取消",
+      "price.p1": "包含免費版全部功能",
+      "price.p2": "穩定輕量化核心",
+      "price.p3": "新功能優先體驗",
+      "price.p4": "優先支援",
+      "price.p5": "每月 License Key，解鎖全部 Pro",
+      "price.proBtn": "購買 Pro",
+      "price.schoolName": "學校",
+      "price.schoolDesc": "全校部署",
+      "price.custom": "自訂",
+      "price.schoolPer": "批量定價 · 聯絡我們",
+      "price.s1": "包含 Pro 全部功能",
+      "price.s2": "不限教師人數",
+      "price.s3": "多課室管理",
+      "price.s4": "優先支援",
+      "price.schoolBtn": "聯絡",
+      "price.note": "Pro 每月 US$12.99，7 天免費試用。付款渠道即將上線；目前本頁即時生成 License Key 供測試。",
+      "key.title": "取得你的 Pro License Key",
+      "key.sub": "輸入管理員 Key 與電郵，即時生成 License Key。貼到 App 即可解鎖 Pro。",
+      "key.emailPlaceholder": "you@example.com",
+      "key.adminPlaceholder": "管理員 Key（開發者）",
+      "key.months": "月數",
+      "key.genBtn": "生成 License Key",
+      "key.err": "請輸入有效電郵地址。",
+      "key.errAdmin": "需要管理員 Key 才能生成。",
+      "key.errServer": "生成失敗，請稍後再試。",
+      "key.resultLabel": "你的 License Key",
+      "key.copy": "複製",
+      "key.copied": "已複製！"
     },
     "zh-Hans": {
       "nav.demo": "在线演示",
@@ -5499,7 +5777,53 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
       "demo.clickHint": "点击任意屏幕以加入或移出广播",
       "demo.activity": "动态日志",
       "demo.reset": "重置演示",
-      "demo.caption": "真实交互模拟，非录屏视频。所有控件均可实时操作。"
+      "demo.caption": "真实交互模拟，非录屏视频。所有控件均可实时操作。",
+      "nav.pricing": "定价",
+      "price.eyebrow": "定价",
+      "price.title": "简单定价，没有意外。",
+      "price.sub": "在本页即时获取 License Key，在 App 中输入即可解锁 Pro。附赠 7 天免费试用。",
+      "price.freeName": "免费版",
+      "price.freeDesc": "广播所需的一切",
+      "price.freePer": "· 永久免费",
+      "price.popular": "热门",
+      "price.freeBtn": "免费下载",
+      "price.f1": "实时屏幕广播（高清）",
+      "price.f2": "一对多串流",
+      "price.f3": "专注锁定与远程指令",
+      "price.f4": "文件清理（DELETE 确认）",
+      "price.f5": "自动更新与 Homebrew",
+      "price.proName": "Pro",
+      "price.proDesc": "解锁全部功能",
+      "price.monthly": "/ 月",
+      "price.trial": "7 天免费试用 · 随时取消",
+      "price.p1": "包含免费版全部功能",
+      "price.p2": "稳定轻量化核心",
+      "price.p3": "新功能优先体验",
+      "price.p4": "优先支持",
+      "price.p5": "每月 License Key，解锁全部 Pro",
+      "price.proBtn": "购买 Pro",
+      "price.schoolName": "学校",
+      "price.schoolDesc": "全校部署",
+      "price.custom": "自定义",
+      "price.schoolPer": "批量定价 · 联系我们",
+      "price.s1": "包含 Pro 全部功能",
+      "price.s2": "不限教师人数",
+      "price.s3": "多教室管理",
+      "price.s4": "优先支持",
+      "price.schoolBtn": "联系",
+      "price.note": "Pro 每月 US$12.99，7 天免费试用。支付渠道即将上线；目前本页即时生成 License Key 供测试。",
+      "key.title": "获取你的 Pro License Key",
+      "key.sub": "输入管理员 Key 与邮箱，即时生成 License Key。粘贴到 App 即可解锁 Pro。",
+      "key.emailPlaceholder": "you@example.com",
+      "key.adminPlaceholder": "管理员 Key（开发者）",
+      "key.months": "月数",
+      "key.genBtn": "生成 License Key",
+      "key.err": "请输入有效邮箱地址。",
+      "key.errAdmin": "需要管理员 Key 才能生成。",
+      "key.errServer": "生成失败，请稍后重试。",
+      "key.resultLabel": "你的 License Key",
+      "key.copy": "复制",
+      "key.copied": "已复制！"
     }
   };
 
@@ -5520,6 +5844,15 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
         if (defaultStrings[key]) el.innerHTML = defaultStrings[key];
       } else if (DICT[lang] && DICT[lang][key]) {
         el.innerHTML = DICT[lang][key];
+      }
+    });
+
+    $$('[data-i18n-placeholder]').forEach((el) => {
+      const key = el.dataset.i18nPlaceholder;
+      if (lang !== 'en' && DICT[lang] && DICT[lang][key]) {
+        el.setAttribute('placeholder', DICT[lang][key]);
+      } else if (defaultStrings[key]) {
+        el.setAttribute('placeholder', defaultStrings[key]);
       }
     });
   }
@@ -5544,6 +5877,75 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
     }).catch(() => {
       toastMessage('Command: ' + cmd);
     });
+  });
+
+  /* ------------------------------------------------------------------
+     License Key Generation (worker backend)
+  ------------------------------------------------------------------ */
+  const LICENSE_WORKER_URL = 'https://focusin-license.marcoattck.workers.dev';
+  const licenseErr = $('#license-err');
+  const licenseRes = $('#license-res');
+  const licenseKeyText = $('#license-key-text');
+
+  function showLicenseErr(msg) {
+    licenseErr.textContent = msg;
+    licenseErr.style.display = msg ? 'block' : 'none';
+  }
+  function i18nOf(key) {
+    const lang = document.documentElement.lang === 'zh-Hant' || document.documentElement.lang === 'zh-Hans'
+      ? document.documentElement.lang : 'en';
+    if (lang !== 'en') {
+      const v = DICT[lang] && DICT[lang][key];
+      if (v) return v;
+    }
+    return defaultStrings[key] || key;
+  }
+
+  $('#license-gen')?.addEventListener('click', async () => {
+    const email = $('#license-email').value.trim();
+    const admin = $('#license-admin').value.trim();
+    const months = parseInt($('#license-months').value, 10) || 1;
+    licenseRes.hidden = true;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      showLicenseErr(i18nOf('key.err'));
+      return;
+    }
+    if (!admin) {
+      showLicenseErr(i18nOf('key.errAdmin'));
+      return;
+    }
+    showLicenseErr('');
+    const btn = $('#license-gen');
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+      const r = await fetch(LICENSE_WORKER_URL + '/api/license/gen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': admin },
+        body: JSON.stringify({ email, months })
+      });
+      const data = await r.json();
+      if (!r.ok || data.error) throw new Error(data.error || 'HTTP ' + r.status);
+      licenseKeyText.textContent = data.key;
+      licenseRes.hidden = false;
+      showLicenseErr('');
+      licenseRes.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+      showLicenseErr(i18nOf('key.errServer') + ' (' + e.message + ')');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  });
+
+  $('#license-copy')?.addEventListener('click', () => {
+    const key = licenseKeyText.textContent;
+    navigator.clipboard?.writeText(key).then(() => {
+      toastMessage(i18nOf('key.copied'));
+      $('#license-copy').textContent = i18nOf('key.copied');
+      setTimeout(() => { $('#license-copy').textContent = i18nOf('key.copy'); }, 2000);
+    }).catch(() => toastMessage(key));
   });
 
 })();

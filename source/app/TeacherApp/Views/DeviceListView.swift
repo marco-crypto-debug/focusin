@@ -22,15 +22,11 @@ struct DeviceListView: View {
     @State private var limitMsg = ""
 #endif
 #if !FOCUSIN_STABLE
-    @State private var licenseKeyInput = ""
-    @State private var licenseMsg = ""
-    @State private var licenseMsgIsError = false
 #if FOCUSIN_BETA
     @State private var probeRateText = "2"
     @State private var probeMaxRateText = "16"
     @State private var probeStageText = "8"
 #endif
-    private var licenseStatus: LicenseStatus { LicenseManager.shared.status }
 #endif
 
     var body: some View {
@@ -60,12 +56,10 @@ struct DeviceListView: View {
             FocusInTheme.sectionLabel("Students")
 #if FOCUSIN_DELTA
             HStack(spacing: 6) {
-                Image(systemName: DeviceLimit.isAdvanced ? "arrow.up.right.square.fill" : "rectangle.stack.fill")
+                Image(systemName: "rectangle.stack.fill")
                     .font(.system(size: 11))
-                    .foregroundStyle(DeviceLimit.isAdvanced ? FocusInTheme.accent : .secondary)
-                Text(DeviceLimit.isAdvanced
-                     ? "Pro · 高級版（50 台）· 已連 \(viewModel.peers.count) 台"
-                     : "免費版（5 台）· 已連 \(viewModel.peers.count) 台")
+                    .foregroundStyle(.secondary)
+                Text("最多 50 台 · 已連 \(viewModel.peers.count) 台")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -346,7 +340,7 @@ struct DeviceListView: View {
 #if FOCUSIN_STABLE
         return "廣播教師屏幕（僅畫面）"
 #else
-        return viewModel.broadcastWithAudio && LicenseManager.shared.isProActive
+        return viewModel.broadcastWithAudio
             ? "廣播教師屏幕（含聲音）"
             : "廣播教師屏幕（僅畫面）"
 #endif
@@ -374,41 +368,30 @@ struct DeviceListView: View {
     private var advancedSection: some View {
         VStack(alignment: .leading, spacing: 12) {
 #if FOCUSIN_DELTA
-            // Delta：傳輸方式（僅 Pro 可自選；免費版鎖定 WebSocket 單播）
+            // Delta：傳輸方式（所有用戶均可自選）
             FocusInTheme.sectionLabel("傳輸方式 Transport")
             FocusInTheme.card {
                 VStack(alignment: .leading, spacing: 8) {
-                    if LicenseManager.shared.isProActive {
-                        Picker("傳輸方式", selection: Binding(
-                            get: { DeviceLimit.transportMode },
-                            set: { mode in
-                                DeviceLimit.transportMode = mode
-                                viewModel.appendLog("傳輸方式切換為「\(mode.label)」")
-                            }
-                        )) {
-                            ForEach(TransportMode.allCases) { m in
-                                Text(m.label).tag(m)
-                            }
+                    Picker("傳輸方式", selection: Binding(
+                        get: { DeviceLimit.transportMode },
+                        set: { mode in
+                            DeviceLimit.transportMode = mode
+                            viewModel.appendLog("傳輸方式切換為「\(mode.label)」")
                         }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
-                        Text(DeviceLimit.transportRecommendation(for: viewModel.peers.count))
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text("UDP 組播模式：畫面與聲音均只發 1 份串流，由 AP 複製給全部學生。")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        HStack(spacing: 8) {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 12))
-                                .foregroundStyle(.secondary)
-                            Text("免費版固定 WebSocket 單播（最多 5 台）。啟用 FocusIn Pro 後可自行選擇傳輸方式。")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
+                    )) {
+                        ForEach(TransportMode.allCases) { m in
+                            Text(m.label).tag(m)
                         }
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    Text(DeviceLimit.transportRecommendation(for: viewModel.peers.count))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("UDP 組播模式：畫面與聲音均只發 1 份串流，由 AP 複製給全部學生。")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
             }
 #endif
@@ -454,85 +437,16 @@ struct DeviceListView: View {
                 .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.red.opacity(0.25)))
             }
 
-            // 聲音 + Pro（非穩定版）
+            // 聲音（非穩定版，已全開放）
 #if !FOCUSIN_STABLE
-            FocusInTheme.sectionLabel("Audio & Pro")
+            FocusInTheme.sectionLabel("Audio")
             FocusInTheme.card {
                 VStack(alignment: .leading, spacing: 10) {
-                    Toggle("傳送聲音（關閉時僅傳畫面）", isOn: Binding(
-                        get: { viewModel.broadcastWithAudio && LicenseManager.shared.isProActive },
-                        set: { on in
-                            guard LicenseManager.shared.isProActive else {
-                                licenseMsg = "聲音廣播為 Pro 功能，請先啟用 FocusIn Pro。"
-                                licenseMsgIsError = true
-                                viewModel.broadcastWithAudio = false
-                                return
-                            }
-                            viewModel.broadcastWithAudio = on
-                        }
-                    ))
-                    .font(.system(size: 13))
-                    .disabled(!LicenseManager.shared.isProActive)
-
-                    Divider()
-
-                    // Pro 狀態
-                    HStack(spacing: 6) {
-                        Image(systemName: licenseStatus.isProActive ? "checkmark.seal.fill" : "seal")
-                            .foregroundStyle(licenseStatus.isProActive ? .green : .secondary)
-                        Text("FocusIn Pro").font(.system(size: 13, weight: .semibold))
-                        Spacer()
-                        switch licenseStatus {
-                        case .pro: Text("已解鎖").font(.caption).foregroundStyle(.green)
-                        case .expired: Text("已過期").font(.caption).foregroundStyle(.orange)
-                        case .free: Text("免費版").font(.caption).foregroundStyle(.secondary)
-                        case .invalid: Text("Key 無效").font(.caption).foregroundStyle(.red)
-                        }
-                    }
-                    if let exp = LicenseManager.shared.expiryString {
-                        Text("Pro 有效至 \(exp)（每月 1 號到期）")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    } else if case .expired = licenseStatus {
-                        Text("Pro 已過期，聲音廣播已停用。請續費後輸入新 Key。")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.orange)
-                    }
-                    if !LicenseManager.shared.isProActive {
-                        Text("聲音廣播為 Pro 功能（US$12.99 / 月）。")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                    TextField("貼上 License Key（FI-PRO-…）", text: $licenseKeyInput)
-                        .textFieldStyle(.plain)
+                    Toggle("傳送聲音（關閉時僅傳畫面）", isOn: $viewModel.broadcastWithAudio)
                         .font(.system(size: 13))
-                        .padding(8)
-                        .background(Color.black.opacity(0.04), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    HStack(spacing: 10) {
-                        Button("啟用 Pro") { activateLicense() }
-                            .disabled(licenseKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                            .controlSize(.small)
-                        if !LicenseManager.shared.storedKey.isEmpty {
-                            Button("移除本機授權") {
-                                LicenseManager.shared.deactivate()
-                                licenseMsg = "已移除本機授權。"
-                                licenseMsgIsError = false
-                            }
-                            .controlSize(.small)
-                        }
-                        Spacer()
-                        Button("前往官網購買") {
-                            if let url = URL(string: "https://focusin.pages.dev/#pricing") {
-                                NSWorkspace.shared.open(url)
-                            }
-                        }
-                        .controlSize(.small)
-                    }
-                    if !licenseMsg.isEmpty {
-                        Text(licenseMsg)
-                            .font(.system(size: 11))
-                            .foregroundStyle(licenseMsgIsError ? .red : .green)
-                    }
+                    Text("開啟後廣播會連同 48 kHz 立體聲一同傳給學生端。")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
             }
 #endif
@@ -704,26 +618,6 @@ struct DeviceListView: View {
         }
     }
 
-#if !FOCUSIN_STABLE
-    /// 啟用 Pro License（驗證 + 持久化 + 顯示結果）。
-    private func activateLicense() {
-        let result = LicenseManager.shared.activate(key: licenseKeyInput)
-        switch result {
-        case .pro(let d):
-            licenseMsg = "✓ Pro 已啟用，有效至 \(LicenseManager.formatMonthFirst(d))"
-            licenseMsgIsError = false
-        case .expired:
-            licenseMsg = "✗ 此 Key 已過期（每月 1 號繳費制），請續費後取得新 Key。"
-            licenseMsgIsError = true
-        case .invalid(let reason):
-            licenseMsg = "✗ Key 無效：\(reason)"
-            licenseMsgIsError = true
-        case .free:
-            licenseMsg = ""
-        }
-        licenseKeyInput = ""
-    }
-#endif
 }
 
 /// 清空文件確認面板：必須輸入 DELETE 才能執行（教師點擊二次確認）。

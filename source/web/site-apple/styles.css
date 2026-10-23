@@ -3760,3 +3760,150 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
 /* scroll-animate (Animate.css skill standard) */
 .scroll-animate { opacity: 0; }
 .scroll-animate.animate__animated { opacity: 1; }
+
+/* ===== Pricing & License ===== */
+.pricing { padding: 120px 0 130px; }
+.pricing .section-head p { color: #a1a1a6; }
+
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1020px;
+  margin: 0 auto;
+}
+.pcard {
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 22px;
+  padding: 34px 30px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+  transition: transform 0.35s var(--ease-out), box-shadow 0.35s var(--ease-out);
+}
+.pcard:hover { transform: translateY(-5px); box-shadow: 0 26px 52px rgba(0, 0, 0, 0.30); }
+.pcard h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 6px; }
+.pcard-desc { font-size: 14px; color: #6e6e73; margin: 0; }
+.pcard-price {
+  font-size: clamp(2.2rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 18px 0 4px;
+}
+.pcard-per { font-size: 15px; font-weight: 400; color: #6e6e73; letter-spacing: 0; }
+.pcard-trial { font-size: 13px; font-weight: 600; color: var(--accent); margin: 6px 0 0; }
+.pcard-list {
+  list-style: none;
+  margin: 22px 0 26px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.pcard-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: #3a3a3c; line-height: 1.35; }
+.pcard-list svg {
+  width: 16px; height: 16px; flex: none;
+  stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round;
+  fill: none; margin-top: 1px;
+}
+.pcard .btn { margin-top: auto; }
+
+.pcard-pop { position: relative; border: 2px solid var(--accent); }
+.pcard-tag {
+  position: absolute;
+  top: -13px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pcard-pop:hover { box-shadow: 0 26px 56px rgba(0, 113, 227, 0.30); }
+
+.price-note {
+  max-width: 680px;
+  margin: 26px auto 0;
+  text-align: center;
+  font-size: 13px;
+  color: #a1a1a6;
+}
+
+.license-box {
+  max-width: 760px;
+  margin: 72px auto 0;
+  background: #fff;
+  color: #1d1d1f;
+  border-radius: 24px;
+  padding: 46px 42px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.28);
+}
+.license-box h3 { font-size: clamp(1.5rem, 2.4vw, 1.9rem); font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.license-sub { color: #6e6e73; font-size: 14.5px; margin: 10px auto 26px; max-width: 520px; line-height: 1.5; }
+.license-fields { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.license-fields input,
+.license-fields select {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  min-width: 0;
+}
+.license-fields input#license-admin { max-width: 230px; }
+.license-fields input#license-email { max-width: 250px; }
+.license-fields select { cursor: pointer; }
+.license-fields input:focus,
+.license-fields select:focus { border-color: var(--accent); }
+.license-err { color: #d33; font-size: 12.5px; margin-top: 14px; }
+.license-res {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.license-res-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #6e6e73;
+}
+.license-key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-all;
+  background: #f5f5f7;
+  border: 1px dashed rgba(0, 0, 0, 0.20);
+  border-radius: 12px;
+  padding: 14px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  user-select: all;
+}
+.license-res .btn-sm { padding: 9px 18px; font-size: 13px; }
+
+@media (max-width: 820px) {
+  .price-grid { grid-template-columns: 1fr; max-width: 460px; }
+  .license-box { padding: 36px 24px; }
+  .license-fields { flex-direction: column; align-items: stretch; }
+  .license-fields input#license-admin,
+  .license-fields input#license-email,
+  .license-fields select { max-width: 100%; }
+}
