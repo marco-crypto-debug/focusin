@@ -373,4 +373,12 @@ extension MulticastTransport {
                                                   interleaved: data[11] == 1)
         return (data.subdata(in: 14..<data.count), info)
     }
+
+    static func packAirPlayAudio(_ packet: AirPlayAudioPacket) -> Data {
+        packet.pack()
+    }
+
+    static func unpackAirPlayAudio(_ data: Data) -> AirPlayAudioPacket? {
+        AirPlayAudioPacket.unpack(data)
+    }
 }

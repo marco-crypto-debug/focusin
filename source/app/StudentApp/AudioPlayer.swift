@@ -72,6 +72,22 @@ final class BroadcastAudioPlayer {
         lockedFormat = nil
     }
 
+    private var lastSequenceNumber: UInt16?
+
+    func playAirPlay(packet: AirPlayAudioPacket) {
+        if !isRunning { start() }
+        guard isRunning, !packet.pcm.isEmpty else { return }
+
+        if let last = lastSequenceNumber {
+            let diff = packet.sequenceNumber &- last
+            if diff > 1 && diff < 30000 {
+                droppedCount += Int(diff - 1)
+            }
+        }
+        lastSequenceNumber = packet.sequenceNumber
+        play(pcm: packet.pcm, format: packet.legacyFormatInfo)
+    }
+
     /// 播放一段 PCM。格式必須與標頭一致。
     func play(pcm: Data, format: PeerConnection.AudioFormatInfo) {
         if !isRunning { start() }

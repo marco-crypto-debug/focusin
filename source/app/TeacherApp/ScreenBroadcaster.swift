@@ -25,9 +25,9 @@ enum BroadcastQuality: String, CaseIterable, Identifiable {
 final class ScreenBroadcaster: NSObject {
     /// 每幀 JPEG 資料回呼（在採集佇列上觸發）。
     var onFrame: ((Data) -> Void)?
-    /// 音訊 PCM 資料回呼（在採集佇列上觸發）。
+    var onMultiDisplayFrame: ((MultiDisplayStreamPacket) -> Void)?
     var onAudio: ((Data, PeerConnection.AudioFormatInfo) -> Void)?
-    /// 啟動失敗回呼（例如未授權「屏幕錄製」），在主執行緒觸發，用於在介面顯示指引。
+    var onAirPlayAudio: ((AirPlayAudioPacket) -> Void)?
     var onStartError: ((String) -> Void)?
 
     /// 目前畫質模式（教師端切換後，廣播中會即時重啟套用）。
@@ -36,6 +36,13 @@ final class ScreenBroadcaster: NSObject {
     var withAudio = true
     /// 目前生效的 JPEG 品質（於 start 時依畫質模式決定）。
     private var activeJpegQuality: Double = 0.92
+
+    var availableDisplays: [SCDisplay] = []
+    var selectedDisplayID: CGDirectDisplayID?
+    private var activeFilter: SCContentFilter?
+
+    private var audioSequenceNumber: UInt16 = 0
+    private var audioClockID: UInt32 = UInt32.random(in: 1...UInt32.max)
 
     /// 依畫質模式與顯示器解析度決定採集參數。
     /// - 高：原生全分辨率（1.0）× 30fps × JPEG 0.92
@@ -106,6 +113,24 @@ final class ScreenBroadcaster: NSObject {
         pendingAudio = Data()
         pendingFrames = 0
         audioLock.unlock()
+
+        let seq = audioSequenceNumber
+        audioSequenceNumber &+= 1
+        let pts = AirPlayClock.nowNanoseconds
+        let packet = AirPlayAudioPacket(
+            version: 2,
+            flags: 0,
+            sequenceNumber: seq,
+            ptsNanoseconds: pts,
+            clockID: audioClockID,
+            sampleRate: formatToSend.sampleRate,
+            channels: formatToSend.channels,
+            bits: formatToSend.bits,
+            isFloat: formatToSend.isFloat,
+            isInterleaved: formatToSend.interleaved,
+            pcm: dataToSend
+        )
+        onAirPlayAudio?(packet)
         onAudio?(dataToSend, formatToSend)
     }
 
@@ -135,19 +160,26 @@ final class ScreenBroadcaster: NSObject {
             do {
                 let content = try await SCShareableContent.excludingDesktopWindows(false,
                                                                                   onScreenWindowsOnly: true)
-                guard let display = content.displays.first else {
+                self.availableDisplays = content.displays
+                let targetDisplay: SCDisplay
+                if let selID = self.selectedDisplayID, let match = content.displays.first(where: { $0.displayID == selID }) {
+                    targetDisplay = match
+                } else if let first = content.displays.first {
+                    targetDisplay = first
+                    self.selectedDisplayID = first.displayID
+                } else {
                     await MainActor.run { onStartError?("未找到可廣播的顯示器。") }
                     return
                 }
-                let filter = SCContentFilter(display: display, excludingWindows: [])
+                let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
+                self.activeFilter = filter
 
-                // 依畫質模式（自動/低/中/高）決定縮放、幀率與 JPEG 品質
-                let params = resolutionParameters(displayWidth: display.width)
+                let params = self.resolutionParameters(displayWidth: targetDisplay.width)
                 activeJpegQuality = params.jpeg
 
                 let config = SCStreamConfiguration()
-                config.width = Int(Double(display.width) * params.scale)
-                config.height = Int(Double(display.height) * params.scale)
+                config.width = Int(Double(targetDisplay.width) * params.scale)
+                config.height = Int(Double(targetDisplay.height) * params.scale)
                 config.minimumFrameInterval = CMTime(value: 1, timescale: Int32(params.fps))
                 config.queueDepth = 4
                 config.showsCursor = false
@@ -157,7 +189,7 @@ final class ScreenBroadcaster: NSObject {
                 }
 #if FOCUSIN_BETA
                 // v1.5-beta：啟動 H.264 硬體編碼器（輸出 Annex-B，每秒 1 關鍵幀）
-                let bitrate = h264Bitrate(displayWidth: display.width)
+                let bitrate = h264Bitrate(displayWidth: targetDisplay.width)
                 h264Encoder.start(width: config.width, height: config.height,
                                   fps: params.fps, bitrate: bitrate) { [weak self] data, key, sps, pps in
                     self?.onFrame?(MulticastTransport.packH264Frame(data, key: key, sps: sps, pps: pps))
@@ -202,6 +234,24 @@ final class ScreenBroadcaster: NSObject {
             pendingAudio = Data()
             pendingFrames = 0
             audioLock.unlock()
+
+            let seq = audioSequenceNumber
+            audioSequenceNumber &+= 1
+            let pts = AirPlayClock.nowNanoseconds
+            let packet = AirPlayAudioPacket(
+                version: 2,
+                flags: 0,
+                sequenceNumber: seq,
+                ptsNanoseconds: pts,
+                clockID: audioClockID,
+                sampleRate: formatToSend.sampleRate,
+                channels: formatToSend.channels,
+                bits: formatToSend.bits,
+                isFloat: formatToSend.isFloat,
+                isInterleaved: formatToSend.interleaved,
+                pcm: dataToSend
+            )
+            onAirPlayAudio?(packet)
             onAudio?(dataToSend, formatToSend)
         } else {
             audioLock.unlock()
@@ -211,6 +261,33 @@ final class ScreenBroadcaster: NSObject {
 #if FOCUSIN_BETA
         h264Encoder.stop()
 #endif
+    }
+
+    func refreshDisplays() async -> [DisplayDescriptor] {
+        guard let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) else {
+            return []
+        }
+        self.availableDisplays = content.displays
+        return content.displays.enumerated().map { idx, d in
+            DisplayDescriptor(
+                id: d.displayID,
+                index: idx,
+                name: "顯示器 \(idx + 1)",
+                width: d.width,
+                height: d.height,
+                isPrimary: idx == 0,
+                scaleFactor: 2.0
+            )
+        }
+    }
+
+    func switchDisplay(to displayID: CGDirectDisplayID) async throws {
+        self.selectedDisplayID = displayID
+        guard let stream = self.stream else { return }
+        guard let match = availableDisplays.first(where: { $0.displayID == displayID }) else { return }
+        let newFilter = SCContentFilter(display: match, excludingWindows: [])
+        self.activeFilter = newFilter
+        try await stream.updateContentFilter(newFilter)
     }
 }
 

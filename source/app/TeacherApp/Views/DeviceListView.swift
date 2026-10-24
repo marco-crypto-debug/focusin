@@ -411,6 +411,27 @@ struct DeviceListView: View {
                     .foregroundStyle(.secondary)
             }
 
+            if viewModel.availableDisplays.count > 1 {
+                FocusInTheme.sectionLabel("Display Selection")
+                FocusInTheme.card {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Picker("選擇顯示器", selection: Binding(
+                            get: { viewModel.selectedDisplayIndex },
+                            set: { viewModel.selectDisplay(at: $0) }
+                        )) {
+                            ForEach(viewModel.availableDisplays.indices, id: \.self) { idx in
+                                Text(viewModel.availableDisplays[idx].displayTitle).tag(idx)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        Text("多螢幕廣播：可隨時切換不同顯示器送至學生端")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
             // 廣播錯誤提示（權限不足時）
             if let error = viewModel.broadcastError {
                 VStack(alignment: .leading, spacing: 8) {

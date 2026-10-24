@@ -100,6 +100,11 @@ final class CommandListener: ObservableObject {
 #endif
                 }
 #if !FOCUSIN_STABLE
+                peer.onAirPlayAudio = { packet in
+                    Task { @MainActor in
+                        self.audio.playAirPlay(packet: packet)
+                    }
+                }
                 peer.onAudio = { pcm, info in
                     Task { @MainActor in
                         self.audio.play(pcm: pcm, format: info)
@@ -216,6 +221,11 @@ final class CommandListener: ObservableObject {
         case .wipeResult:
             break   // 教師端使用
 
+        case .switchDisplay:
+            if let payload = message.payload {
+                appendLog("收到切換顯示器通知：\(payload)")
+            }
+
         case .streamStart:
             isBroadcasting = true
             kiosk.clearBroadcastImage()
@@ -316,10 +326,15 @@ final class CommandListener: ObservableObject {
     private func startMulticastAudio() {
         multicastAudio.stop()
         multicastAudio.startReceiver(port: MulticastTransport.audioPort, ifaceIP: nil) { [weak self] data in
-            guard let self,
-                  let audio = MulticastTransport.unpackAudio(data) else { return }
-            Task { @MainActor in
-                self.audio.play(pcm: audio.pcm, format: audio.format)
+            guard let self else { return }
+            if let packet = MulticastTransport.unpackAirPlayAudio(data) {
+                Task { @MainActor in
+                    self.audio.playAirPlay(packet: packet)
+                }
+            } else if let audio = MulticastTransport.unpackAudio(data) {
+                Task { @MainActor in
+                    self.audio.play(pcm: audio.pcm, format: audio.format)
+                }
             }
         }
         appendLog("Delta 組播音訊接收已啟動（\(MulticastTransport.group):\(MulticastTransport.audioPort)）")

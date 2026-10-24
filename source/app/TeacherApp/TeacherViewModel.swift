@@ -13,6 +13,8 @@ final class TeacherViewModel: ObservableObject {
     @Published var updateAvailable: UpdateChecker.UpdateInfo?
     /// 各學生端即時網路延遲（ms），由 ping/pong 測得。
     @Published var latencies: [String: Int] = [:]
+    @Published var availableDisplays: [DisplayDescriptor] = []
+    @Published var selectedDisplayIndex: Int = 0
 
     private var browser: PeerBrowser?
     private var connections: [String: PeerConnection] = [:]   // studentID -> command connection
@@ -47,6 +49,36 @@ final class TeacherViewModel: ObservableObject {
         startDiscovery()
         checkForUpdates()
         startPingLoop()
+        refreshDisplays()
+    }
+
+    func refreshDisplays() {
+        Task {
+            let displays = await broadcaster.refreshDisplays()
+            self.availableDisplays = displays
+            if !displays.isEmpty && selectedDisplayIndex >= displays.count {
+                selectedDisplayIndex = 0
+            }
+        }
+    }
+
+    func selectDisplay(at index: Int) {
+        guard index >= 0 && index < availableDisplays.count else { return }
+        selectedDisplayIndex = index
+        let target = availableDisplays[index]
+        broadcaster.selectedDisplayID = target.id
+        if broadcastActive {
+            Task {
+                do {
+                    try await broadcaster.switchDisplay(to: target.id)
+                    let payload = "\(target.index),\(target.id)"
+                    send(CommandMessage(type: .switchDisplay, payload: payload))
+                    appendLog("已切換廣播顯示器至：\(target.name)")
+                } catch {
+                    appendLog("切換顯示器失敗：\(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     // MARK: - 即時延遲（ping/pong）
@@ -465,6 +497,21 @@ final class TeacherViewModel: ObservableObject {
 #endif
         }
 #if !FOCUSIN_STABLE
+        broadcaster.onAirPlayAudio = { packet in
+#if FOCUSIN_DELTA
+            if DeviceLimit.transportMode == .udp {
+                self.multicastAudio.send(MulticastTransport.packAirPlayAudio(packet))
+            } else {
+                for target in audioTargets where target.connection.state == .ready {
+                    target.sendAirPlayAudio(packet)
+                }
+            }
+#else
+            for target in audioTargets where target.connection.state == .ready {
+                target.sendAirPlayAudio(packet)
+            }
+#endif
+        }
         broadcaster.onAudio = { pcm, info in
 #if FOCUSIN_DELTA
             if DeviceLimit.transportMode == .udp {
@@ -506,6 +553,7 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
+        broadcaster.onAirPlayAudio = nil
 #if FOCUSIN_BETA
         multicastVideo.stop()
         multicastAudio.stop()
@@ -522,6 +570,7 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
+        broadcaster.onAirPlayAudio = nil
 #if FOCUSIN_BETA
         multicastVideo.stop()
         multicastAudio.stop()

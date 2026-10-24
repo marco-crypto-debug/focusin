@@ -28,8 +28,9 @@ final class PeerConnection {
     var onCommand: ((CommandMessage) -> Void)?
     /// 收到原始廣播幀（JPEG 資料），在背景佇列觸發。
     var onFrame: ((Data) -> Void)?
-    /// 收到廣播音訊（PCM 資料 + 格式），在背景佇列觸發。
+    var onMultiDisplayFrame: ((MultiDisplayStreamPacket) -> Void)?
     var onAudio: ((Data, AudioFormatInfo) -> Void)?
+    var onAirPlayAudio: ((AirPlayAudioPacket) -> Void)?
     var onConnectionLost: (() -> Void)?
     var onError: ((Error) -> Void)?
 
@@ -149,6 +150,36 @@ final class PeerConnection {
         })
     }
 
+    func sendAirPlayAudio(_ packet: AirPlayAudioPacket) {
+        sendQueue.async { [weak self] in
+            guard let self, self.connection.state == .ready else { return }
+            let payload = packet.pack()
+            let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
+            let context = NWConnection.ContentContext(identifier: "airplay-audio", metadata: [metadata])
+            self.connection.send(content: payload, contentContext: context, isComplete: true,
+                                 completion: .contentProcessed { [weak self] error in
+                if let error {
+                    DispatchQueue.main.async { self?.onError?(error) }
+                }
+            })
+        }
+    }
+
+    func sendMultiDisplayFrame(_ packet: MultiDisplayStreamPacket) {
+        sendQueue.async { [weak self] in
+            guard let self, self.connection.state == .ready else { return }
+            let payload = packet.pack()
+            let metadata = NWProtocolWebSocket.Metadata(opcode: .binary)
+            let context = NWConnection.ContentContext(identifier: "multidisplay-frame", metadata: [metadata])
+            self.connection.send(content: payload, contentContext: context, isComplete: true,
+                                 completion: .contentProcessed { [weak self] error in
+                if let error {
+                    DispatchQueue.main.async { self?.onError?(error) }
+                }
+            })
+        }
+    }
+
     /// 發送一段廣播音訊（PCM + 格式標頭）。
     /// 音訊不節流：聲音中斷比延遲更明顯，逐緩衝區直送。
     func sendAudio(_ pcm: Data, format: AudioFormatInfo) {
@@ -183,8 +214,27 @@ final class PeerConnection {
             DiagLog.log("receiveMessage: size=\(data?.count ?? -1) error=\(error.map(String.init(describing:)) ?? "nil")")
             if error == nil {
                 if let data, !data.isEmpty {
-                    // 1) 原始廣播幀（魔數 FZFR 開頭）：直接交回呼，背景佇列解碼
-                    if data.count > 4 && data.prefix(4).elementsEqual(Self.frameMagic) {
+                    if data.count >= MultiDisplayStreamPacket.headerSize && data.prefix(4).elementsEqual(MultiDisplayStreamPacket.magic) {
+                        if let packet = MultiDisplayStreamPacket.unpack(data) {
+                            DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+                                if let onMultiDisplay = self?.onMultiDisplayFrame {
+                                    onMultiDisplay(packet)
+                                } else {
+                                    self?.onFrame?(packet.videoData)
+                                }
+                            }
+                        }
+                    } else if data.count >= AirPlayAudioPacket.headerSize && data.prefix(4).elementsEqual(AirPlayAudioPacket.magic) {
+                        if let packet = AirPlayAudioPacket.unpack(data) {
+                            DispatchQueue.global(qos: .userInteractive).async { [weak self] in
+                                if let onAirPlay = self?.onAirPlayAudio {
+                                    onAirPlay(packet)
+                                } else {
+                                    self?.onAudio?(packet.pcm, packet.legacyFormatInfo)
+                                }
+                            }
+                        }
+                    } else if data.count > 4 && data.prefix(4).elementsEqual(Self.frameMagic) {
                         let jpeg = data.subdata(in: 4..<data.count)
                         DispatchQueue.global(qos: .userInteractive).async { [weak self] in
                             self?.onFrame?(jpeg)

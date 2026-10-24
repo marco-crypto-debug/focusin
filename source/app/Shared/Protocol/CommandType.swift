@@ -22,6 +22,7 @@ enum CommandType: String, Codable {
     case streamStart    // 教師端開始廣播
     case streamFrame    // 歷史：JSON 幀（base64 JPEG）；現行幀走二進位通道
     case streamStop     // 教師端停止廣播
+    case switchDisplay  // 教師端切換廣播顯示器，payload = DisplayDescriptor JSON 或 "displayIndex,displayID"
 
     // —— v1.5-beta：AP 組播探測 ——
     case multicastProbeStart    // 教師端 → 學生端：開始組播統計，payload = "rate,maxRate,step,stageSeconds"
