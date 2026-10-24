@@ -18,7 +18,7 @@ ROOT="/Users/marco/Documents/FocusIn"
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 TARGET="arm64-apple-macos14.0"
 BUILD_SHA="$(git -C "$ROOT" rev-parse --short HEAD)"
-VERSION_BASE="${FOCUSIN_VERSION:-1.4.1}"
+VERSION_BASE="${FOCUSIN_VERSION:-1.5.10}"
 
 SHARED_SRC=(
   "$ROOT/source/app/Shared/Networking/PeerConnection.swift"
