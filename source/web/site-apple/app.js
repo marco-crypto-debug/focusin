@@ -197,6 +197,21 @@
   }
 
   /* ------------------------------------------------------------------
+     Hero background orbs: pause animations when off-screen to save CPU/GPU
+  ------------------------------------------------------------------ */
+  const orbs = $$('.orb');
+  if (hero && orbs.length && 'IntersectionObserver' in window && !prefersReduced()) {
+    const orbObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        orbs.forEach((orb) => orb.classList.toggle('orb-play', entry.isIntersecting));
+      });
+    }, { threshold: 0.05 });
+    orbObserver.observe(hero);
+  } else {
+    orbs.forEach((orb) => orb.classList.add('orb-play'));
+  }
+
+  /* ------------------------------------------------------------------
      Bento card spotlight
   ------------------------------------------------------------------ */
   $$('.bento-card').forEach((card) => {
