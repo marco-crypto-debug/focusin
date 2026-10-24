@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-10-23T16:02:05.121Z
-**Commit:** 6449545
+**Generated:** 2026-10-24T16:44:08.346Z
+**Commit:** b86c43f
 **Branch:** main
 
 ## OVERVIEW
@@ -33,20 +33,26 @@ FocusIn/
 ## CODE MAP
 | Symbol | Type | Location | Refs | Role |
 |---|---|---|---|---|
-| `FocusInTheme` | enum | `source/app/Shared/Utility/FocusInTheme.swift` | 56 | App theming, TUTTI / MoodLab palettes, style tokens |
-| `DiagLog` | enum | `source/app/Shared/Utility/DiagLog.swift` | 44 | Append-only diagnostics in `~/Library/Logs/FocusIn-diag.log` |
-| `MulticastTransport` | class | `source/app/Shared/Networking/MulticastTransport.swift` | 41 | Darwin BSD UDP multicast socket engine on `239.255.42.99` |
-| `CommandMessage` | struct | `source/app/Shared/Protocol/CommandMessage.swift` | 35 | Codable JSON envelope for control signaling |
-| `PeerConnection` | class | `source/app/Shared/Networking/PeerConnection.swift` | 27 | NWConnection WebSocket wrapper with serial queue and frame throttle |
-| `LicenseManager` | class | `source/app/Shared/Utility/LicenseManager.swift` | 25 | Ed25519 offline cryptographic license validator |
-| `QuitGuard` | enum | `source/app/Shared/Utility/QuitGuard.swift` | 17 | Intercepts `applicationShouldTerminate` with admin password |
-| `KioskConfig` | enum | `source/app/StudentApp/Kiosk/KioskConfig.swift` | 16 | Salted SHA-256 admin password store for emergency unlock |
-| `DeviceLimit` | enum | `source/app/Shared/Utility/DeviceLimit.swift` | 16 | Delta tier limits (5 free unicast vs 50 pro multicast) |
-| `TeacherViewModel` | class | `source/app/TeacherApp/TeacherViewModel.swift` | 5 | Teacher state, mDNS discovery, and WebSocket peer manager |
-| `KioskModeController` | class | `source/app/StudentApp/Kiosk/KioskModeController.swift` | 6 | Lock windows at `.screenSaver` level with presentation options |
-| `InputInterceptor` | class | `source/app/StudentApp/Kiosk/InputInterceptor.swift` | 5 | Low-level CGEventTap input swallower and ⌘⇧U unlock trigger |
-| `H264Encoder` | class | `source/app/TeacherApp/H264Encoder.swift` | 3 | VideoToolbox hardware encoder producing Annex-B streams (1s IDR) |
-| `H264Decoder` | class | `source/app/StudentApp/H264Decoder.swift` | 3 | VideoToolbox hardware decoder with SPS/PPS dynamic rebuild |
+| `FocusInTheme` | enum | `source/app/Shared/Utility/FocusInTheme.swift` | 55 | App theming, TUTTI / MoodLab palettes, style tokens |
+| `DiagLog` | enum | `source/app/Shared/Utility/DiagLog.swift` | 54 | Append-only diagnostics in `~/Library/Logs/FocusIn-diag.log` |
+| `CommandMessage` | struct | `source/app/Shared/Protocol/CommandMessage.swift` | 47 | Codable JSON envelope for control signaling |
+| `MulticastTransport` | class | `source/app/Shared/Networking/MulticastTransport.swift` | 42 | Darwin BSD UDP multicast socket engine on `239.255.42.99` |
+| `PeerConnection` | class | `source/app/Shared/Networking/PeerConnection.swift` | 40 | NWConnection WebSocket wrapper with serial queue and backpressure |
+| `KioskConfig` | enum | `source/app/StudentApp/Kiosk/KioskConfig.swift` | 23 | Salted SHA-256 admin password store for emergency unlock |
+| `UpdateChecker` | enum | `source/app/Shared/Utility/UpdateChecker.swift` | 23 | GitHub API rate-limit resilient release updater |
+| `QuitGuard` | enum | `source/app/Shared/Utility/QuitGuard.swift` | 21 | Intercepts `applicationShouldTerminate` with admin password |
+| `CommandListener` | class | `source/app/StudentApp/CommandListener.swift` | 15 | Student command and video/audio frame dispatcher |
+| `DeviceLimit` | enum | `source/app/Shared/Utility/DeviceLimit.swift` | 14 | Unified 50-device limit across builds; unicast/multicast & audio open to all |
+| `TeacherViewModel` | class | `source/app/TeacherApp/TeacherViewModel.swift` | 13 | Teacher state, mDNS discovery, and WebSocket peer manager |
+| `KioskModeController` | class | `source/app/StudentApp/Kiosk/KioskModeController.swift` | 13 | Lock windows at `.screenSaver` level with presentation options |
+| `InputInterceptor` | class | `source/app/StudentApp/Kiosk/InputInterceptor.swift` | 13 | Low-level CGEventTap input swallower and ⌘⇧U unlock trigger |
+| `ScreenBroadcaster` | class | `source/app/TeacherApp/ScreenBroadcaster.swift` | 11 | ScreenCaptureKit screen and system audio capture engine |
+| `DisplayKeepAlive` | enum | `source/app/Shared/Utility/DisplayKeepAlive.swift` | 6 | ProcessInfo assertion preventing display sleep during broadcast/lock |
+| `LicenseManager` | class | `source/app/Shared/Utility/LicenseManager.swift` | 5 | Ed25519 offline cryptographic license validator |
+| `H264Decoder` | class | `source/app/StudentApp/H264Decoder.swift` | 5 | VideoToolbox hardware decoder with SPS/PPS dynamic rebuild |
+| `H264Encoder` | class | `source/app/TeacherApp/H264Encoder.swift` | 4 | VideoToolbox hardware encoder producing Annex-B streams (1s IDR) |
+| `BrightnessManager` | enum | `source/app/StudentApp/BrightnessManager.swift` | 4 | DisplayServices private framework display brightness adjuster |
+| `BroadcastAudioPlayer` | class | `source/app/StudentApp/AudioPlayer.swift` | 3 | AVAudioEngine 240ms jitter buffer audio renderer with format lock |
 
 ## CONVENTIONS
 - Multiplexing uses 4-byte ASCII magic headers: `FZFR` (unicast video), `FZHV` (H.264 multicast), `FZAU` (PCM audio), `FZMP` (AP probe). Non-magic binary frames decode as JSON `CommandMessage`.

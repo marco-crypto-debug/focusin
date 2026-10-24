@@ -14,8 +14,8 @@ Shared networking primitives, binary framing protocols, Ed25519 licensing, and s
 | Transport settings | `Networking/PeerTransport.swift` | NWParameters factory enabling TCP_NODELAY, WebSocket options, interactive QoS |
 | Wire protocol models | `Protocol/CommandMessage.swift`, `CommandType.swift` | JSON message envelope and command discriminator enum |
 | Cryptographic licensing | `Utility/LicenseManager.swift` | Ed25519 public-key signature verification for monthly and Pro licenses |
-| Tier & device limits | `Utility/DeviceLimit.swift` | Free (5 devices, unicast) vs Pro (50 devices, multicast/audio) enforcement |
-| App protection & tools | `Utility/QuitGuard.swift`, `LoginStartManager.swift` | ⌘Q password guard, LaunchAgent auto-start, update checker, menu bar manager |
+| Tier & device limits | `Utility/DeviceLimit.swift` | Unified 50-device limit across builds; unicast/multicast & audio open to all |
+| App protection & tools | `Utility/QuitGuard.swift`, `LoginStartManager.swift`, `DisplayKeepAlive.swift` | ⌘Q guard, LaunchAgent auto-start, sleep prevention assertion, update checker |
 
 ## CONVENTIONS
 - Multiplexing uses 4-byte ASCII magic headers: `FZFR` (unicast video), `FZHV` (H.264 multicast), `FZAU` (PCM audio), `FZMP` (AP probe). Non-magic packets are parsed as JSON `CommandMessage`.
