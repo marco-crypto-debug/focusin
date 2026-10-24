@@ -228,6 +228,7 @@ final class CommandListener: ObservableObject {
                 startMulticastAudio()
             } else {
                 startUnicastVideo()
+                startUnicastAudio()
             }
 #elseif FOCUSIN_BETA
             startMulticastVideo()
@@ -247,8 +248,9 @@ final class CommandListener: ObservableObject {
             DisplayKeepAlive.shared.release()
 #if FOCUSIN_DELTA
             stopUnicastVideo()
+            stopUnicastAudio()   // 停止單播音訊播放器，重設 lockedFormat / isPrimed
             stopMulticastVideo()
-            stopMulticastAudio()
+            stopMulticastAudio() // 含 audio.stop()
 #elseif FOCUSIN_BETA
             stopMulticastVideo()
 #elseif FOCUSIN_ALPHA
@@ -325,6 +327,7 @@ final class CommandListener: ObservableObject {
 
     private func stopMulticastAudio() {
         multicastAudio.stop()
+        audio.stop()   // 釋放 AVAudioEngine，重設 lockedFormat 與 isPrimed
     }
 
 #if FOCUSIN_DELTA
@@ -351,6 +354,19 @@ final class CommandListener: ObservableObject {
     private func stopUnicastVideo() {
         h264Decoder.stop()
         hasDecodedFrame = false
+    }
+
+    /// 啟動單播音訊播放（Delta：WebSocket 單播模式）。
+    /// AVAudioEngine 由 AudioPlayer.play() 惰性啟動；此處先停止殘留狀態，
+    // 確保本次廣播的 lockedFormat / isPrimed 從乾淨狀態開始。
+    private func startUnicastAudio() {
+        audio.stop()
+        appendLog("Delta 單播音訊通道已就緒（WebSocket）")
+    }
+
+    /// 停止單播音訊播放（Delta：WebSocket 單播模式）。
+    private func stopUnicastAudio() {
+        audio.stop()
     }
 
     /// 解一幀 H.264（供 onFrame 背景佇列呼叫；未解出首幀前只接受關鍵幀）。
