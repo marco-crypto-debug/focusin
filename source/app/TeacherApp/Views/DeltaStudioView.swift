@@ -91,7 +91,7 @@ struct DeltaStudioView: View {
                         Text("iMac Lab")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundStyle(FocusInTheme.studioTextPrimary)
-                        Text("Room 204 · Local network")
+                        Text("\(viewModel.currentWiFiName) · Local network")
                             .font(.system(size: 11))
                             .foregroundStyle(FocusInTheme.studioTextSecondary)
                     }
@@ -418,7 +418,9 @@ struct DeltaStudioView: View {
             HStack {
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(viewModel.broadcastActive ? FocusInTheme.studioRedSoft : FocusInTheme.studioGreen)
+                        .fill(viewModel.broadcastActive
+                              ? FocusInTheme.studioRedSoft
+                              : (viewModel.hasScreenRecordingPermission ? FocusInTheme.studioGreen : .orange))
                         .frame(width: 7, height: 7)
                     Text("Screen preview")
                         .font(.system(size: 12.5, weight: .semibold))
@@ -441,13 +443,30 @@ struct DeltaStudioView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(FocusInTheme.studioRed.opacity(0.18), in: Capsule())
+                } else if viewModel.hasScreenRecordingPermission {
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(FocusInTheme.studioGreen)
+                            .frame(width: 5, height: 5)
+                        Text("Real-time preview")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(FocusInTheme.studioGreen)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(FocusInTheme.studioGreen.opacity(0.12), in: Capsule())
                 } else {
-                    Text("Standby")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(FocusInTheme.studioTextSecondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.white.opacity(0.06), in: Capsule())
+                    HStack(spacing: 5) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.orange)
+                        Text("Permission needed")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.orange.opacity(0.15), in: Capsule())
                 }
             }
 
@@ -457,7 +476,9 @@ struct DeltaStudioView: View {
                     .fill(Color(red: 0.045, green: 0.045, blue: 0.055))
                     .aspectRatio(16/9, contentMode: .fit)
 
-                if viewModel.broadcastActive, let img = viewModel.previewImage {
+                if !viewModel.hasScreenRecordingPermission {
+                    permissionRequestView
+                } else if let img = viewModel.previewImage {
                     Image(nsImage: img)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -467,8 +488,12 @@ struct DeltaStudioView: View {
                                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
                         )
                 } else {
-                    // 待機風格插畫看板（致敬網頁互動演示 The water cycle）
-                    standbySlideView
+                    VStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text("正在載入即時桌面預覽...")
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(FocusInTheme.studioTextSecondary)
+                    }
                 }
             }
             .overlay(
@@ -558,66 +583,63 @@ struct DeltaStudioView: View {
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(FocusInTheme.studioLine, lineWidth: 1))
     }
 
-    // 待機插畫看板
-    private var standbySlideView: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text("SCIENCE · PERIOD 3")
-                    .font(.system(size: 10, weight: .bold))
-                    .kerning(1.2)
-                    .foregroundStyle(Color(red: 0.4, green: 0.8, blue: 0.8))
-                Spacer()
-                Text("10:42")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+    // 螢幕錄製權限請求視圖
+    private var permissionRequestView: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.15))
+                    .frame(width: 52, height: 52)
+                Image(systemName: "video.badge.waveform")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(.orange)
             }
 
-            Spacer()
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("TODAY'S LESSON")
-                    .font(.system(size: 9.5, weight: .bold))
-                    .kerning(1.0)
+            VStack(spacing: 4) {
+                Text("需要「螢幕錄製」權限")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(FocusInTheme.studioTextPrimary)
+                Text("macOS 需要您授予螢幕錄製權限，FocusIn 才能即時預覽並廣播桌面。")
+                    .font(.system(size: 11.5))
                     .foregroundStyle(FocusInTheme.studioTextSecondary)
-                Text("The water cycle")
-                    .font(.system(size: 24, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white)
-                Text("Evaporation · Condensation · Precipitation")
-                    .font(.system(size: 12))
-                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 320)
             }
 
-            // 進度條與等化器裝飾
-            HStack {
-                Capsule()
-                    .fill(Color(red: 0.843, green: 0.098, blue: 0.125))
-                    .frame(width: 80, height: 3)
-                Capsule()
-                    .fill(Color.white.opacity(0.12))
-                    .frame(maxWidth: 140, maxHeight: 3)
-                Spacer()
-                HStack(spacing: 3) {
-                    ForEach(0..<6) { i in
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(Color.white.opacity(0.35))
-                            .frame(width: 2.5, height: CGFloat([8, 14, 11, 18, 9, 13][i]))
+            HStack(spacing: 10) {
+                Button {
+                    viewModel.requestScreenRecordingPermission()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "gearshape.fill")
+                        Text("前往「系統設定」開啟權限")
                     }
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(FocusInTheme.studioRed, in: RoundedRectangle(cornerRadius: 6))
+                    .foregroundStyle(.white)
                 }
+                .buttonStyle(.plain)
+
+                Button {
+                    viewModel.checkScreenRecordingPermission()
+                    Task { await viewModel.captureStandbyPreview() }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.clockwise")
+                        Text("重新檢測")
+                    }
+                    .font(.system(size: 11.5, weight: .medium))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+                }
+                .buttonStyle(.plain)
             }
         }
-        .padding(20)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 0.12, green: 0.14, blue: 0.20),
-                    Color(red: 0.08, green: 0.10, blue: 0.13),
-                    Color(red: 0.05, green: 0.05, blue: 0.07)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .padding(16)
     }
 
     // MARK: - 右側三聯狀態統計卡片
@@ -672,7 +694,7 @@ struct DeltaStudioView: View {
             VStack(spacing: 5) {
                 streamRow(label: "Resolution", value: "Native (30fps)")
                 streamRow(label: "Transport", value: DeviceLimit.transportMode.label)
-                streamRow(label: "Network", value: "Local Wi-Fi")
+                streamRow(label: "Network", value: viewModel.currentWiFiName)
                 streamRow(label: "Clock", value: "AirPlay 2 PTS")
             }
         }
@@ -1280,7 +1302,7 @@ struct StudentCardItemView: View {
                         .fill(Color(red: 0.05, green: 0.05, blue: 0.07))
                         .aspectRatio(16/10, contentMode: .fit)
 
-                    if broadcastActive, let img = previewImage {
+                    if let img = previewImage, (broadcastActive || !isLocked) {
                         Image(nsImage: img)
                             .resizable()
                             .aspectRatio(contentMode: .fit)

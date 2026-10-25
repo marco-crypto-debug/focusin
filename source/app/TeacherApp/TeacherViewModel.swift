@@ -1,6 +1,8 @@
 import AppKit
+import CoreWLAN
 import Foundation
 import Network
+import ScreenCaptureKit
 
 /// 教師端視圖模型：Bonjour 裝置發現、連線管理、命令廣播。
 @MainActor
@@ -25,7 +27,14 @@ final class TeacherViewModel: ObservableObject {
     @Published var broadcastDuration: TimeInterval = 0
     /// 延遲歷史數據（供 Studio Sparkline 即時圖表繪製）
     @Published var latencyHistory: [Double] = [16, 14, 15, 18, 16, 15, 19, 16, 17, 16]
+    /// 當前連線的 Wi-Fi 名稱（動態偵測）
+    @Published var currentWiFiName: String = "Local network"
+    /// 是否已獲得螢幕錄製權限
+    @Published var hasScreenRecordingPermission: Bool = CGPreflightScreenCaptureAccess()
+
     private var broadcastTimer: Timer?
+    private var standbyPreviewTimer: Timer?
+    private var wifiRefreshTimer: Timer?
 
     private var browser: PeerBrowser?
     private var connections: [String: PeerConnection] = [:]   // studentID -> command connection
@@ -61,6 +70,10 @@ final class TeacherViewModel: ObservableObject {
         checkForUpdates()
         startPingLoop()
         refreshDisplays()
+        checkScreenRecordingPermission()
+        refreshWiFiName()
+        startWiFiMonitoring()
+        startStandbyPreviewLoop()
         broadcaster.onPreviewImage = { [weak self] img in
             Task { @MainActor in
                 self?.previewImage = img
@@ -93,6 +106,126 @@ final class TeacherViewModel: ObservableObject {
                 } catch {
                     appendLog("切換顯示器失敗：\(error.localizedDescription)")
                 }
+            }
+        } else {
+            Task {
+                await captureStandbyPreview()
+            }
+        }
+    }
+
+    // MARK: - 螢幕錄製權限與即時預覽
+
+    func checkScreenRecordingPermission() {
+        hasScreenRecordingPermission = CGPreflightScreenCaptureAccess()
+    }
+
+    func requestScreenRecordingPermission() {
+        _ = CGRequestScreenCaptureAccess()
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+            self?.checkScreenRecordingPermission()
+            Task { await self?.captureStandbyPreview() }
+        }
+    }
+
+    func startStandbyPreviewLoop() {
+        standbyPreviewTimer?.invalidate()
+        standbyPreviewTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                await self?.captureStandbyPreview()
+            }
+        }
+        Task { @MainActor in
+            await captureStandbyPreview()
+        }
+    }
+
+    func stopStandbyPreviewLoop() {
+        standbyPreviewTimer?.invalidate()
+        standbyPreviewTimer = nil
+    }
+
+    func captureStandbyPreview() async {
+        checkScreenRecordingPermission()
+        guard hasScreenRecordingPermission else { return }
+        guard !broadcastActive else { return }
+
+        do {
+            let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+            guard !content.displays.isEmpty else { return }
+
+            let targetDisplay = content.displays.first(where: { [weak self] d in
+                guard let self = self else { return false }
+                if let selID = self.broadcaster.selectedDisplayID {
+                    return d.displayID == selID
+                }
+                return true
+            }) ?? content.displays[0]
+
+            let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
+            let config = SCStreamConfiguration()
+            config.width = 720
+            let aspect = Double(targetDisplay.height) / Double(max(targetDisplay.width, 1))
+            config.height = max(Int(720.0 * aspect), 100)
+            config.showsCursor = true
+
+            let cgImg = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+            let nsImg = NSImage(cgImage: cgImg, size: NSSize(width: cgImg.width, height: cgImg.height))
+            self.previewImage = nsImg
+        } catch {
+            if (error as NSError).code == -3801 {
+                self.hasScreenRecordingPermission = false
+            }
+        }
+    }
+
+    // MARK: - Wi-Fi 名稱動態檢測
+
+    func startWiFiMonitoring() {
+        wifiRefreshTimer?.invalidate()
+        wifiRefreshTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshWiFiName()
+            }
+        }
+    }
+
+    func refreshWiFiName() {
+        Task.detached {
+            var detected: String? = nil
+            if let ssid = CWWiFiClient.shared().interface()?.ssid(), !ssid.isEmpty {
+                detected = ssid
+            } else {
+                let iface = CWWiFiClient.shared().interface()?.interfaceName ?? "en0"
+                let task = Process()
+                task.executableURL = URL(fileURLWithPath: "/usr/sbin/ipconfig")
+                task.arguments = ["getsummary", iface]
+                let pipe = Pipe()
+                task.standardOutput = pipe
+                do {
+                    try task.run()
+                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                    task.waitUntilExit()
+                    if let output = String(data: data, encoding: .utf8) {
+                        for line in output.components(separatedBy: "\n") {
+                            let trimmed = line.trimmingCharacters(in: .whitespaces)
+                            if trimmed.hasPrefix("SSID : ") {
+                                let name = String(trimmed.dropFirst("SSID : ".count))
+                                if !name.isEmpty {
+                                    detected = name
+                                    break
+                                }
+                            }
+                        }
+                    }
+                } catch {}
+            }
+            let finalName = detected ?? "Wi-Fi"
+            await MainActor.run { [weak self] in
+                self?.currentWiFiName = finalName
             }
         }
     }
@@ -460,6 +593,14 @@ final class TeacherViewModel: ObservableObject {
 
     private func startBroadcast() {
         broadcastError = nil
+        checkScreenRecordingPermission()
+        if !hasScreenRecordingPermission {
+            requestScreenRecordingPermission()
+            broadcastError = "請先授予「螢幕錄製」權限再開始廣播"
+            appendLog("⚠️ 無法開始廣播：未授予螢幕錄製權限")
+            return
+        }
+        stopStandbyPreviewLoop()
 #if FOCUSIN_DELTA
         // Delta：未勾選任何學生時直接提示，避免「廣播中」但學生端收不到
         if selectedIDs.isEmpty {
@@ -607,7 +748,6 @@ final class TeacherViewModel: ObservableObject {
         broadcastTimer?.invalidate()
         broadcastTimer = nil
         broadcastDuration = 0
-        previewImage = nil
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
@@ -621,6 +761,7 @@ final class TeacherViewModel: ObservableObject {
         send(CommandMessage(type: .streamStop))
         broadcastActive = false
         appendLog("已停止廣播")
+        startStandbyPreviewLoop()
     }
 
     /// 畫質切換時：先停再開，讓新畫質立即生效。

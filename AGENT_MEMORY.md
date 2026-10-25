@@ -14,6 +14,14 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-25T02:50:00.000Z] @Antigravity
+- **Summary**: Implemented real-time desktop screen preview with Screen Recording permission fallback and dynamic Wi-Fi SSID detection
+  - **Files Touched**: `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `AGENT_MEMORY.md`
+  - **Key Decisions**:
+    - Replaced static "Room 204" with dynamic Wi-Fi SSID detection using `CWWiFiClient` and `ipconfig getsummary` fallback to bypass macOS 14+ CoreLocation restriction, dynamically displaying the connected network name in sidebar and stream telemetry card.
+    - Implemented real desktop screen preview in Studio: When broadcasting, live 30fps stream feeds `onPreviewImage` (8fps); when on standby, `SCScreenshotManager` captures 720p snapshots every 1.5s so the preview is always actual live desktop content.
+    - Added in-viewport Screen Recording permission detection (`CGPreflightScreenCaptureAccess`): If permission is missing, displays an interactive permission request card with direct one-click button to open macOS System Settings and trigger `CGRequestScreenCaptureAccess`.
+    - Repackaged and signed Delta Teacher & Student applications and generated fresh DMGs in `release/delta/`.
 ### 🔹 [2026-10-25T01:50:00.000Z] @Antigravity
 - **Summary**: Upgraded FocusIn Delta Edition UI to Apple Pro Studio dark aesthetic & overhauled student lock screen
   - **Files Touched**: `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/TeacherApp/Views/DeviceListView.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/ScreenBroadcaster.swift`, `source/app/StudentApp/Kiosk/KioskLockView.swift`, `source/app/StudentApp/Views/StatusView.swift`, `source/app/Shared/Utility/FocusInTheme.swift`, `source/tools/build.sh`, `AGENT_MEMORY.md`
