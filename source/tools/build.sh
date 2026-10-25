@@ -164,6 +164,10 @@ build_variant() {
   make_dmg "TeacherApp" "FocusIn-$DMG_TAG""Teacher"
   make_dmg "StudentApp" "FocusIn-$DMG_TAG""Student"
 
+  rm -rf "$OUTDIR/TeacherApp.app" "$OUTDIR/StudentApp.app"
+  cp -R "$STAGE/TeacherApp.app" "$OUTDIR/"
+  cp -R "$STAGE/StudentApp.app" "$OUTDIR/"
+
   echo "✓ $VARIANT 版完成"
 }
 
