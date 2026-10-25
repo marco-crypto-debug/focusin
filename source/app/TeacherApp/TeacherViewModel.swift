@@ -28,7 +28,7 @@ final class TeacherViewModel: ObservableObject {
     /// 延遲歷史數據（供 Studio Sparkline 即時圖表繪製）
     @Published var latencyHistory: [Double] = [16, 14, 15, 18, 16, 15, 19, 16, 17, 16]
     /// 當前連線的 Wi-Fi 名稱（動態偵測）
-    @Published var currentWiFiName: String = "Local network"
+    @Published var currentWiFiName: String = TeacherViewModel.detectCurrentWiFiSSID() ?? "Wi-Fi"
     /// 是否已獲得螢幕錄製權限
     @Published var hasScreenRecordingPermission: Bool = CGPreflightScreenCaptureAccess()
 
@@ -200,37 +200,40 @@ final class TeacherViewModel: ObservableObject {
         }
     }
 
-    func refreshWiFiName() {
-        Task.detached {
-            var detected: String? = nil
-            if let ssid = CWWiFiClient.shared().interface()?.ssid(), !ssid.isEmpty {
-                detected = ssid
-            } else {
-                let iface = CWWiFiClient.shared().interface()?.interfaceName ?? "en0"
-                let task = Process()
-                task.executableURL = URL(fileURLWithPath: "/usr/sbin/ipconfig")
-                task.arguments = ["getsummary", iface]
-                let pipe = Pipe()
-                task.standardOutput = pipe
-                do {
-                    try task.run()
-                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                    task.waitUntilExit()
-                    if let output = String(data: data, encoding: .utf8) {
-                        for line in output.components(separatedBy: "\n") {
-                            let trimmed = line.trimmingCharacters(in: .whitespaces)
-                            if trimmed.hasPrefix("SSID : ") {
-                                let name = String(trimmed.dropFirst("SSID : ".count))
-                                if !name.isEmpty {
-                                    detected = name
-                                    break
-                                }
+    nonisolated static func detectCurrentWiFiSSID() -> String? {
+        if let ssid = CWWiFiClient.shared().interface()?.ssid(), !ssid.isEmpty {
+            return ssid
+        }
+        let ifaces = [CWWiFiClient.shared().interface()?.interfaceName ?? "en0", "en0", "en1"]
+        for iface in ifaces {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/sbin/ipconfig")
+            task.arguments = ["getsummary", iface]
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            do {
+                try task.run()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                task.waitUntilExit()
+                if let output = String(data: data, encoding: .utf8) {
+                    for line in output.components(separatedBy: "\n") {
+                        let trimmed = line.trimmingCharacters(in: .whitespaces)
+                        if trimmed.hasPrefix("SSID : ") {
+                            let name = String(trimmed.dropFirst("SSID : ".count))
+                            if !name.isEmpty {
+                                return name
                             }
                         }
                     }
-                } catch {}
-            }
-            let finalName = detected ?? "Wi-Fi"
+                }
+            } catch {}
+        }
+        return nil
+    }
+
+    func refreshWiFiName() {
+        Task.detached {
+            let finalName = TeacherViewModel.detectCurrentWiFiSSID() ?? "Wi-Fi"
             await MainActor.run { [weak self] in
                 self?.currentWiFiName = finalName
             }

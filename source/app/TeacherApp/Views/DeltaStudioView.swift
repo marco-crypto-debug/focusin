@@ -86,16 +86,11 @@ struct DeltaStudioView: View {
         VStack(spacing: 0) {
             // 頂部課室標題
             VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(viewModel.currentWiFiName)
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(FocusInTheme.studioTextPrimary)
-                            .lineLimit(1)
-                        Text("Local network")
-                            .font(.system(size: 11))
-                            .foregroundStyle(FocusInTheme.studioTextSecondary)
-                    }
+                HStack(alignment: .center) {
+                    Text(viewModel.currentWiFiName)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(FocusInTheme.studioTextPrimary)
+                        .lineLimit(1)
                     Spacer()
                     // 在線人數膠囊
                     HStack(spacing: 5) {

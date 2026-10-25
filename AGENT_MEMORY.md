@@ -14,6 +14,14 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-25T04:14:00.000Z] @Antigravity
+- **Summary**: Changed sidebar header to display exclusively the current Wi-Fi name
+  - **Files Touched**: `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `AGENT_MEMORY.md`
+  - **Key Decisions**:
+    - Removed the "Local network" subtitle entirely from `sidebarView` in `DeltaStudioView.swift`.
+    - Implemented `nonisolated static func detectCurrentWiFiSSID()` in `TeacherViewModel` to synchronously resolve the active Wi-Fi SSID at initialization, preventing any placeholder text flash.
+    - Top-left header now cleanly shows exclusively the current Wi-Fi name directly alongside the online status capsule.
+    - Recompiled, signed, and generated fresh DMGs in `release/delta/`.
 ### 🔹 [2026-10-25T04:03:00.000Z] @Antigravity
 - **Summary**: Excluded TeacherApp from ScreenCaptureKit filter to eliminate infinite recursive preview loop
   - **Files Touched**: `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/ScreenBroadcaster.swift`, `AGENT_MEMORY.md`
