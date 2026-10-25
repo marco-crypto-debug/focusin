@@ -14,6 +14,14 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-25T04:03:00.000Z] @Antigravity
+- **Summary**: Excluded TeacherApp from ScreenCaptureKit filter to eliminate infinite recursive preview loop
+  - **Files Touched**: `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/ScreenBroadcaster.swift`, `AGENT_MEMORY.md`
+  - **Key Decisions**:
+    - Identified root cause of infinite recursive mirror tunnel in preview card: `SCContentFilter(display: targetDisplay, excludingWindows: [])` was capturing TeacherApp's own window rendering the preview.
+    - Updated both `captureStandbyPreview()` in `TeacherViewModel` and `ScreenBroadcaster.start()` / `switchDisplay(to:)` to resolve the current process ID (`ProcessInfo.processInfo.processIdentifier`) and exclude the TeacherApp application via `SCContentFilter(display: targetDisplay, excludingApplications: [myApp], exceptingWindows: [])` (with window exclusion fallback).
+    - TeacherApp preview now displays the teacher's clean desktop, wallpapers, slides, and background apps without capturing itself.
+    - Recompiled, code-signed, and repackaged Delta DMGs (`release/delta/FocusIn-Delta-Teacher.dmg` and `release/delta/FocusIn-Delta-Student.dmg`).
 ### 🔹 [2026-10-25T02:56:00.000Z] @Antigravity
 - **Summary**: Switched primary lab title directly to dynamic Wi-Fi SSID with Local network subtitle
   - **Files Touched**: `source/app/TeacherApp/Views/DeltaStudioView.swift`, `AGENT_MEMORY.md`

@@ -165,7 +165,14 @@ final class TeacherViewModel: ObservableObject {
                 return true
             }) ?? content.displays[0]
 
-            let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
+            let myPID = ProcessInfo.processInfo.processIdentifier
+            let filter: SCContentFilter
+            if let myApp = content.applications.first(where: { $0.processID == myPID }) {
+                filter = SCContentFilter(display: targetDisplay, excludingApplications: [myApp], exceptingWindows: [])
+            } else {
+                let myWindows = content.windows.filter { $0.owningApplication?.processID == myPID }
+                filter = SCContentFilter(display: targetDisplay, excludingWindows: myWindows)
+            }
             let config = SCStreamConfiguration()
             config.width = 720
             let aspect = Double(targetDisplay.height) / Double(max(targetDisplay.width, 1))

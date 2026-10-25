@@ -174,7 +174,14 @@ final class ScreenBroadcaster: NSObject {
                     await MainActor.run { onStartError?("未找到可廣播的顯示器。") }
                     return
                 }
-                let filter = SCContentFilter(display: targetDisplay, excludingWindows: [])
+                let myPID = ProcessInfo.processInfo.processIdentifier
+                let filter: SCContentFilter
+                if let myApp = content.applications.first(where: { $0.processID == myPID }) {
+                    filter = SCContentFilter(display: targetDisplay, excludingApplications: [myApp], exceptingWindows: [])
+                } else {
+                    let myWindows = content.windows.filter { $0.owningApplication?.processID == myPID }
+                    filter = SCContentFilter(display: targetDisplay, excludingWindows: myWindows)
+                }
                 self.activeFilter = filter
 
                 let params = self.resolutionParameters(displayWidth: targetDisplay.width)
@@ -291,7 +298,15 @@ final class ScreenBroadcaster: NSObject {
         self.selectedDisplayID = displayID
         guard let stream = self.stream else { return }
         guard let match = availableDisplays.first(where: { $0.displayID == displayID }) else { return }
-        let newFilter = SCContentFilter(display: match, excludingWindows: [])
+        let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        let myPID = ProcessInfo.processInfo.processIdentifier
+        let newFilter: SCContentFilter
+        if let myApp = content?.applications.first(where: { $0.processID == myPID }) {
+            newFilter = SCContentFilter(display: match, excludingApplications: [myApp], exceptingWindows: [])
+        } else {
+            let myWindows = content?.windows.filter { $0.owningApplication?.processID == myPID } ?? []
+            newFilter = SCContentFilter(display: match, excludingWindows: myWindows)
+        }
         self.activeFilter = newFilter
         try await stream.updateContentFilter(newFilter)
     }
