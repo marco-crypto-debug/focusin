@@ -88,10 +88,11 @@ struct DeltaStudioView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("iMac Lab")
+                        Text(viewModel.currentWiFiName)
                             .font(.system(size: 15, weight: .bold))
                             .foregroundStyle(FocusInTheme.studioTextPrimary)
-                        Text("\(viewModel.currentWiFiName) · Local network")
+                            .lineLimit(1)
+                        Text("Local network")
                             .font(.system(size: 11))
                             .foregroundStyle(FocusInTheme.studioTextSecondary)
                     }

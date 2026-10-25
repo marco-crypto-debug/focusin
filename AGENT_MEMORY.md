@@ -14,6 +14,10 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-25T02:56:00.000Z] @Antigravity
+- **Summary**: Switched primary lab title directly to dynamic Wi-Fi SSID with Local network subtitle
+  - **Files Touched**: `source/app/TeacherApp/Views/DeltaStudioView.swift`, `AGENT_MEMORY.md`
+  - **Key Decisions**: Updated DeltaStudioView sidebar header to use `viewModel.currentWiFiName` directly as the main bold headline, replacing placeholder "iMac Lab" and displaying "Local network" as clean subtext. Repackaged and signed Delta DMGs.
 ### 🔹 [2026-10-25T02:50:00.000Z] @Antigravity
 - **Summary**: Implemented real-time desktop screen preview with Screen Recording permission fallback and dynamic Wi-Fi SSID detection
   - **Files Touched**: `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `AGENT_MEMORY.md`
