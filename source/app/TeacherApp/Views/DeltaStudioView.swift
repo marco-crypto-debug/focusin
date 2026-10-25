@@ -22,9 +22,77 @@ enum DeltaStudioTab: String, CaseIterable, Identifiable {
     }
 }
 
+enum SettingsSubTab: String, CaseIterable, Identifiable {
+    case general = "通用"
+    case transport = "傳輸模式"
+    case security = "管理密碼"
+    case probe = "組播探測"
+    case about = "關於"
+
+    var id: String { rawValue }
+    var icon: String {
+        switch self {
+        case .general: return "gearshape"
+        case .transport: return "network"
+        case .security: return "lock.shield"
+        case .probe: return "waveform.path.ecg"
+        case .about: return "info.circle"
+        }
+    }
+}
+
+/// FocusIn 向量 Squircle 應用圖標
+struct FocusInLogoView: View {
+    var size: CGFloat = 86
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 1.0, green: 0.60, blue: 0.69),
+                            Color(red: 0.88, green: 0.25, blue: 0.42),
+                            Color(red: 0.55, green: 0.24, blue: 1.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
+                        .stroke(Color.white.opacity(0.28), lineWidth: 1.5)
+                )
+                .shadow(color: Color(red: 0.88, green: 0.25, blue: 0.42).opacity(0.35), radius: size * 0.16, x: 0, y: size * 0.08)
+
+            GeometryReader { geo in
+                let w = geo.size.width
+                let h = geo.size.height
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.35, y: h * 0.72))
+                    p.addLine(to: CGPoint(x: w * 0.35, y: h * 0.32))
+                    p.addLine(to: CGPoint(x: w * 0.70, y: h * 0.32))
+                    p.move(to: CGPoint(x: w * 0.35, y: h * 0.51))
+                    p.addLine(to: CGPoint(x: w * 0.62, y: h * 0.51))
+                }
+                .stroke(Color.white, style: StrokeStyle(lineWidth: w * 0.085, lineCap: .round, lineJoin: .round))
+
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: w * 0.09, height: w * 0.09)
+                    .position(x: w * 0.72, y: h * 0.32)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
 struct DeltaStudioView: View {
     @EnvironmentObject var viewModel: TeacherViewModel
     @State private var selectedTab: DeltaStudioTab = .studio
+    @State private var settingsSubTab: SettingsSubTab = .about
+    @State private var updateChannel: String = "正式版 (Stable)"
+    @State private var showSaveSuccess: Bool = false
     @State private var allSelected: Bool = false
     @State private var brightness: Double = 1.0
     @State private var launchBundleID: String = "com.apple.Safari"
@@ -360,6 +428,38 @@ struct DeltaStudioView: View {
                 metricItem(label: "LATENCY", value: "\(viewModel.averageLatency) ms")
                 metricItem(label: "FPS", value: "30")
                 metricItem(label: "BITRATE", value: "Adaptive")
+            }
+
+            Divider()
+                .frame(height: 16)
+                .background(FocusInTheme.studioLine)
+
+            // 頂部輔助工具列 (全螢幕、主題、語系)
+            HStack(spacing: 8) {
+                Button {
+                    NSApp.keyWindow?.toggleFullScreen(nil)
+                } label: {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 11))
+                        .foregroundStyle(FocusInTheme.studioTextSecondary)
+                        .padding(5)
+                        .background(Color.white.opacity(0.04), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .help("切換全螢幕")
+
+                Image(systemName: "sun.max.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+                    .padding(5)
+                    .background(Color.white.opacity(0.04), in: Circle())
+
+                Text("TW")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 4))
             }
         }
         .padding(.horizontal, 18)
@@ -975,190 +1075,480 @@ struct DeltaStudioView: View {
 
     private var settingsTabContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // 傳輸模式 (Transport Mode)
-            toolSectionCard(title: "TRANSPORT MODE", icon: "network") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Picker("", selection: Binding(
-                        get: { DeviceLimit.transportMode },
-                        set: { mode in
-                            DeviceLimit.transportMode = mode
-                            viewModel.appendLog("傳輸方式切換為「\(mode.label)」")
+            // 次導航列 (Sub-navigation Pills + 儲存設定按鈕)
+            HStack {
+                HStack(spacing: 6) {
+                    ForEach(SettingsSubTab.allCases) { sub in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                settingsSubTab = sub
+                            }
+                        } label: {
+                            HStack(spacing: 5) {
+                                Image(systemName: sub.icon)
+                                    .font(.system(size: 11))
+                                Text(sub.rawValue)
+                                    .font(.system(size: 12, weight: settingsSubTab == sub ? .semibold : .regular))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                settingsSubTab == sub
+                                    ? Color.white.opacity(0.14)
+                                    : Color.white.opacity(0.04),
+                                in: RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            )
+                            .foregroundStyle(
+                                settingsSubTab == sub
+                                    ? FocusInTheme.studioTextPrimary
+                                    : FocusInTheme.studioTextSecondary
+                            )
                         }
-                    )) {
-                        ForEach(TransportMode.allCases) { m in
-                            Text(m.label).tag(m)
-                        }
+                        .buttonStyle(.plain)
                     }
-                    .pickerStyle(.segmented)
+                }
 
-                    Text(DeviceLimit.transportRecommendation(for: viewModel.peers.count))
-                        .font(.system(size: 11.5))
+                Spacer()
+
+                // 儲存設定按鈕 (Matching screenshot's blue Save button)
+                Button {
+                    showSaveSuccess = true
+                    viewModel.appendLog("設定已成功儲存")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+                        showSaveSuccess = false
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: showSaveSuccess ? "checkmark" : "square.and.arrow.down.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(showSaveSuccess ? "已儲存" : "儲存設定")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(
+                        showSaveSuccess ? FocusInTheme.studioGreen : Color(red: 0.14, green: 0.44, blue: 0.98),
+                        in: RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    )
+                    .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.bottom, 4)
+
+            // 依子分頁呈現不同內容
+            switch settingsSubTab {
+            case .about:
+                aboutCardView
+                    .frame(maxWidth: .infinity, alignment: .center)
+            case .general:
+                generalSettingsSection
+            case .transport:
+                transportSettingsSection
+            case .security:
+                securitySettingsSection
+            case .probe:
+                probeSettingsSection
+            }
+        }
+    }
+
+    // MARK: - 關於 FocusIn 卡片 (About Card - Matching User Mockup)
+
+    private var aboutCardView: some View {
+        VStack(spacing: 22) {
+            // 1. App Logo & Brand Header
+            VStack(spacing: 12) {
+                FocusInLogoView(size: 86)
+                    .padding(.top, 6)
+
+                VStack(spacing: 6) {
+                    Text("FocusIn")
+                        .font(.system(size: 26, weight: .bold))
+                        .foregroundStyle(FocusInTheme.studioTextPrimary)
+
+                    Text("v1.5.10-delta · Native macOS Classroom System")
+                        .font(.system(size: 12.5, weight: .medium))
                         .foregroundStyle(FocusInTheme.studioTextSecondary)
-                    Text("UDP 組播模式：畫面與聲音均只發 1 份串流，由路由器/AP 複製給全體學生，最高支援 50 台擴容。")
-                        .font(.system(size: 11))
-                        .foregroundStyle(FocusInTheme.studioTextSecondary.opacity(0.8))
                 }
             }
 
-            // 管理員密碼設定
-            toolSectionCard(title: "ADMIN PASSWORD", icon: "lock.shield.fill") {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(QuitGuard.hasPassword ? "已設定管理員密碼" : "尚未設定管理員密碼")
-                            .font(.system(size: 12.5, weight: .semibold))
-                            .foregroundStyle(QuitGuard.hasPassword ? FocusInTheme.studioGreen : .orange)
-                        Spacer()
+            // 2. Info Cards (No WeChat, No Telegram, No Donate!)
+            HStack(spacing: 14) {
+                aboutInfoCard(
+                    icon: "person.fill",
+                    iconColor: Color.blue,
+                    title: "作者",
+                    subtitle: "Marco",
+                    action: nil
+                )
+
+                aboutInfoCard(
+                    icon: "chevron.left.forwardslash.chevron.right",
+                    iconColor: Color.purple,
+                    title: "開源地址",
+                    subtitle: "檢視程式碼 ↗",
+                    action: {
+                        if let url = URL(string: "https://github.com/marco-crypto-debug/FocusIn") {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
-                    Text("此密碼同時用於：教師端退出 (⌘Q)、學生端退出保護與學生端緊急解鎖 (⌘⇧U)。設定後會自動下發至所有已連線學生端。")
-                        .font(.system(size: 11.5))
+                )
+
+                aboutInfoCard(
+                    icon: "checkmark.shield.fill",
+                    iconColor: Color.green,
+                    title: "安全架構",
+                    subtitle: "零依賴 / 離線 Ed25519",
+                    action: nil
+                )
+
+                aboutInfoCard(
+                    icon: "apple.logo",
+                    iconColor: Color.orange,
+                    title: "系統環境",
+                    subtitle: "macOS 14+ 原生",
+                    action: nil
+                )
+            }
+            .frame(maxWidth: 720)
+
+            // 3. Tech Stack Tags
+            HStack(spacing: 8) {
+                techTagPill("Swift 5")
+                techTagPill("SwiftUI")
+                techTagPill("ScreenCaptureKit")
+                techTagPill("VideoToolbox")
+                techTagPill("Network.framework")
+            }
+
+            // 4. Update Channel Segmented Control
+            HStack(spacing: 12) {
+                Text("更新通道:")
+                    .font(.system(size: 12))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+
+                HStack(spacing: 2) {
+                    updateChannelButton(label: "正式版 (Stable)", isBeta: false)
+                    updateChannelButton(label: "預覽版 (Beta)", isBeta: true)
+                }
+                .padding(3)
+                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            }
+
+            // 5. Check for Updates Button
+            VStack(spacing: 8) {
+                Button {
+                    viewModel.checkForUpdatesManually()
+                } label: {
+                    HStack(spacing: 7) {
+                        if viewModel.isCheckingUpdate {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                        Text("檢查更新")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 9)
+                    .background(Color(red: 0.14, green: 0.44, blue: 0.98), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isCheckingUpdate)
+
+                if let update = viewModel.updateAvailable {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundStyle(FocusInTheme.studioGreen)
+                        Text("發現新版本（\(update.version)）")
+                            .font(.system(size: 11.5, weight: .semibold))
+                            .foregroundStyle(FocusInTheme.studioGreen)
+                        if let url = URL(string: update.url) {
+                            Button("立即下載 DMG") { UpdateChecker.downloadAndOpen(url) }
+                                .font(.system(size: 11.5, weight: .semibold))
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                } else if let msg = viewModel.updateCheckStatusText {
+                    Text(msg)
+                        .font(.system(size: 11))
                         .foregroundStyle(FocusInTheme.studioTextSecondary)
+                } else {
+                    Text("目前已是最新版本 (\(UpdateChecker.localDisplayVersion))")
+                        .font(.system(size: 11))
+                        .foregroundStyle(FocusInTheme.studioTextSecondary.opacity(0.7))
+                }
+            }
 
-                    if QuitGuard.hasPassword {
-                        SecureField("舊密碼", text: $oldQuitPass)
-                            .textFieldStyle(.plain)
-                            .padding(8)
-                            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+            // 6. Copyright Footer
+            Text("Copyright © 2025-2026 FocusIn. All rights reserved.")
+                .font(.system(size: 10.5))
+                .foregroundStyle(FocusInTheme.studioTextSecondary.opacity(0.45))
+                .padding(.top, 4)
+                .padding(.bottom, 6)
+        }
+        .padding(32)
+        .frame(maxWidth: 780)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(FocusInTheme.studioCard)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(FocusInTheme.studioLine, lineWidth: 1)
+        )
+    }
+
+    private func aboutInfoCard(
+        icon: String,
+        iconColor: Color,
+        title: String,
+        subtitle: String,
+        action: (() -> Void)? = nil
+    ) -> some View {
+        Button {
+            action?()
+        } label: {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(iconColor.opacity(0.15))
+                        .frame(width: 38, height: 38)
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(iconColor)
+                }
+
+                Text(title)
+                    .font(.system(size: 11))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+
+                Text(subtitle)
+                    .font(.system(size: 12.5, weight: .bold))
+                    .foregroundStyle(FocusInTheme.studioTextPrimary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 8)
+            .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(FocusInTheme.studioLine, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(action == nil)
+    }
+
+    private func techTagPill(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .medium))
+            .foregroundStyle(FocusInTheme.studioTextSecondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(FocusInTheme.studioLine.opacity(0.5), lineWidth: 0.5)
+            )
+    }
+
+    private func updateChannelButton(label: String, isBeta: Bool) -> some View {
+        let isSelected = (updateChannel == label)
+        return Button {
+            updateChannel = label
+        } label: {
+            HStack(spacing: 4) {
+                Text(label)
+                    .font(.system(size: 11.5, weight: isSelected ? .semibold : .regular))
+                if isBeta {
+                    Circle()
+                        .fill(Color.orange)
+                        .frame(width: 5, height: 5)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(
+                isSelected ? Color(red: 0.14, green: 0.44, blue: 0.98) : Color.clear,
+                in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+            )
+            .foregroundStyle(isSelected ? .white : FocusInTheme.studioTextSecondary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var transportSettingsSection: some View {
+        toolSectionCard(title: "TRANSPORT MODE", icon: "network") {
+            VStack(alignment: .leading, spacing: 8) {
+                Picker("", selection: Binding(
+                    get: { DeviceLimit.transportMode },
+                    set: { mode in
+                        DeviceLimit.transportMode = mode
+                        viewModel.appendLog("傳輸方式切換為「\(mode.label)」")
                     }
+                )) {
+                    ForEach(TransportMode.allCases) { m in
+                        Text(m.label).tag(m)
+                    }
+                }
+                .pickerStyle(.segmented)
 
-                    SecureField("新管理員密碼（至少 4 字元）", text: $newQuitPass)
+                Text(DeviceLimit.transportRecommendation(for: viewModel.peers.count))
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+                Text("UDP 組播模式：畫面與聲音均只發 1 份串流，由路由器/AP 複製給全體學生，最高支援 50 台擴容。")
+                    .font(.system(size: 11))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary.opacity(0.8))
+            }
+        }
+    }
+
+    private var securitySettingsSection: some View {
+        toolSectionCard(title: "ADMIN PASSWORD", icon: "lock.shield.fill") {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(QuitGuard.hasPassword ? "已設定管理員密碼" : "尚未設定管理員密碼")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(QuitGuard.hasPassword ? FocusInTheme.studioGreen : .orange)
+                    Spacer()
+                }
+                Text("此密碼同時用於：教師端退出 (⌘Q)、學生端退出保護與學生端緊急解鎖 (⌘⇧U)。設定後會自動下發至所有已連線學生端。")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+
+                if QuitGuard.hasPassword {
+                    SecureField("舊密碼", text: $oldQuitPass)
                         .textFieldStyle(.plain)
                         .padding(8)
                         .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+                }
 
-                    Button(QuitGuard.hasPassword ? "變更並即時下發" : "設定並即時下發") {
-                        quitPassError = ""
-                        do {
-                            try QuitGuard.setPassword(newQuitPass, oldPassword: QuitGuard.hasPassword ? oldQuitPass : nil)
-                            viewModel.sendSetAdminPassword(newQuitPass)
-                            newQuitPass = ""
-                            oldQuitPass = ""
-                            viewModel.appendLog("已成功更新並廣播管理員密碼")
-                        } catch {
-                            quitPassError = error.localizedDescription
+                SecureField("新管理員密碼（至少 4 字元）", text: $newQuitPass)
+                    .textFieldStyle(.plain)
+                    .padding(8)
+                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+
+                Button(QuitGuard.hasPassword ? "變更並即時下發" : "設定並即時下發") {
+                    quitPassError = ""
+                    do {
+                        try QuitGuard.setPassword(newQuitPass, oldPassword: QuitGuard.hasPassword ? oldQuitPass : nil)
+                        viewModel.sendSetAdminPassword(newQuitPass)
+                        newQuitPass = ""
+                        oldQuitPass = ""
+                        viewModel.appendLog("已成功更新並廣播管理員密碼")
+                    } catch {
+                        quitPassError = error.localizedDescription
+                    }
+                }
+                .disabled(newQuitPass.count < 4)
+                .controlSize(.small)
+
+                if !quitPassError.isEmpty {
+                    Text(quitPassError)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+    }
+
+    private var probeSettingsSection: some View {
+        toolSectionCard(title: "MULTICAST THROUGHPUT TEST", icon: "antenna.radiowaves.left.and.right") {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("向組播組發送階梯速率流，學生端統計接收率，用於檢驗 AP 的 IGMP snooping 與組播吞吐性能。")
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(FocusInTheme.studioTextSecondary)
+
+                HStack(spacing: 8) {
+                    Text("起:").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
+                    TextField("2", text: $probeRateText)
+                        .textFieldStyle(.plain)
+                        .frame(width: 44)
+                        .padding(6)
+                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+                    Text("Mbps → 上限:").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
+                    TextField("16", text: $probeMaxRateText)
+                        .textFieldStyle(.plain)
+                        .frame(width: 48)
+                        .padding(6)
+                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+                    Text("Mbps 每檔:").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
+                    TextField("8", text: $probeStageText)
+                        .textFieldStyle(.plain)
+                        .frame(width: 38)
+                        .padding(6)
+                        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+                    Text("秒").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
+
+                    Spacer()
+
+                    Button(viewModel.probeRunning ? "停止測試" : "開始測試") {
+                        if viewModel.probeRunning {
+                            viewModel.stopMulticastProbe()
+                        } else {
+                            let rate = Double(probeRateText) ?? 2
+                            let max = Double(probeMaxRateText) ?? 16
+                            let stage = Double(probeStageText) ?? 8
+                            viewModel.startMulticastProbe(rate: rate, maxRate: max, step: 2, stageSeconds: stage)
                         }
                     }
-                    .disabled(newQuitPass.count < 4)
                     .controlSize(.small)
-
-                    if !quitPassError.isEmpty {
-                        Text(quitPassError)
-                            .font(.system(size: 11))
-                            .foregroundStyle(.red)
-                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(FocusInTheme.studioRed)
                 }
-            }
 
-            // AP 組播吞吐測試
-            toolSectionCard(title: "MULTICAST THROUGHPUT TEST", icon: "antenna.radiowaves.left.and.right") {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("向組播組發送階梯速率流，學生端統計接收率，用於檢驗 AP 的 IGMP snooping 與組播吞吐性能。")
-                        .font(.system(size: 11.5))
-                        .foregroundStyle(FocusInTheme.studioTextSecondary)
-
-                    HStack(spacing: 8) {
-                        Text("起:").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
-                        TextField("2", text: $probeRateText)
-                            .textFieldStyle(.plain)
-                            .frame(width: 44)
-                            .padding(6)
-                            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
-                        Text("Mbps → 上限:").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
-                        TextField("16", text: $probeMaxRateText)
-                            .textFieldStyle(.plain)
-                            .frame(width: 48)
-                            .padding(6)
-                            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
-                        Text("Mbps 每檔:").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
-                        TextField("8", text: $probeStageText)
-                            .textFieldStyle(.plain)
-                            .frame(width: 38)
-                            .padding(6)
-                            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
-                        Text("秒").font(.system(size: 11)).foregroundStyle(FocusInTheme.studioTextSecondary)
-
-                        Spacer()
-
-                        Button(viewModel.probeRunning ? "停止測試" : "開始測試") {
-                            if viewModel.probeRunning {
-                                viewModel.stopMulticastProbe()
-                            } else {
-                                let rate = Double(probeRateText) ?? 2
-                                let max = Double(probeMaxRateText) ?? 16
-                                let stage = Double(probeStageText) ?? 8
-                                viewModel.startMulticastProbe(rate: rate, maxRate: max, step: 2, stageSeconds: stage)
-                            }
-                        }
-                        .controlSize(.small)
-                        .buttonStyle(.borderedProminent)
-                        .tint(FocusInTheme.studioRed)
-                    }
-
-                    if !viewModel.probeResults.isEmpty {
-                        Divider().background(FocusInTheme.studioLine)
-                        ForEach(viewModel.probeResults.sorted(by: { $0.key < $1.key }), id: \.key) { name, report in
-                            HStack {
-                                Text(name).font(.system(size: 11, weight: .medium))
-                                Spacer()
-                                Text(report)
-                                    .font(.system(size: 11, design: .monospaced))
-                                    .foregroundStyle(FocusInTheme.studioTextSecondary)
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 開機自啟動與更新檢查
-            toolSectionCard(title: "GENERAL & UPDATES", icon: "gearshape") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Toggle("登入時自動啟動 FocusIn 教師端", isOn: Binding(
-                        get: { LoginStartManager.isEnabled },
-                        set: { on in
-                            autoStartError = ""
-                            do {
-                                if on { try LoginStartManager.enable() }
-                                else { LoginStartManager.disable() }
-                            } catch {
-                                autoStartError = "自動啟動設定失敗：\(error.localizedDescription)"
-                            }
-                        }
-                    ))
-                    .font(.system(size: 12.5))
-
-                    if !autoStartError.isEmpty {
-                        Text(autoStartError).font(.system(size: 11)).foregroundStyle(.red)
-                    }
-
+                if !viewModel.probeResults.isEmpty {
                     Divider().background(FocusInTheme.studioLine)
-
-                    HStack {
-                        Text("版本 \(UpdateChecker.localDisplayVersion) · Delta 旗艦版")
-                            .font(.system(size: 11))
-                            .foregroundStyle(FocusInTheme.studioTextSecondary)
-                        Spacer()
-                        Button("檢查更新") {
-                            viewModel.checkForUpdatesManually()
-                        }
-                        .controlSize(.small)
-                    }
-
-                    if let update = viewModel.updateAvailable {
-                        HStack(spacing: 8) {
-                            Image(systemName: "arrow.down.circle.fill")
-                                .foregroundStyle(FocusInTheme.studioRedSoft)
-                            Text("發現新版本（\(update.version)）")
-                                .font(.system(size: 11.5, weight: .semibold))
+                    ForEach(viewModel.probeResults.sorted(by: { $0.key < $1.key }), id: \.key) { name, report in
+                        HStack {
+                            Text(name).font(.system(size: 11, weight: .medium))
                             Spacer()
-                            Button("下載更新 (DMG)") {
-                                if let url = URL(string: update.url) {
-                                    UpdateChecker.downloadAndOpen(url)
-                                }
-                            }
-                            .controlSize(.small)
+                            Text(report)
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundStyle(FocusInTheme.studioTextSecondary)
                         }
-                        .padding(8)
-                        .background(FocusInTheme.studioRed.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
                     }
+                }
+            }
+        }
+    }
+
+    private var generalSettingsSection: some View {
+        toolSectionCard(title: "GENERAL & UPDATES", icon: "gearshape") {
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("登入時自動啟動 FocusIn 教師端", isOn: Binding(
+                    get: { LoginStartManager.isEnabled },
+                    set: { on in
+                        autoStartError = ""
+                        do {
+                            if on { try LoginStartManager.enable() }
+                            else { LoginStartManager.disable() }
+                        } catch {
+                            autoStartError = "自動啟動設定失敗：\(error.localizedDescription)"
+                        }
+                    }
+                ))
+                .font(.system(size: 12.5))
+
+                if !autoStartError.isEmpty {
+                    Text(autoStartError).font(.system(size: 11)).foregroundStyle(.red)
+                }
+
+                Divider().background(FocusInTheme.studioLine)
+
+                HStack {
+                    Text("快捷鍵說明")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(FocusInTheme.studioTextPrimary)
+                    Spacer()
+                    Text("⌘Q: 安全退出 • ⌘⇧U: 學生端緊急解鎖")
+                        .font(.system(size: 11))
+                        .foregroundStyle(FocusInTheme.studioTextSecondary)
                 }
             }
         }

@@ -31,6 +31,10 @@ final class TeacherViewModel: ObservableObject {
     @Published var currentWiFiName: String = WiFiMonitor.getCurrentSSID()
     /// 是否已獲得螢幕錄製權限
     @Published var hasScreenRecordingPermission: Bool = CGPreflightScreenCaptureAccess()
+    /// 是否正在檢查更新
+    @Published var isCheckingUpdate: Bool = false
+    /// 手動檢查更新狀態文字
+    @Published var updateCheckStatusText: String? = nil
 
     private var broadcastTimer: Timer?
     private var standbyPreviewTimer: Timer?
@@ -347,15 +351,21 @@ final class TeacherViewModel: ObservableObject {
 
     /// 手動重新檢查更新（UI 按鈕）。
     func checkForUpdatesManually() {
+        isCheckingUpdate = true
+        updateCheckStatusText = "正在檢查更新…"
         appendLog("正在檢查更新…")
         UpdateChecker.checkForUpdate { [weak self] info, isLatest in
             guard let self else { return }
+            self.isCheckingUpdate = false
             if let info {
                 self.updateAvailable = info
+                self.updateCheckStatusText = "發現新版本（\(info.version)）"
                 self.appendLog("發現新版本（\(info.version)）")
             } else if isLatest {
+                self.updateCheckStatusText = "目前已是最新版本（\(UpdateChecker.localDisplayVersion)）"
                 self.appendLog("已是最新版本（\(UpdateChecker.localDisplayVersion)）")
             } else {
+                self.updateCheckStatusText = "檢查失敗（無法連線 GitHub）"
                 self.appendLog("檢查失敗（無法連線 GitHub）")
             }
         }

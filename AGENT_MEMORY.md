@@ -14,6 +14,21 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-25T16:38:00.000Z] @Antigravity
+- **Summary**: Implemented modern About & Settings sub-navigation dashboard matching user reference UI
+- **Files Touched**: `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `AGENT_MEMORY.md`
+- **Key Decisions**:
+  - Replaced flat settings list with horizontal sub-tab navigation (`SettingsSubTab`: `通用`, `傳輸模式`, `管理密碼`, `組播探測`, `關於`) alongside a top right `💾 儲存設定` button and utility icons (`⤢`, `☀️`, `TW`).
+  - Implemented modern Apple Pro About dashboard (`aboutCardView`):
+    - Vector squircle brand logo (`FocusInLogoView`) with official gradient (`#FF9AAF` → `#E0416A` → `#8B3DFF`).
+    - App title and subtitle: `FocusIn` / `v1.5.10-delta · Native macOS Classroom System`.
+    - Information grid cards: Author (Marco), GitHub repository (direct browser link), Security Architecture (Zero-dependency / offline Ed25519), and System Environment (macOS 14+ Native).
+    - **Excluded WeChat, Telegram, and Donate cards** as explicitly instructed by the user.
+    - Native tech stack pills (`Swift 5`, `SwiftUI`, `ScreenCaptureKit`, `VideoToolbox`, `Network.framework`).
+    - Update channel picker (`正式版 (Stable)` vs `預覽版 (Beta) ◆`).
+    - Prominent blue `[ 🔄 檢查更新 ]` button with live status spinner and textual feedback.
+    - Copyright footer: `Copyright © 2025-2026 FocusIn. All rights reserved.`.
+  - Recompiled, code-signed, and repackaged Delta DMGs (`release/delta/FocusIn-Delta-Teacher.dmg` and `release/delta/FocusIn-Delta-Student.dmg`).
 ### 🔹 [2026-10-25T06:50:00.000Z] @Antigravity
 - **Summary**: Implemented dynamic event-driven Wi-Fi detection to follow active network changes
   - **Files Touched**: `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Info.plist`, `AGENT_MEMORY.md`
