@@ -28,13 +28,14 @@ final class TeacherViewModel: ObservableObject {
     /// 延遲歷史數據（供 Studio Sparkline 即時圖表繪製）
     @Published var latencyHistory: [Double] = [16, 14, 15, 18, 16, 15, 19, 16, 17, 16]
     /// 當前連線的 Wi-Fi 名稱（動態偵測）
-    @Published var currentWiFiName: String = TeacherViewModel.detectCurrentWiFiSSID() ?? "Wi-Fi"
+    @Published var currentWiFiName: String = WiFiMonitor.getCurrentSSID()
     /// 是否已獲得螢幕錄製權限
     @Published var hasScreenRecordingPermission: Bool = CGPreflightScreenCaptureAccess()
 
     private var broadcastTimer: Timer?
     private var standbyPreviewTimer: Timer?
     private var wifiRefreshTimer: Timer?
+    private var wiFiMonitor: WiFiMonitor?
 
     private var browser: PeerBrowser?
     private var connections: [String: PeerConnection] = [:]   // studentID -> command connection
@@ -192,51 +193,30 @@ final class TeacherViewModel: ObservableObject {
     // MARK: - Wi-Fi 名稱動態檢測
 
     func startWiFiMonitoring() {
+        let monitor = WiFiMonitor()
+        monitor.onWiFiChange = { [weak self] newName in
+            Task { @MainActor in
+                if self?.currentWiFiName != newName {
+                    self?.currentWiFiName = newName
+                }
+            }
+        }
+        self.wiFiMonitor = monitor
+
         wifiRefreshTimer?.invalidate()
-        wifiRefreshTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 2.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshWiFiName()
             }
         }
-    }
-
-    nonisolated static func detectCurrentWiFiSSID() -> String? {
-        if let ssid = CWWiFiClient.shared().interface()?.ssid(), !ssid.isEmpty {
-            return ssid
-        }
-        let ifaces = [CWWiFiClient.shared().interface()?.interfaceName ?? "en0", "en0", "en1"]
-        for iface in ifaces {
-            let task = Process()
-            task.executableURL = URL(fileURLWithPath: "/usr/sbin/ipconfig")
-            task.arguments = ["getsummary", iface]
-            let pipe = Pipe()
-            task.standardOutput = pipe
-            do {
-                try task.run()
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                task.waitUntilExit()
-                if let output = String(data: data, encoding: .utf8) {
-                    for line in output.components(separatedBy: "\n") {
-                        let trimmed = line.trimmingCharacters(in: .whitespaces)
-                        if trimmed.hasPrefix("SSID : ") {
-                            let name = String(trimmed.dropFirst("SSID : ".count))
-                            if !name.isEmpty {
-                                return name
-                            }
-                        }
-                    }
-                }
-            } catch {}
-        }
-        return nil
+        RunLoop.main.add(timer, forMode: .common)
+        wifiRefreshTimer = timer
     }
 
     func refreshWiFiName() {
-        Task.detached {
-            let finalName = TeacherViewModel.detectCurrentWiFiSSID() ?? "Wi-Fi"
-            await MainActor.run { [weak self] in
-                self?.currentWiFiName = finalName
-            }
+        let name = WiFiMonitor.getCurrentSSID()
+        if self.currentWiFiName != name {
+            self.currentWiFiName = name
         }
     }
 
@@ -861,4 +841,77 @@ struct StudentPeer: Identifiable {
     var name: String
     let endpoint: NWEndpoint
     var isSelected: Bool
+}
+
+/// 監控並動態獲取當前連線之 Wi-Fi SSID
+final class WiFiMonitor: NSObject, CWEventDelegate {
+    private let client = CWWiFiClient.shared()
+    var onWiFiChange: ((String) -> Void)?
+
+    override init() {
+        super.init()
+        client.delegate = self
+        _ = try? client.startMonitoringEvent(with: .ssidDidChange)
+        _ = try? client.startMonitoringEvent(with: .linkDidChange)
+        _ = try? client.startMonitoringEvent(with: .bssidDidChange)
+    }
+
+    func ssidDidChangeForWiFiInterface(withName interfaceName: String) {
+        check()
+    }
+    func linkDidChangeForWiFiInterface(withName interfaceName: String) {
+        check()
+    }
+    func bssidDidChangeForWiFiInterface(withName interfaceName: String) {
+        check()
+    }
+
+    private func check() {
+        let ssid = WiFiMonitor.getCurrentSSID()
+        DispatchQueue.main.async { [weak self] in
+            self?.onWiFiChange?(ssid)
+        }
+    }
+
+    static func getCurrentSSID() -> String {
+        if let iface = CWWiFiClient.shared().interface() {
+            if let ssid = iface.ssid(), !ssid.isEmpty, ssid != "<redacted>" {
+                return ssid
+            }
+            if let lastProfile = iface.value(forKey: "lastPreferredNetworkJoined") as? NSObject,
+               let ssid = lastProfile.value(forKey: "ssid") as? String,
+               !ssid.isEmpty, ssid != "<redacted>" {
+                return ssid
+            }
+        }
+        return fetchSSIDFromIPConfig() ?? "Wi-Fi"
+    }
+
+    static func fetchSSIDFromIPConfig() -> String? {
+        let ifaces = [CWWiFiClient.shared().interface()?.interfaceName ?? "en0", "en0", "en1"]
+        for iface in ifaces {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/sbin/ipconfig")
+            task.arguments = ["getsummary", iface]
+            let pipe = Pipe()
+            task.standardOutput = pipe
+            do {
+                try task.run()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                task.waitUntilExit()
+                if let output = String(data: data, encoding: .utf8) {
+                    for line in output.components(separatedBy: "\n") {
+                        let trimmed = line.trimmingCharacters(in: .whitespaces)
+                        if trimmed.hasPrefix("SSID : ") {
+                            let name = String(trimmed.dropFirst("SSID : ".count)).trimmingCharacters(in: .whitespaces)
+                            if !name.isEmpty && name != "<redacted>" {
+                                return name
+                            }
+                        }
+                    }
+                }
+            } catch {}
+        }
+        return nil
+    }
 }

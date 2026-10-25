@@ -14,6 +14,16 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-25T06:50:00.000Z] @Antigravity
+- **Summary**: Implemented dynamic event-driven Wi-Fi detection to follow active network changes
+  - **Files Touched**: `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Info.plist`, `AGENT_MEMORY.md`
+  - **Key Decisions**:
+    - Discovered that previous implementation relied on `/usr/sbin/ipconfig getsummary` which returns stale cached DHCP leases from initial boot, preventing the app from updating when connecting to a different Wi-Fi.
+    - Implemented `WiFiMonitor` conforming to `CWEventDelegate` with `.ssidDidChange`, `.linkDidChange`, and `.bssidDidChange` event monitoring.
+    - Added CoreWLAN `lastPreferredNetworkJoined` retrieval and sanitized fallback to dynamically follow whatever Wi-Fi network the Mac is currently connected to in real time.
+    - Added `NSLocationWhenInUseUsageDescription` to `Info.plist`.
+    - Discarded literal `<redacted>` strings in parsing fallbacks.
+    - Recompiled, signed, and generated fresh DMGs in `release/delta/`.
 ### 🔹 [2026-10-25T04:14:00.000Z] @Antigravity
 - **Summary**: Changed sidebar header to display exclusively the current Wi-Fi name
   - **Files Touched**: `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `AGENT_MEMORY.md`
