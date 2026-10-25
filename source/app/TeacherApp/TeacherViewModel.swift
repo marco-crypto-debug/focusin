@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Network
 
@@ -15,6 +16,16 @@ final class TeacherViewModel: ObservableObject {
     @Published var latencies: [String: Int] = [:]
     @Published var availableDisplays: [DisplayDescriptor] = []
     @Published var selectedDisplayIndex: Int = 0
+
+    /// 是否處於鎖定狀態（教師端下發 lock 後為 true）
+    @Published var isLocked = false
+    /// 即時廣播畫面縮圖預覽（供 Studio UI 呈現）
+    @Published var previewImage: NSImage?
+    /// 廣播持續時間（秒）
+    @Published var broadcastDuration: TimeInterval = 0
+    /// 延遲歷史數據（供 Studio Sparkline 即時圖表繪製）
+    @Published var latencyHistory: [Double] = [16, 14, 15, 18, 16, 15, 19, 16, 17, 16]
+    private var broadcastTimer: Timer?
 
     private var browser: PeerBrowser?
     private var connections: [String: PeerConnection] = [:]   // studentID -> command connection
@@ -50,6 +61,11 @@ final class TeacherViewModel: ObservableObject {
         checkForUpdates()
         startPingLoop()
         refreshDisplays()
+        broadcaster.onPreviewImage = { [weak self] img in
+            Task { @MainActor in
+                self?.previewImage = img
+            }
+        }
     }
 
     func refreshDisplays() {
@@ -95,6 +111,21 @@ final class TeacherViewModel: ObservableObject {
         for (id, connection) in connections {
             connection.send(CommandMessage(type: .ping, payload: String(stamp)))
             _ = id
+        }
+    }
+
+    var averageLatency: Int {
+        guard !latencies.isEmpty else { return 0 }
+        let sum = latencies.values.reduce(0, +)
+        return max(sum / latencies.count, 0)
+    }
+
+    private func updateLatencyHistory() {
+        guard !latencies.isEmpty else { return }
+        let avg = Double(averageLatency)
+        latencyHistory.append(avg)
+        if latencyHistory.count > 30 {
+            latencyHistory.removeFirst(latencyHistory.count - 30)
         }
     }
 
@@ -305,6 +336,7 @@ final class TeacherViewModel: ObservableObject {
             if let payload = message.payload, let stamp = Double(payload) {
                 let rtt = Int((Date().timeIntervalSinceReferenceDate - stamp) * 1000)
                 latencies[id] = max(rtt, 0)
+                updateLatencyHistory()
             }
 #if FOCUSIN_BETA
         case .multicastProbeReport:
@@ -351,8 +383,23 @@ final class TeacherViewModel: ObservableObject {
         }
     }
 
-    func sendLock() { send(CommandMessage(type: .lock)) }
-    func sendUnlock() { send(CommandMessage(type: .unlock)) }
+    func sendLock() {
+        isLocked = true
+        send(CommandMessage(type: .lock))
+        appendLog("已下發鎖定指令（\(selectedIDs.count) 台學生端）")
+    }
+    func sendUnlock() {
+        isLocked = false
+        send(CommandMessage(type: .unlock))
+        appendLog("已下發解鎖指令（\(selectedIDs.count) 台學生端）")
+    }
+    func toggleLock() {
+        if isLocked {
+            sendUnlock()
+        } else {
+            sendLock()
+        }
+    }
     func sendShutdown() { send(CommandMessage(type: .shutdown)) }
     func sendRestart() { send(CommandMessage(type: .restart)) }
     func sendLaunchApp(bundleID: String) {
@@ -540,6 +587,13 @@ final class TeacherViewModel: ObservableObject {
             self.send(CommandMessage(type: .streamStart))
 #endif
             self.broadcastActive = true
+            self.broadcastDuration = 0
+            self.broadcastTimer?.invalidate()
+            self.broadcastTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                Task { @MainActor in
+                    self?.broadcastDuration += 1
+                }
+            }
             self.appendLog("開始廣播教師屏幕（畫質：\(self.broadcastQuality.label)）")
         } onError: { [weak self] message in
             Task { @MainActor in
@@ -550,6 +604,10 @@ final class TeacherViewModel: ObservableObject {
     }
 
     private func stopBroadcast() {
+        broadcastTimer?.invalidate()
+        broadcastTimer = nil
+        broadcastDuration = 0
+        previewImage = nil
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil

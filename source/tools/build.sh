@@ -46,6 +46,7 @@ TEACHER_SRC=(
   "$ROOT/source/app/TeacherApp/ScreenBroadcaster.swift"
   "$ROOT/source/app/TeacherApp/H264Encoder.swift"
   "$ROOT/source/app/TeacherApp/Views/DeviceListView.swift"
+  "$ROOT/source/app/TeacherApp/Views/DeltaStudioView.swift"
 )
 STUDENT_SRC=(
   "$ROOT/source/app/StudentApp/StudentApp.swift"

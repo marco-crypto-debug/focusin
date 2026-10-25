@@ -9,7 +9,21 @@ struct KioskLockView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            // 背景底色與環境光暈
+            Color(red: 0.05, green: 0.05, blue: 0.07).ignoresSafeArea()
+
+            // 柔和暗紅氛圍光 (Ambient Glow)
+            RadialGradient(
+                colors: [
+                    Color(red: 0.843, green: 0.098, blue: 0.125).opacity(0.18),
+                    Color(red: 0.54, green: 0.24, blue: 0.99).opacity(0.06),
+                    Color.clear
+                ],
+                center: .center,
+                startRadius: 20,
+                endRadius: 420
+            )
+            .ignoresSafeArea()
 
             if let image = controller.broadcastImage {
                 Image(nsImage: image)
@@ -18,18 +32,75 @@ struct KioskLockView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                VStack(spacing: 14) {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 52))
-                        .foregroundStyle(.white)
-                    Text("屏幕已被教師鎖定")
-                        .font(.title.bold())
-                        .foregroundStyle(.white)
-                    Text("按 ⌘⇧U，輸入本地管理員密碼可緊急解鎖")
-                        .font(.callout)
-                        .foregroundStyle(.white.opacity(0.7))
+                // 鎖定提示看板（致敬官網 Focus Lock 設計）
+                VStack(spacing: 20) {
+                    // 發光鎖定圓形徽章
+                    ZStack {
+                        Circle()
+                            .fill(Color(red: 0.843, green: 0.098, blue: 0.125).opacity(0.15))
+                            .frame(width: 82, height: 82)
+                        Circle()
+                            .stroke(Color(red: 0.843, green: 0.098, blue: 0.125).opacity(0.42), lineWidth: 1.5)
+                            .frame(width: 82, height: 82)
+                            .shadow(color: Color(red: 0.843, green: 0.098, blue: 0.125).opacity(0.35), radius: 8)
+
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundStyle(Color(red: 1.0, green: 0.28, blue: 0.32))
+                    }
+
+                    VStack(spacing: 8) {
+                        Text("Locked by FocusIn")
+                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Focus on the lesson.")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(Color.white.opacity(0.65))
+                    }
+
+                    // ⌘⇧U 緊急解鎖膠囊按鈕
+                    Button {
+                        controller.unlockRequested = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            HStack(spacing: 3) {
+                                keyBadge("⌘")
+                                keyBadge("⇧")
+                                keyBadge("U")
+                            }
+                            Text("Emergency Unlock")
+                                .font(.system(size: 12.5, weight: .medium))
+                                .foregroundStyle(Color.white.opacity(0.85))
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(Color.white.opacity(0.14), lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
+
+            // 右下角「● Input blocked」狀態膠囊
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color(red: 1.0, green: 0.25, blue: 0.25))
+                    .frame(width: 6, height: 6)
+                    .shadow(color: Color(red: 1.0, green: 0.25, blue: 0.25).opacity(0.8), radius: 3)
+                Text("Input blocked")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.85))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.black.opacity(0.65), in: Capsule())
+            .overlay(Capsule().stroke(Color(red: 1.0, green: 0.25, blue: 0.25).opacity(0.3), lineWidth: 1))
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            .padding(.trailing, 24)
+            .padding(.bottom, 24)
 
             // 輸入攔截未生效（缺少輔助功能權限）時，明確提示原因
             if !controller.isInputBlocked && !controller.unlockRequested {
@@ -113,5 +184,14 @@ struct KioskLockView: View {
             showError = true
             password = ""
         }
+    }
+
+    private func keyBadge(_ key: String) -> some View {
+        Text(key)
+            .font(.system(size: 11, weight: .bold, design: .monospaced))
+            .foregroundStyle(Color.white.opacity(0.9))
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 4))
     }
 }

@@ -30,6 +30,9 @@ struct DeviceListView: View {
 #endif
 
     var body: some View {
+#if FOCUSIN_DELTA
+        DeltaStudioView()
+#else
         HSplitView {
             devicePanel
             controlPanel
@@ -47,6 +50,7 @@ struct DeviceListView: View {
                 showingWipeConfirm = false
             })
         }
+#endif
     }
 
     // MARK: - 左側：裝置列表

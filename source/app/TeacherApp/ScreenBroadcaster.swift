@@ -29,6 +29,8 @@ final class ScreenBroadcaster: NSObject {
     var onAudio: ((Data, PeerConnection.AudioFormatInfo) -> Void)?
     var onAirPlayAudio: ((AirPlayAudioPacket) -> Void)?
     var onStartError: ((String) -> Void)?
+    /// 即時畫面縮圖預覽回呼（供教師端 Studio UI 本地預覽使用）
+    var onPreviewImage: ((NSImage?) -> Void)?
 
     /// 目前畫質模式（教師端切換後，廣播中會即時重啟套用）。
     var quality: BroadcastQuality = .high
@@ -77,6 +79,7 @@ final class ScreenBroadcaster: NSObject {
     private let context = CIContext(options: [.cacheIntermediates: false])
     /// 編碼節流旗標：上一幀尚未完成編碼時，直接丟棄新幀（保延遲優先於幀率）。
     private var isEncodingFrame = false
+    private var lastPreviewTimestamp: CFTimeInterval = 0
 
 #if FOCUSIN_BETA
     // —— v1.5-beta：H.264 硬體編碼（VideoToolbox，組播單流）——
@@ -258,6 +261,9 @@ final class ScreenBroadcaster: NSObject {
         }
         stream?.stopCapture { _ in }
         stream = nil
+        DispatchQueue.main.async { [weak self] in
+            self?.onPreviewImage?(nil)
+        }
 #if FOCUSIN_BETA
         h264Encoder.stop()
 #endif
@@ -391,6 +397,23 @@ extension ScreenBroadcaster: SCStreamOutput {
 
         guard type == .screen,
               let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+
+        if let onPreview = onPreviewImage {
+            let now = CACurrentMediaTime()
+            if now - lastPreviewTimestamp >= 0.12 {
+                lastPreviewTimestamp = now
+                let ci = CIImage(cvPixelBuffer: pixelBuffer)
+                let targetW: CGFloat = 640
+                let scale = targetW / max(ci.extent.width, 1)
+                let scaled = ci.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+                if let cg = context.createCGImage(scaled, from: scaled.extent) {
+                    let nsImg = NSImage(cgImage: cg, size: NSSize(width: scaled.extent.width, height: scaled.extent.height))
+                    DispatchQueue.main.async {
+                        onPreview(nsImg)
+                    }
+                }
+            }
+        }
 
         // 低延遲策略：上一幀還在編碼就跳過本幀，不讓畫面延遲隨佇列堆積
         guard !isEncodingFrame else { return }

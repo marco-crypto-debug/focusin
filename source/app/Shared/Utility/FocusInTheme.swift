@@ -74,6 +74,23 @@ enum FocusInTheme {
             .frame(width: 3)
             .padding(.vertical, 10)
     }
+
+#if FOCUSIN_DELTA
+    static let isDelta = true
+    static let studioCanvas = Color(red: 0.067, green: 0.067, blue: 0.082)     // #111115
+    static let studioSidebar = Color(red: 0.047, green: 0.047, blue: 0.059)    // #0C0C0F
+    static let studioCard = Color(red: 0.094, green: 0.094, blue: 0.110)       // #18181C
+    static let studioCardHover = Color(red: 0.125, green: 0.125, blue: 0.145)
+    static let studioLine = Color.white.opacity(0.08)
+    static let studioLineHighlight = Color.white.opacity(0.16)
+    static let studioRed = Color(red: 0.843, green: 0.098, blue: 0.125)        // #D71920
+    static let studioRedSoft = Color(red: 1.0, green: 0.231, blue: 0.271)      // #FF3B45
+    static let studioGreen = Color(red: 0.204, green: 0.780, blue: 0.349)      // #34C759
+    static let studioTextPrimary = Color(red: 0.96, green: 0.96, blue: 0.97)
+    static let studioTextSecondary = Color(red: 0.55, green: 0.55, blue: 0.60)
+#else
+    static let isDelta = false
+#endif
 }
 
 

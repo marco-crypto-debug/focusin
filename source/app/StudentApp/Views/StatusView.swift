@@ -80,7 +80,12 @@ struct StatusView: View {
         }
         .padding(14)
         .frame(minWidth: 380, minHeight: 420)
+#if FOCUSIN_DELTA
+        .background(FocusInTheme.studioCanvas)
+        .preferredColorScheme(.dark)
+#else
         .background(FocusInTheme.canvas)
+#endif
     }
 
     // MARK: - 第一頁：狀態（基礎功能）

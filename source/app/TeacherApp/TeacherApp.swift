@@ -14,7 +14,11 @@ struct TeacherApp: App {
         WindowGroup {
             DeviceListView()
                 .environmentObject(viewModel)
+#if FOCUSIN_DELTA
+                .frame(minWidth: 960, minHeight: 620)
+#else
                 .frame(minWidth: 720, minHeight: 460)
+#endif
                 .onAppear {
                     appDelegate.attach(viewModel: viewModel, appState: FocusInAppState.shared)
                 }
