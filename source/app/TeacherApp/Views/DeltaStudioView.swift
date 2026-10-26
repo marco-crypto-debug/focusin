@@ -41,51 +41,6 @@ enum SettingsSubTab: String, CaseIterable, Identifiable {
     }
 }
 
-/// FocusIn 向量 Squircle 應用圖標
-struct FocusInLogoView: View {
-    var size: CGFloat = 86
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 1.0, green: 0.60, blue: 0.69),
-                            Color(red: 0.88, green: 0.25, blue: 0.42),
-                            Color(red: 0.55, green: 0.24, blue: 1.0)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
-                        .stroke(Color.white.opacity(0.28), lineWidth: 1.5)
-                )
-                .shadow(color: Color(red: 0.88, green: 0.25, blue: 0.42).opacity(0.35), radius: size * 0.16, x: 0, y: size * 0.08)
-
-            GeometryReader { geo in
-                let w = geo.size.width
-                let h = geo.size.height
-                Path { p in
-                    p.move(to: CGPoint(x: w * 0.35, y: h * 0.72))
-                    p.addLine(to: CGPoint(x: w * 0.35, y: h * 0.32))
-                    p.addLine(to: CGPoint(x: w * 0.70, y: h * 0.32))
-                    p.move(to: CGPoint(x: w * 0.35, y: h * 0.51))
-                    p.addLine(to: CGPoint(x: w * 0.62, y: h * 0.51))
-                }
-                .stroke(Color.white, style: StrokeStyle(lineWidth: w * 0.085, lineCap: .round, lineJoin: .round))
-
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: w * 0.09, height: w * 0.09)
-                    .position(x: w * 0.72, y: h * 0.32)
-            }
-        }
-        .frame(width: size, height: size)
-    }
-}
 
 struct DeltaStudioView: View {
     @EnvironmentObject var viewModel: TeacherViewModel

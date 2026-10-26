@@ -9,11 +9,20 @@ final class CommandListener: ObservableObject {
     @Published var isBroadcasting = false
     @Published var connectionCount = 0
     @Published var log: [String] = []
+    /// 當前連線的 Wi-Fi 名稱（動態偵測）
+    @Published var currentWiFiName: String = WiFiMonitor.getCurrentSSID()
+    /// 本機 IP 位址
+    @Published var localIP: String = WiFiMonitor.getLocalIPAddress()
+    /// 是否正在檢查更新
+    @Published var isCheckingUpdate: Bool = false
+    /// 手動檢查更新狀態文字
+    @Published var updateCheckStatusText: String? = nil
     /// 自動更新檢查結果（非 nil 代表 GitHub 有新版本）。
     @Published var updateAvailable: UpdateChecker.UpdateInfo?
 
     private var advertiser: PeerAdvertiser?
     private var connections: [PeerConnection] = []
+    private var wiFiMonitor: WiFiMonitor?
 #if !FOCUSIN_STABLE
     /// 教師為廣播開闢的「音訊專屬通道」（hello payload = "audio"），不計入教師連線數。
     private var audioPeers: [PeerConnection] = []
@@ -40,6 +49,22 @@ final class CommandListener: ObservableObject {
         }
         startService()
         checkForUpdates()
+        startWiFiMonitoring()
+    }
+
+    func startWiFiMonitoring() {
+        let monitor = WiFiMonitor()
+        monitor.onWiFiChange = { [weak self] newSSID in
+            Task { @MainActor in
+                self?.currentWiFiName = newSSID
+                self?.localIP = WiFiMonitor.getLocalIPAddress()
+            }
+        }
+        self.wiFiMonitor = monitor
+    }
+
+    func clearLog() {
+        log.removeAll()
     }
 
     /// 啟動時自動檢查 GitHub 新版本；偵測到更新時在狀態視窗提示。
@@ -53,15 +78,21 @@ final class CommandListener: ObservableObject {
 
     /// 手動重新檢查更新（UI 按鈕）。
     func checkForUpdatesManually() {
+        isCheckingUpdate = true
+        updateCheckStatusText = "正在檢查更新…"
         appendLog("正在檢查更新…")
         UpdateChecker.checkForUpdate { [weak self] info, isLatest in
             guard let self else { return }
+            self.isCheckingUpdate = false
             if let info {
                 self.updateAvailable = info
+                self.updateCheckStatusText = "發現新版本（\(info.version)）"
                 self.appendLog("發現新版本（\(info.version)）")
             } else if isLatest {
+                self.updateCheckStatusText = "目前已是最新版本（\(UpdateChecker.localDisplayVersion)）"
                 self.appendLog("已是最新版本（\(UpdateChecker.localDisplayVersion)）")
             } else {
+                self.updateCheckStatusText = "檢查失敗（無法連線 GitHub）"
                 self.appendLog("檢查失敗（無法連線 GitHub）")
             }
         }

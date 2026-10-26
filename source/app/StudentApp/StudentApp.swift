@@ -16,7 +16,11 @@ struct StudentApp: App {
         WindowGroup {
             StatusView()
                 .environmentObject(listener)
+#if FOCUSIN_DELTA
+                .frame(minWidth: 860, minHeight: 580)
+#else
                 .frame(minWidth: 380, minHeight: 420)
+#endif
                 .onAppear {
                     appDelegate.attach(listener: listener, appState: FocusInAppState.shared)
                 }

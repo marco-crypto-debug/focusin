@@ -2,6 +2,11 @@ import SwiftUI
 
 /// 學生端狀態視窗：簡潔主頁（連線 / 鎖定 / 廣播狀態）+ 進階設定（密碼 / 自動啟動 / 更新）。
 struct StatusView: View {
+#if FOCUSIN_DELTA
+    var body: some View {
+        DeltaStudentStudioView()
+    }
+#else
     @EnvironmentObject var listener: CommandListener
     @ObservedObject private var kiosk = KioskModeController.shared
     @ObservedObject private var appState = FocusInAppState.shared
@@ -280,4 +285,5 @@ struct StatusView: View {
             passwordError = "保存失敗: \(error)"
         }
     }
+#endif
 }

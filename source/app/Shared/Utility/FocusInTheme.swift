@@ -8,17 +8,27 @@ import SwiftUI
 enum FocusInTheme {
     /// 畫布底色
     static let canvas: Color = {
-#if FOCUSIN_BETA
+#if FOCUSIN_DELTA
+        return studioCanvas
+#elseif FOCUSIN_BETA
         return Color(red: 0.965, green: 0.965, blue: 0.969)      // #F6F6F7 MoodLab Apple 灰
 #else
         return Color(red: 0.969, green: 0.961, blue: 0.949)      // 暖白
 #endif
     }()
-    /// 卡片白
-    static let card = Color(red: 1.0, green: 1.0, blue: 1.0)
+    /// 卡片底色（Delta 模式下為深色 Studio 卡片，避免白屏）
+    static let card: Color = {
+#if FOCUSIN_DELTA
+        return studioCard
+#else
+        return Color(red: 1.0, green: 1.0, blue: 1.0)
+#endif
+    }()
     /// 卡片描邊
     static let line: Color = {
-#if FOCUSIN_BETA
+#if FOCUSIN_DELTA
+        return studioLine
+#elseif FOCUSIN_BETA
         return Color.black.opacity(0.09)
 #else
         return Color.black.opacity(0.07)
@@ -92,5 +102,52 @@ enum FocusInTheme {
     static let isDelta = false
 #endif
 }
+
+/// FocusIn 向量 Squircle 應用圖標（全端共用）
+struct FocusInLogoView: View {
+    var size: CGFloat = 86
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 1.0, green: 0.60, blue: 0.69),
+                            Color(red: 0.88, green: 0.25, blue: 0.42),
+                            Color(red: 0.55, green: 0.24, blue: 1.0)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
+                        .stroke(Color.white.opacity(0.28), lineWidth: 1.5)
+                )
+                .shadow(color: Color(red: 0.88, green: 0.25, blue: 0.42).opacity(0.35), radius: size * 0.16, x: 0, y: size * 0.08)
+
+            GeometryReader { geo in
+                let w = geo.size.width
+                let h = geo.size.height
+                Path { p in
+                    p.move(to: CGPoint(x: w * 0.35, y: h * 0.72))
+                    p.addLine(to: CGPoint(x: w * 0.35, y: h * 0.32))
+                    p.addLine(to: CGPoint(x: w * 0.70, y: h * 0.32))
+                    p.move(to: CGPoint(x: w * 0.35, y: h * 0.51))
+                    p.addLine(to: CGPoint(x: w * 0.62, y: h * 0.51))
+                }
+                .stroke(Color.white, style: StrokeStyle(lineWidth: w * 0.085, lineCap: .round, lineJoin: .round))
+
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: w * 0.09, height: w * 0.09)
+                    .position(x: w * 0.72, y: h * 0.32)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+}
+
 
 

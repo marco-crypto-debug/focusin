@@ -39,6 +39,7 @@ SHARED_SRC=(
   "$ROOT/source/app/Shared/Utility/QuitGuard.swift"
   "$ROOT/source/app/Shared/Utility/UpdateChecker.swift"
   "$ROOT/source/app/Shared/Utility/DisplayKeepAlive.swift"
+  "$ROOT/source/app/Shared/Utility/WiFiMonitor.swift"
 )
 TEACHER_SRC=(
   "$ROOT/source/app/TeacherApp/TeacherApp.swift"
@@ -60,6 +61,7 @@ STUDENT_SRC=(
   "$ROOT/source/app/StudentApp/Kiosk/KioskLockView.swift"
   "$ROOT/source/app/StudentApp/Kiosk/KioskModeController.swift"
   "$ROOT/source/app/StudentApp/Views/StatusView.swift"
+  "$ROOT/source/app/StudentApp/Views/DeltaStudentStudioView.swift"
 )
 
 build_variant() {

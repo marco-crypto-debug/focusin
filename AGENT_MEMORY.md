@@ -14,6 +14,23 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-26T18:24:00.000Z] @Antigravity
+- **Summary**: Overhauled StudentApp UI for Delta Edition into Apple Pro Dark Studio dashboard
+- **Files Touched**: `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `source/app/StudentApp/Views/StatusView.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/StudentApp.swift`, `source/app/Shared/Utility/FocusInTheme.swift`, `source/app/Shared/Utility/WiFiMonitor.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/tools/build.sh`, `AGENT_MEMORY.md`
+- **Key Decisions**:
+  - Identified root cause of blank white solid slabs in student screenshot: `FocusInTheme.card` was hardcoded to pure white (`#FFFFFF`) on a `#111115` dark canvas, rendering cards blindingly bright with invisible white-on-white text, and lacking responsive container bounds.
+  - Fixed `FocusInTheme.card` to resolve to `studioCard` (`#18181C`) and `line` to `studioLine` when `FOCUSIN_DELTA` is active.
+  - Extracted `WiFiMonitor` into `Shared/Utility/WiFiMonitor.swift` with Darwin `getLocalIPAddress()` support, enabling shared real-time SSID and IP discovery across TeacherApp and StudentApp.
+  - Made `FocusInLogoView` globally available in `FocusInTheme.swift` for unified vector branding.
+  - Created `DeltaStudentStudioView.swift` implementing an Apple Pro Studio dark receiver interface:
+    - **Header Bar**: Squircle FocusIn brand icon, DELTA badge, machine hostname, dynamic Wi-Fi SSID pill, Teacher connection halo capsule, and Kiosk status badge.
+    - **Sub-Tabs**:
+      1. `廣播接收 (Live Stream)`: 16:9 cinematic video viewport with live H.264 stream and corner telemetry tags (`🔴 LIVE`, `H.264 硬體解碼`, `48kHz PCM 音訊同步`); atmospheric ambient radar standby visualization when waiting for broadcast, and 4 telemetry cards (Teacher link, Hardware decoder, Audio engine, Kiosk shield).
+      2. `安全防護 (Security & Kiosk)`: Visual `⌘⇧U` Emergency Unlock showcase card with Accessibility permission detection; salted SHA-256 local admin password management; Quit Guard protection guide.
+      3. `系統診斷 (Diagnostics)`: Auto-start on login toggle (`LoginStartManager`), DisplayKeepAlive status, Accessibility permission status with one-click authorization deep link, system telemetry, and monospace terminal-style diagnostic log console with filter, copy all, and clear actions.
+      4. `關於 (About)`: Identical modern Apple Pro About dashboard with squircle logo, version info, 4 info cards (Author: Marco, GitHub, Security, Platform — zero WeChat/Telegram/Donate), tech stack pills, update channel selector, and manual update checker.
+    - Responsive layout with `minWidth: 860, minHeight: 580` preventing stretched horizontal bars.
+  - Recompiled, signed, and generated fresh DMGs in `release/delta/FocusIn-Delta-Student.dmg` and `FocusIn-Delta-Teacher.dmg`.
 ### 🔹 [2026-10-25T16:38:00.000Z] @Antigravity
 - **Summary**: Implemented modern About & Settings sub-navigation dashboard matching user reference UI
 - **Files Touched**: `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `AGENT_MEMORY.md`
