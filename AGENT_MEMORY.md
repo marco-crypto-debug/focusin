@@ -14,6 +14,15 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-26T18:35:00.000Z] @OmO
+- **Summary**: Fixed broken website download links, published missing GitHub Release v1.5.10-delta, and deployed live site
+- **Files Touched**: `source/web/site-apple/index.html`, `source/web/public/index.html`, `source/web/site/FocusIn官網.html`, `AGENT_MEMORY.md`
+- **Key Decisions**:
+  - Investigated root cause of website download failure: download buttons previously pointed to hardcoded tag `v1.5.10-delta` (`https://github.com/marco-crypto-debug/focusin/releases/download/v1.5.10-delta/...`), but git tag `v1.5.10-delta` had never been published as a GitHub Release with assets, causing GitHub to respond with HTTP 404 Not Found.
+  - Published GitHub Release `v1.5.10-delta` with built release DMGs (`FocusIn-Delta-Teacher.dmg` and `FocusIn-Delta-Student.dmg`) via `gh release create`.
+  - Updated download URLs in `source/web/site-apple/index.html` to canonical `https://github.com/marco-crypto-debug/focusin/releases/latest/download/FocusIn-Delta-Teacher.dmg` and `FocusIn-Delta-Student.dmg`.
+  - Re-compiled single-file HTML sites via `python3 source/tools/build-site-apple.py` to regenerate `source/web/public/index.html` and `source/web/site/FocusIn官網.html`.
+  - Deployed updated web distribution to Cloudflare Pages (`focusin.pages.dev`). Verified with `curl -sIL` that both Teacher and Student DMG downloads return HTTP 302 -> 200 OK with valid byte streams.
 ### 🔹 [2026-10-26T18:24:00.000Z] @Antigravity
 - **Summary**: Overhauled StudentApp UI for Delta Edition into Apple Pro Dark Studio dashboard
 - **Files Touched**: `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `source/app/StudentApp/Views/StatusView.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/StudentApp.swift`, `source/app/Shared/Utility/FocusInTheme.swift`, `source/app/Shared/Utility/WiFiMonitor.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/tools/build.sh`, `AGENT_MEMORY.md`
