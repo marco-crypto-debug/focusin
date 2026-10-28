@@ -270,7 +270,177 @@ enum UpdateChecker {
         }
     }
 
-    // MARK: - 直接下載 DMG
+    enum UpdateError: LocalizedError {
+        case mountFailed
+        case noAppBundleFound
+        case scriptExecutionFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .mountFailed: return "無法掛載磁碟映像檔"
+            case .noAppBundleFound: return "磁碟映像檔內未找到應用程式套件"
+            case .scriptExecutionFailed: return "更新重啟腳本啟動失敗"
+            }
+        }
+    }
+
+    static func downloadAndPrepareInPlaceUpdate(
+        from url: URL,
+        progressHandler: @escaping (Double, String) -> Void,
+        completion: @escaping (Result<URL, Error>) -> Void
+    ) {
+        let task = URLSession.shared.downloadTask(with: url) { tmpURL, _, error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+                return
+            }
+            guard let tmpURL = tmpURL else {
+                DispatchQueue.main.async {
+                    completion(.failure(UpdateError.mountFailed))
+                }
+                return
+            }
+
+            DispatchQueue.main.async {
+                progressHandler(0.9, "正在解壓並準備更新...")
+            }
+
+            DispatchQueue.global(qos: .userInitiated).async {
+                let fm = FileManager.default
+                let uniqueID = UUID().uuidString
+                let tempDir = fm.temporaryDirectory.appendingPathComponent("focusin_update_\(uniqueID)")
+                let mountDir = tempDir.appendingPathComponent("mount")
+                let dmgCopy = tempDir.appendingPathComponent("update.dmg")
+
+                do {
+                    try fm.createDirectory(at: mountDir, withIntermediateDirectories: true)
+                    try fm.copyItem(at: tmpURL, to: dmgCopy)
+
+                    let attachProc = Process()
+                    attachProc.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+                    attachProc.arguments = ["attach", dmgCopy.path, "-nobrowse", "-mountpoint", mountDir.path, "-readonly"]
+                    try attachProc.run()
+                    attachProc.waitUntilExit()
+
+                    guard attachProc.terminationStatus == 0 else {
+                        throw UpdateError.mountFailed
+                    }
+
+                    let items = try fm.contentsOfDirectory(atPath: mountDir.path)
+                    guard let appName = items.first(where: { $0.hasSuffix(".app") }) else {
+                        let detachProc = Process()
+                        detachProc.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+                        detachProc.arguments = ["detach", mountDir.path, "-force"]
+                        try? detachProc.run()
+                        detachProc.waitUntilExit()
+                        throw UpdateError.noAppBundleFound
+                    }
+
+                    let srcApp = mountDir.appendingPathComponent(appName)
+
+                    let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
+                    let stagingDir = appSupport.appendingPathComponent("FocusIn/StagedUpdate")
+                    try fm.createDirectory(at: stagingDir, withIntermediateDirectories: true)
+                    let stagedApp = stagingDir.appendingPathComponent(appName)
+
+                    if fm.fileExists(atPath: stagedApp.path) {
+                        try fm.removeItem(at: stagedApp)
+                    }
+                    try fm.copyItem(at: srcApp, to: stagedApp)
+
+                    let detachProc = Process()
+                    detachProc.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+                    detachProc.arguments = ["detach", mountDir.path, "-force"]
+                    try? detachProc.run()
+                    detachProc.waitUntilExit()
+
+                    let xattrProc = Process()
+                    xattrProc.executableURL = URL(fileURLWithPath: "/usr/bin/xattr")
+                    xattrProc.arguments = ["-cr", stagedApp.path]
+                    try? xattrProc.run()
+                    xattrProc.waitUntilExit()
+
+                    try? fm.removeItem(at: tempDir)
+
+                    DispatchQueue.main.async {
+                        progressHandler(1.0, "更新已就緒，點擊重啟即可完成")
+                        completion(.success(stagedApp))
+                    }
+                } catch {
+                    let detachProc = Process()
+                    detachProc.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+                    detachProc.arguments = ["detach", mountDir.path, "-force"]
+                    try? detachProc.run()
+                    detachProc.waitUntilExit()
+
+                    try? fm.removeItem(at: tempDir)
+
+                    DispatchQueue.main.async {
+                        completion(.failure(error))
+                    }
+                }
+            }
+        }
+
+        let progress = task.progress
+        DispatchQueue.global(qos: .utility).async {
+            while !progress.isFinished && !progress.isCancelled {
+                let f = min(0.85, progress.fractionCompleted * 0.85)
+                let pct = Int(f * 100)
+                DispatchQueue.main.async {
+                    progressHandler(f, "正在下載更新 (\(pct)%)...")
+                }
+                Thread.sleep(forTimeInterval: 0.2)
+            }
+        }
+        task.resume()
+    }
+
+    static func restartAndApplyUpdate(stagedAppURL: URL, currentAppURL: URL = Bundle.main.bundleURL) throws {
+        let fm = FileManager.default
+        let scriptURL = fm.temporaryDirectory.appendingPathComponent("focusin_apply_\(UUID().uuidString).sh")
+        let currentPID = ProcessInfo.processInfo.processIdentifier
+
+        let script = """
+        #!/bin/bash
+        PID=$1
+        TARGET_APP="$2"
+        STAGED_APP="$3"
+
+        COUNT=0
+        while kill -0 "$PID" 2>/dev/null && [ $COUNT -lt 50 ]; do
+            sleep 0.2
+            COUNT=$((COUNT + 1))
+        done
+
+        if [ -d "$STAGED_APP" ] && [ -n "$TARGET_APP" ]; then
+            rm -rf "$TARGET_APP"
+            cp -R "$STAGED_APP" "$TARGET_APP"
+            rm -rf "$STAGED_APP"
+            xattr -cr "$TARGET_APP" 2>/dev/null || true
+        fi
+
+        open "$TARGET_APP"
+        rm -f "$0"
+        """
+
+        try script.write(to: scriptURL, atomically: true, encoding: .utf8)
+        try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/bin/bash")
+        proc.arguments = [scriptURL.path, "\(currentPID)", currentAppURL.path, stagedAppURL.path]
+        try proc.run()
+
+        QuitGuard.authorizeQuit()
+        DispatchQueue.main.async {
+            NSApp.terminate(nil)
+        }
+    }
+
+    // MARK: - 直接下載 DMG (備用)
 
     /// 直接把最新 DMG 下載到 ~/Downloads 並掛載開啟（不再跳轉 GitHub 網頁）。
     /// - 下載期間 UI 顯示進度文字（progressHandler 回呼主執行緒）。

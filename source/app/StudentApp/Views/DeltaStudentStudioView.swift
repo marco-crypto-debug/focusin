@@ -1037,12 +1037,60 @@ struct DeltaStudentStudioView: View {
                 }
 
                 // 更新檢查文字回饋
-                if let status = listener.updateCheckStatusText {
+                if let update = listener.updateAvailable {
+                    VStack(alignment: .center, spacing: 10) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .foregroundStyle(FocusInTheme.studioGreen)
+                            Text("發現新版本（\(update.version)）")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(FocusInTheme.studioGreen)
+                        }
+
+                        if listener.stagedUpdateAppURL != nil {
+                            Button {
+                                listener.restartAndApplyUpdate()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "arrow.clockwise.circle.fill")
+                                    Text("立即重啟完成更新")
+                                        .font(.system(size: 12.5, weight: .bold))
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(FocusInTheme.studioGreen, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .foregroundStyle(.white)
+                            }
+                            .buttonStyle(.plain)
+                        } else if listener.isDownloadingUpdate {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text(listener.updateCheckStatusText ?? "正在下載...")
+                                    .font(.system(size: 11.5, weight: .medium))
+                                    .foregroundStyle(Color.orange)
+                            }
+                        } else {
+                            Button {
+                                listener.startInPlaceUpdate()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "arrow.down.app")
+                                    Text("一鍵自動更新（重啟即可，無需手動重裝）")
+                                        .font(.system(size: 12, weight: .semibold))
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .foregroundStyle(FocusInTheme.studioTextPrimary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                } else if let status = listener.updateCheckStatusText {
                     Text(status)
                         .font(.system(size: 11.5, weight: .medium))
-                        .foregroundStyle(
-                            status.contains("發現") ? FocusInTheme.studioGreen : FocusInTheme.studioTextSecondary
-                        )
+                        .foregroundStyle(FocusInTheme.studioTextSecondary)
                 }
             }
 

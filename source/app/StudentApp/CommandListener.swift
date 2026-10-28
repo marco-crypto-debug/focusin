@@ -17,6 +17,9 @@ final class CommandListener: ObservableObject {
     @Published var isCheckingUpdate: Bool = false
     /// 手動檢查更新狀態文字
     @Published var updateCheckStatusText: String? = nil
+    @Published var isDownloadingUpdate: Bool = false
+    @Published var updateDownloadProgress: Double = 0.0
+    @Published var stagedUpdateAppURL: URL? = nil
     /// 自動更新檢查結果（非 nil 代表 GitHub 有新版本）。
     @Published var updateAvailable: UpdateChecker.UpdateInfo?
 
@@ -95,6 +98,42 @@ final class CommandListener: ObservableObject {
                 self.updateCheckStatusText = "檢查失敗（無法連線 GitHub）"
                 self.appendLog("檢查失敗（無法連線 GitHub）")
             }
+        }
+    }
+
+    /// 開始下載更新並就地準備（無需手動拖拽安裝，重啟即可套用）
+    func startInPlaceUpdate() {
+        guard let info = updateAvailable, let url = URL(string: info.url), !isDownloadingUpdate else { return }
+        isDownloadingUpdate = true
+        stagedUpdateAppURL = nil
+        appendLog("開始下載更新套件（\(info.version)）...")
+        UpdateChecker.downloadAndPrepareInPlaceUpdate(from: url) { [weak self] progress, statusText in
+            self?.updateDownloadProgress = progress
+            self?.updateCheckStatusText = statusText
+        } completion: { [weak self] result in
+            guard let self else { return }
+            self.isDownloadingUpdate = false
+            switch result {
+            case .success(let stagedURL):
+                self.stagedUpdateAppURL = stagedURL
+                self.updateCheckStatusText = "更新已就緒，點擊「立即重啟」即可完成更新"
+                self.appendLog("更新已解壓就緒：\(stagedURL.path)")
+            case .failure(let error):
+                self.stagedUpdateAppURL = nil
+                self.updateCheckStatusText = "更新準備失敗：\(error.localizedDescription)"
+                self.appendLog("更新準備失敗：\(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// 立即重啟套用更新
+    func restartAndApplyUpdate() {
+        guard let staged = stagedUpdateAppURL else { return }
+        appendLog("正在啟動就地更新腳本並重啟...")
+        do {
+            try UpdateChecker.restartAndApplyUpdate(stagedAppURL: staged)
+        } catch {
+            appendLog("重啟更新失敗：\(error.localizedDescription)")
         }
     }
 

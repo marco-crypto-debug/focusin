@@ -14,6 +14,18 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-28T14:40:00.000Z] @OmO
+- **Summary**: Implemented seamless in-place auto update functionality (no manual reinstallation needed, restart to update)
+- **Files Touched**: `source/app/Shared/Utility/UpdateChecker.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `AGENT_MEMORY.md`
+- **Key Decisions**:
+  - **In-Place Staging Engine**: Implemented `UpdateChecker.downloadAndPrepareInPlaceUpdate` which downloads the release DMG in the background, mounts it programmatically via `hdiutil attach -nobrowse -readonly`, extracts the inner `.app` bundle into `~/Library/Application Support/FocusIn/StagedUpdate/`, strips Gatekeeper quarantine attributes (`xattr -cr`), and unmounts the DMG volume.
+  - **Atomic Swap & Relaunch Helper**: Implemented `UpdateChecker.restartAndApplyUpdate` which writes a lightweight self-terminating updater script (`focusin_apply_*.sh`) that waits for the running process PID to terminate, atomically replaces the bundle at `Bundle.main.bundleURL` with the staged application, and relaunches the new version using macOS `open "$TARGET_APP"`.
+  - **QuitGuard Integration**: Calls `QuitGuard.authorizeQuit()` before terminating the app so the administrator quit protection modal does not intercept or block the automated update restart.
+  - **UI Integration**: Added interactive status and actions in Teacher and Student Studio views (`DeltaStudioView` and `DeltaStudentStudioView`):
+    - When new release is detected: displays "一鍵自動更新（重啟即可，無需手動重裝）".
+    - During download: shows progress percentage and status spinner.
+    - When staged: presents a highlighted green "立即重啟完成更新" button that triggers the seamless in-place restart.
+  - **Verification**: Verified extraction and script execution in Swift integration tests, and compiled both `stable` and `alpha` release DMGs with `bash source/tools/build.sh all`.
 ### 🔹 [2026-10-28T14:25:00.000Z] @OmO
 - **Summary**: Promoted Delta Studio UI to default Stable version, removed legacy variants, and completely remade Alpha sound broadcasting/playback engine
 - **Files Touched**: `source/app/Shared/Utility/FocusInTheme.swift`, `source/app/Shared/Utility/QuitGuard.swift`, `source/app/TeacherApp/TeacherApp.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/ScreenBroadcaster.swift`, `source/app/TeacherApp/Views/DeviceListView.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/StudentApp/StudentApp.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/AudioPlayer.swift`, `source/app/StudentApp/Views/StatusView.swift`, `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `source/tools/build.sh`, `source/tools/test_audio_pipeline.swift`, `AGENT_MEMORY.md`
