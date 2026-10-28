@@ -1122,7 +1122,7 @@ struct DeltaStudioView: View {
                         .font(.system(size: 26, weight: .bold))
                         .foregroundStyle(FocusInTheme.studioTextPrimary)
 
-                    Text("v1.5.10-delta · Native macOS Classroom System")
+                    Text("v1.5.11-delta · Native macOS Classroom System")
                         .font(.system(size: 12.5, weight: .medium))
                         .foregroundStyle(FocusInTheme.studioTextSecondary)
                 }

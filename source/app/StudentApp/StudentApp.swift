@@ -38,6 +38,19 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
         self.listener = listener
         self.appState = appState
         installMenuBar()
+        installPowerOffObserver()
+    }
+
+    private func installPowerOffObserver() {
+        #if FOCUSIN_STABLE || FOCUSIN_BETA
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willPowerOffNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            QuitGuard.authorizeQuit()
+        }
+        #endif
     }
 
     private func installMenuBar() {
@@ -101,8 +114,11 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     #if FOCUSIN_STABLE || FOCUSIN_BETA
-    /// 退出保護：⌘Q / Dock / 選單一律需要管理員密碼。
+    /// 退出保護：⌘Q / Dock / 選單一律需要管理員密碼。若為遠端或系統關機則允許直接退出。
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if QuitGuard.isAuthorizedToQuit {
+            return .terminateNow
+        }
         let allow = QuitGuard.shouldAllowQuit(
             appName: "FocusIn 學生端",
             hasConfigured: KioskConfig.hasAdminPassword,

@@ -16,6 +16,14 @@ enum QuitGuard {
     private static let hashKey = "quit.adminPasswordHash"
     private static let saltKey = "quit.adminPasswordSalt"
 
+    /// 是否已由系統程序（如遠端關機/重新啟動、系統即將關機）授權直接退出，無需彈出密碼提示。
+    private(set) static var isAuthorizedToQuit: Bool = false
+
+    /// 授權免密碼退出（遠端關機、重啟、系統關機事件觸發時呼叫）。
+    static func authorizeQuit() {
+        isAuthorizedToQuit = true
+    }
+
     static var hasPassword: Bool {
         UserDefaults.standard.string(forKey: hashKey) != nil
     }
@@ -63,6 +71,9 @@ enum QuitGuard {
                                 hasConfigured: Bool,
                                 verifier: (String) -> Bool,
                                 notConfiguredHint: String) -> Bool {
+        if isAuthorizedToQuit {
+            return true
+        }
         guard hasConfigured else {
             let alert = NSAlert()
             alert.messageText = "無法退出"

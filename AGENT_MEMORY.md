@@ -14,6 +14,21 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-28T08:00:00.000Z] @Antigravity
+- **Summary**: Resolved QuitGuard lock triggering during remote shutdown/restart and published updated Delta v1.5.11 binaries to GitHub Releases
+- **Files Touched**: `source/app/Shared/Utility/QuitGuard.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/StudentApp.swift`, `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/tools/build.sh`, `source/web/site-apple/index.html`, `source/web/site-apple/app.js`, `source/web/public/index.html`, `source/web/site/FocusIn官網.html`, `AGENT_MEMORY.md`
+- **Key Decisions**:
+  - **Issue 1 (Remote Shutdown & Restart Triggering App Lock)**:
+    - Analyzed root cause: Teacher sending `.shutdown` or `.restart` commanded `System Events` to shut down / restart, which prompted macOS to issue `applicationShouldTerminate` to StudentApp.
+    - `StudentAppDelegate.applicationShouldTerminate` was intercepting all quit requests and calling `QuitGuard.shouldAllowQuit`, presenting a password modal ("應用鎖") and returning `.terminateCancel`, thereby aborting macOS shutdown/restart.
+    - Added `QuitGuard.isAuthorizedToQuit` flag and `QuitGuard.authorizeQuit()` method.
+    - Registered `NSWorkspace.willPowerOffNotification` observer in `StudentAppDelegate` to authorize clean quit whenever macOS powers off or restarts.
+    - In `CommandListener.swift` for `.shutdown` and `.restart`: explicitly authorized quit (`QuitGuard.authorizeQuit()`), exited Kiosk mode (`kiosk.exitKiosk()`) to release event taps, added Finder AppleScript fallback, and scheduled clean termination (`NSApp.terminate`).
+  - **Issue 2 (GitHub Student Download Link Was Old Version)**:
+    - Discovered that previous GitHub Release `v1.5.10-delta` had been created with `FocusIn-Delta-Student.dmg` from commit `ebf549a` (prior to `ebd9ed8` which introduced the modern Student Studio UI).
+    - Bumped base version to `1.5.11` (`v1.5.11-delta`) across `build.sh`, Studio views, and web pages.
+    - Recompiled and signed release DMGs (`FocusIn-Delta-Student.dmg` and `FocusIn-Delta-Teacher.dmg`).
+    - Merged `feat/airplay-engine` to `main`, pushed to GitHub, created release `v1.5.11-delta`, and clobbered assets on `v1.5.10-delta` to ensure all latest/tag links serve the new Student UI.
 ### 🔹 [2026-10-26T18:35:00.000Z] @OmO
 - **Summary**: Fixed broken website download links, published missing GitHub Release v1.5.10-delta, and deployed live site
 - **Files Touched**: `source/web/site-apple/index.html`, `source/web/public/index.html`, `source/web/site/FocusIn官網.html`, `AGENT_MEMORY.md`

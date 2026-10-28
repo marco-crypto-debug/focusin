@@ -214,11 +214,25 @@ final class CommandListener: ObservableObject {
 
         case .shutdown:
             appendLog("收到關機指令")
+#if FOCUSIN_STABLE || FOCUSIN_BETA
+            QuitGuard.authorizeQuit()
+#endif
+            kiosk.exitKiosk()
             runSystemEventScript("tell application \"System Events\" to shut down")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                NSApp.terminate(nil)
+            }
 
         case .restart:
             appendLog("收到重新啟動指令")
+#if FOCUSIN_STABLE || FOCUSIN_BETA
+            QuitGuard.authorizeQuit()
+#endif
+            kiosk.exitKiosk()
             runSystemEventScript("tell application \"System Events\" to restart")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                NSApp.terminate(nil)
+            }
 
         case .launchApp:
             if let bundleID = message.payload {
@@ -491,18 +505,25 @@ final class CommandListener: ObservableObject {
         var error: NSDictionary?
         NSAppleScript(source: source)?.executeAndReturnError(&error)
         if let error {
-            appendLog("系統命令執行失敗 (AppleScript): \(error)")
-            // Fallback: 嘗試用 shutdown 指令（通常需要 sudo，這裡僅作最佳努力）
-            let fallbackScript: String
-            if source.contains("shut down") {
-                fallbackScript = "do shell script \"shutdown -h now\" with administrator privileges"
-            } else {
-                fallbackScript = "do shell script \"shutdown -r now\" with administrator privileges"
-            }
-            var fbError: NSDictionary?
-            NSAppleScript(source: fallbackScript)?.executeAndReturnError(&fbError)
-            if let fbError {
-                appendLog("系統命令執行失敗 (fallback): \(fbError)")
+            appendLog("系統命令執行失敗 (System Events): \(error)")
+            // Fallback 1: 嘗試透過 Finder 觸發關機/重啟
+            let isShutDown = source.contains("shut down")
+            let finderScript = isShutDown
+                ? "tell application \"Finder\" to shut down"
+                : "tell application \"Finder\" to restart"
+            var finderError: NSDictionary?
+            NSAppleScript(source: finderScript)?.executeAndReturnError(&finderError)
+            if let finderError {
+                appendLog("系統命令執行失敗 (Finder): \(finderError)")
+                // Fallback 2: do shell script
+                let fallbackScript = isShutDown
+                    ? "do shell script \"shutdown -h now\" with administrator privileges"
+                    : "do shell script \"shutdown -r now\" with administrator privileges"
+                var fbError: NSDictionary?
+                NSAppleScript(source: fallbackScript)?.executeAndReturnError(&fbError)
+                if let fbError {
+                    appendLog("系統命令執行失敗 (fallback): \(fbError)")
+                }
             }
         }
     }
