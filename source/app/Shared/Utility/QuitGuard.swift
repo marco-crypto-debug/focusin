@@ -1,4 +1,3 @@
-#if FOCUSIN_STABLE || FOCUSIN_BETA
 import AppKit
 import CryptoKit
 import Foundation
@@ -116,4 +115,3 @@ enum QuitGuard {
         case oldPasswordMismatch
     }
 }
-#endif

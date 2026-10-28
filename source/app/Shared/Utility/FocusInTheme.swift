@@ -6,59 +6,19 @@ import SwiftUI
 //  beta：MoodLab 風格（Apple 灰底、主紅 #D71920、深色 #171717）
 // ============================================================
 enum FocusInTheme {
-    /// 畫布底色
-    static let canvas: Color = {
-#if FOCUSIN_DELTA
-        return studioCanvas
-#elseif FOCUSIN_BETA
-        return Color(red: 0.965, green: 0.965, blue: 0.969)      // #F6F6F7 MoodLab Apple 灰
-#else
-        return Color(red: 0.969, green: 0.961, blue: 0.949)      // 暖白
-#endif
-    }()
-    /// 卡片底色（Delta 模式下為深色 Studio 卡片，避免白屏）
-    static let card: Color = {
-#if FOCUSIN_DELTA
-        return studioCard
-#else
-        return Color(red: 1.0, green: 1.0, blue: 1.0)
-#endif
-    }()
+    /// 畫布底色（Apple Pro Dark Studio 畫布底色）
+    static let canvas: Color = studioCanvas
+    /// 卡片底色（深色 Studio 卡片）
+    static let card: Color = studioCard
     /// 卡片描邊
-    static let line: Color = {
-#if FOCUSIN_DELTA
-        return studioLine
-#elseif FOCUSIN_BETA
-        return Color.black.opacity(0.09)
-#else
-        return Color.black.opacity(0.07)
-#endif
-    }()
-    /// 品牌強調（beta 用 MoodLab 主紅 #D71920）
-    static let accent: Color = {
-#if FOCUSIN_BETA
-        return Color(red: 0.843, green: 0.098, blue: 0.125)      // #D71920
-#else
-        return Color(red: 0.82, green: 0.32, blue: 0.30)
-#endif
-    }()
-    /// 深色主按鈕（beta 用 #171717）
-    static let dark: Color = {
-#if FOCUSIN_BETA
-        return Color(red: 0.09, green: 0.09, blue: 0.09)         // #171717
-#else
-        return Color(red: 0.12, green: 0.12, blue: 0.12)
-#endif
-    }()
+    static let line: Color = studioLine
+    /// 品牌強調（FocusIn 主紅 #D71920）
+    static let accent: Color = studioRed
+    /// 深色主按鈕（#171717）
+    static let dark: Color = Color(red: 0.09, green: 0.09, blue: 0.09)
 
-    /// 卡片圓角（beta 用 14pt 大圓角）
-    static var cornerRadius: CGFloat = {
-#if FOCUSIN_BETA
-        return 14
-#else
-        return 12
-#endif
-    }()
+    /// 卡片圓角（14pt 大圓角）
+    static var cornerRadius: CGFloat = 14
 
     /// 分區標籤（小號、寬字距、全大寫感）
     static func sectionLabel(_ text: String) -> some View {
@@ -85,7 +45,6 @@ enum FocusInTheme {
             .padding(.vertical, 10)
     }
 
-#if FOCUSIN_DELTA
     static let isDelta = true
     static let studioCanvas = Color(red: 0.067, green: 0.067, blue: 0.082)     // #111115
     static let studioSidebar = Color(red: 0.047, green: 0.047, blue: 0.059)    // #0C0C0F
@@ -98,9 +57,6 @@ enum FocusInTheme {
     static let studioGreen = Color(red: 0.204, green: 0.780, blue: 0.349)      // #34C759
     static let studioTextPrimary = Color(red: 0.96, green: 0.96, blue: 0.97)
     static let studioTextSecondary = Color(red: 0.55, green: 0.55, blue: 0.60)
-#else
-    static let isDelta = false
-#endif
 }
 
 /// FocusIn 向量 Squircle 應用圖標（全端共用）

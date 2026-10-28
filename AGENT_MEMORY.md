@@ -14,6 +14,24 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-28T14:25:00.000Z] @OmO
+- **Summary**: Promoted Delta Studio UI to default Stable version, removed legacy variants, and completely remade Alpha sound broadcasting/playback engine
+- **Files Touched**: `source/app/Shared/Utility/FocusInTheme.swift`, `source/app/Shared/Utility/QuitGuard.swift`, `source/app/TeacherApp/TeacherApp.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/ScreenBroadcaster.swift`, `source/app/TeacherApp/Views/DeviceListView.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/StudentApp/StudentApp.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/AudioPlayer.swift`, `source/app/StudentApp/Views/StatusView.swift`, `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `source/tools/build.sh`, `source/tools/test_audio_pipeline.swift`, `AGENT_MEMORY.md`
+- **Key Decisions**:
+  - **Replaced Stable with Delta**: Promoted Apple Pro Dark Studio UI (`DeltaStudioView` in TeacherApp, `DeltaStudentStudioView` in StudentApp), dynamic WiFiMonitor SSID tracking, 50-device limit, and hardware H.264 video decoding into the official `stable` variant.
+  - **Removed Legacy Variants**: Deprecated and purged obsolete `beta`, `delta`, and `archive` builds from `source/tools/build.sh` and `release/`. The project now maintains exclusively `stable` (video only, rock solid) and `alpha` (video + remade sound).
+  - **Remade Alpha Sound Engine**:
+    - Discovered root cause of audio failure: `AudioPlayer.swift` had a fatal guard `audioFormat.isStandard` evaluated against `interleaved: true` formats, which Apple AVFoundation defines as strictly false (only deinterleaved Float32 is standard). This caused 100% of incoming audio packets to be discarded immediately.
+    - Eliminated duplicate network packet transmission: `ScreenBroadcaster` was firing both `onAirPlayAudio` (`APAU`) and `onAudio` (`FZAU`), doubling bandwidth and creating packet race conditions. Deduplicated to single canonical `AirPlayAudioPacket` stream with sequence numbering.
+    - Completely remade `BroadcastAudioPlayer` in `AudioPlayer.swift`:
+      1. Fixed `AVAudioPlayerNode` connection format to standard 48kHz stereo Float32 (`standardFormat`).
+      2. Dynamic PCM decoding converting any sample format (Float32, Int16, mono, stereo, planar, interleaved) into standard Float32 deinterleaved channel buffers.
+      3. Implemented `NSRecursiveLock` and unlocked prior to `player.stop()` to eliminate synchronous buffer completion handler deadlocks.
+      4. Bounded jitter buffer with 2-chunk pre-roll (120-160ms) and bounded 8-chunk maximum.
+    - Built automated unit and integration test `source/tools/test_audio_pipeline.swift` verifying packet generation, wire serialization, jitter buffering, and clean stop lifecycle without errors.
+  - **Verified Multi-Variant Packaging**: Ran `build.sh all` to produce signed DMGs:
+    - Stable: `release/stable/FocusIn-Teacher.dmg` (974K) and `FocusIn-Student.dmg` (842K).
+    - Alpha: `release/alpha/FocusIn-Alpha-Teacher.dmg` (980K) and `FocusIn-Alpha-Student.dmg` (846K).
 ### 🔹 [2026-10-28T08:00:00.000Z] @Antigravity
 - **Summary**: Resolved QuitGuard lock triggering during remote shutdown/restart and published updated Delta v1.5.11 binaries to GitHub Releases
 - **Files Touched**: `source/app/Shared/Utility/QuitGuard.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/StudentApp.swift`, `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/tools/build.sh`, `source/web/site-apple/index.html`, `source/web/site-apple/app.js`, `source/web/public/index.html`, `source/web/site/FocusIn官網.html`, `AGENT_MEMORY.md`

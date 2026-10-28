@@ -16,11 +16,7 @@ struct StudentApp: App {
         WindowGroup {
             StatusView()
                 .environmentObject(listener)
-#if FOCUSIN_DELTA
                 .frame(minWidth: 860, minHeight: 580)
-#else
-                .frame(minWidth: 380, minHeight: 420)
-#endif
                 .onAppear {
                     appDelegate.attach(listener: listener, appState: FocusInAppState.shared)
                 }
@@ -42,7 +38,6 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func installPowerOffObserver() {
-        #if FOCUSIN_STABLE || FOCUSIN_BETA
         NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.willPowerOffNotification,
             object: nil,
@@ -50,7 +45,6 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
         ) { _ in
             QuitGuard.authorizeQuit()
         }
-        #endif
     }
 
     private func installMenuBar() {
@@ -100,7 +94,6 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func mbQuit() {
-        #if FOCUSIN_STABLE || FOCUSIN_BETA
         let allow = QuitGuard.shouldAllowQuit(
             appName: "FocusIn 學生端",
             hasConfigured: KioskConfig.hasAdminPassword,
@@ -108,12 +101,8 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
             notConfiguredHint: "尚未設定管理員密碼。\n請先在「狀態視窗 → 進階設定 → 管理員密碼」設定，才能退出。"
         )
         if allow { NSApp.terminate(nil) }
-        #else
-        NSApp.terminate(nil)
-        #endif
     }
 
-    #if FOCUSIN_STABLE || FOCUSIN_BETA
     /// 退出保護：⌘Q / Dock / 選單一律需要管理員密碼。若為遠端或系統關機則允許直接退出。
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if QuitGuard.isAuthorizedToQuit {
@@ -127,5 +116,4 @@ final class StudentAppDelegate: NSObject, NSApplicationDelegate {
         )
         return allow ? .terminateNow : .terminateCancel
     }
-    #endif
 }

@@ -2,8 +2,6 @@ import AppKit
 import ApplicationServices
 import SwiftUI
 
-#if FOCUSIN_DELTA
-
 // ============================================================
 // FocusIn Delta 學生端 Studio 介面 (Apple Pro Dark UI)
 // ============================================================
@@ -91,7 +89,25 @@ struct DeltaStudentStudioView: View {
                             .font(.system(size: 16, weight: .bold, design: .rounded))
                             .foregroundStyle(FocusInTheme.studioTextPrimary)
 
-                        Text("DELTA")
+#if FOCUSIN_ALPHA
+                        Text("ALPHA")
+                            .font(.system(size: 9, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 1.0, green: 0.60, blue: 0.20),
+                                        Color(red: 0.95, green: 0.35, blue: 0.20)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                ),
+                                in: Capsule()
+                            )
+#else
+                        Text("PRO")
                             .font(.system(size: 9, weight: .heavy))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 5)
@@ -108,6 +124,7 @@ struct DeltaStudentStudioView: View {
                                 ),
                                 in: Capsule()
                             )
+#endif
 
                         Text("學生端")
                             .font(.system(size: 13, weight: .medium))
@@ -1182,5 +1199,3 @@ struct DeltaStudentStudioView: View {
         }
     }
 }
-
-#endif

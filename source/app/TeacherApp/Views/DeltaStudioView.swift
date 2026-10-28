@@ -1,8 +1,6 @@
 import AppKit
 import SwiftUI
 
-#if FOCUSIN_DELTA
-
 // ============================================================
 // FocusIn Delta Studio — 旗艦暗黑專業控制台 (Apple Pro Studio UI)
 // ============================================================
@@ -1700,5 +1698,3 @@ struct StudentCardItemView: View {
         .buttonStyle(.plain)
     }
 }
-
-#endif

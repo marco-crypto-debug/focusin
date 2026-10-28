@@ -1,16 +1,17 @@
 #!/bin/bash
 # ============================================================
-# FocusIn 一鍵構建：stable / alpha / beta / delta 四版 × 教師端/學生端
+# FocusIn 一鍵構建：stable（Delta UI 旗艦穩定版）/ alpha（含聲音廣播版）
 #
 # 用法：
-#   bash tools/build.sh            # 預設構建 beta（含 Pro License）
-#   bash tools/build.sh stable     # 構建穩定版（僅畫面 + 退出保護）
-#   bash tools/build.sh alpha      # 構建 Alpha（聲音 + Pro License）
-#   bash tools/build.sh all        # 三版全建
+#   bash tools/build.sh            # 預設構建 stable
+#   bash tools/build.sh stable     # 構建 stable 版
+#   bash tools/build.sh alpha      # 構建 alpha 版（含聲音廣播）
+#   bash tools/build.sh all        # stable + alpha 兩版全建
 #
 # 產物：
-#   release/staging-<版>/*.app     （已簽名）
-#   release/<版>/FocusIn-*.dmg     （可分發）
+#   release/staging-rel/*.app      （已簽名）
+#   release/stable/FocusIn-*.dmg   （可分發）
+#   release/alpha/FocusIn-Alpha-*.dmg
 # ============================================================
 set -e
 
@@ -74,20 +75,15 @@ build_variant() {
   local CAP="Stable"       # 顯示用大寫首字母
 
   case "$VARIANT" in
-    stable) MACRO="-D FOCUSIN_STABLE";  SUFFIX="";       CAP="Stable"; STAGE="$ROOT/release/staging-rel";  OUTDIR="$ROOT/release/stable"; DMG_TAG="";;
-    alpha)  MACRO="-D FOCUSIN_ALPHA";   SUFFIX=".alpha"; CAP="Alpha"; STAGE="$ROOT/release/staging-alpha"; OUTDIR="$ROOT/release/alpha"; DMG_TAG="Alpha-";;
-    beta)   MACRO="-D FOCUSIN_BETA";    SUFFIX=".beta";  CAP="Beta"; STAGE="$ROOT/release/staging-beta"; OUTDIR="$ROOT/release/beta"; DMG_TAG="Beta-";;
-    delta)  MACRO="-D FOCUSIN_BETA -D FOCUSIN_DELTA"; SUFFIX=".delta"; CAP="Delta"; STAGE="$ROOT/release/staging-delta"; OUTDIR="$ROOT/release/delta"; DMG_TAG="Delta-";;
-    *) echo "✗ 未知版本：$VARIANT（stable/alpha/beta/delta/all）"; exit 1;;
+    stable) MACRO="-D FOCUSIN_STABLE";  SUFFIX="";       CAP="Stable"; STAGE="$ROOT/release/staging-rel";   OUTDIR="$ROOT/release/stable"; DMG_TAG="";;
+    alpha)  MACRO="-D FOCUSIN_ALPHA";   SUFFIX=".alpha"; CAP="Alpha";  STAGE="$ROOT/release/staging-alpha"; OUTDIR="$ROOT/release/alpha";  DMG_TAG="Alpha-";;
+    *) echo "✗ 未知版本：$VARIANT（stable/alpha/all）"; exit 1;;
   esac
 
   local VERSION="$VERSION_BASE"
-  # 版本標記用「-」尾綴（如 1.4.0-beta），bundle id 後綴用「.」（如 com.classroom.teacher.beta）
   local TAG_SUFFIX=""
   case "$VARIANT" in
     alpha) TAG_SUFFIX="-alpha";;
-    beta)  TAG_SUFFIX="-beta";;
-    delta) TAG_SUFFIX="-delta";;
   esac
   [ -n "$TAG_SUFFIX" ] && VERSION="$VERSION_BASE$TAG_SUFFIX"
 
@@ -174,14 +170,12 @@ build_variant() {
   echo "✓ $VARIANT 版完成"
 }
 
-case "${1:-beta}" in
+case "${1:-stable}" in
   all)
     build_variant stable
     build_variant alpha
-    build_variant beta
-    build_variant delta
     ;;
-  *) build_variant "${1:-beta}" ;;
+  *) build_variant "${1:-stable}" ;;
 esac
 
 echo ""

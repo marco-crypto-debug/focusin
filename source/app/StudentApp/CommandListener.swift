@@ -113,33 +113,15 @@ final class CommandListener: ObservableObject {
                     Task { @MainActor in self.handle(message, from: peer) }
                 }
                 peer.onFrame = { [weak self] frameData in
-#if FOCUSIN_DELTA
-                    // Delta：單播（普通模式）也走 H.264 硬解，與組播共用解碼器
                     DispatchQueue.global(qos: .userInteractive).async {
                         guard let self,
                               let frame = MulticastTransport.unpackH264Frame(frameData) else { return }
                         self.decodeH264(frame)
                     }
-#else
-                    // JPEG 解碼較耗時：先在背景佇列解碼，再切回主執行緒更新畫面，避免卡頓
-                    DispatchQueue.global(qos: .userInteractive).async { [weak self] in
-                        guard let self, let image = NSImage(data: frameData) else { return }
-                        Task { @MainActor in
-                            self.kiosk.setBroadcastImage(image)
-                        }
-                    }
-#endif
                 }
 #if !FOCUSIN_STABLE
-                peer.onAirPlayAudio = { packet in
-                    Task { @MainActor in
-                        self.audio.playAirPlay(packet: packet)
-                    }
-                }
-                peer.onAudio = { pcm, info in
-                    Task { @MainActor in
-                        self.audio.play(pcm: pcm, format: info)
-                    }
+                peer.onAirPlayAudio = { [weak self] packet in
+                    self?.audio.playAirPlay(packet: packet)
                 }
 #endif
                 peer.onConnectionLost = {
@@ -214,9 +196,7 @@ final class CommandListener: ObservableObject {
 
         case .shutdown:
             appendLog("收到關機指令")
-#if FOCUSIN_STABLE || FOCUSIN_BETA
             QuitGuard.authorizeQuit()
-#endif
             kiosk.exitKiosk()
             runSystemEventScript("tell application \"System Events\" to shut down")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -225,9 +205,7 @@ final class CommandListener: ObservableObject {
 
         case .restart:
             appendLog("收到重新啟動指令")
-#if FOCUSIN_STABLE || FOCUSIN_BETA
             QuitGuard.authorizeQuit()
-#endif
             kiosk.exitKiosk()
             runSystemEventScript("tell application \"System Events\" to restart")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -245,7 +223,6 @@ final class CommandListener: ObservableObject {
             appendLog(result)
             peer.send(CommandMessage(type: .wipeResult, senderID: deviceID, senderName: deviceName, payload: result))
 
-#if FOCUSIN_STABLE || FOCUSIN_BETA
         case .setAdminPassword:
             if let password = message.payload {
                 do {
@@ -255,7 +232,6 @@ final class CommandListener: ObservableObject {
                     appendLog("管理員密碼設定失敗：密碼需至少 4 字元")
                 }
             }
-#endif
 
         case .setBrightness:
             if let payload = message.payload, let value = Float(payload) {
@@ -276,22 +252,17 @@ final class CommandListener: ObservableObject {
             kiosk.clearBroadcastImage()
             // 防熄屏：廣播接收期間停用 idle display/system sleep，避免被投影的學生機自動熄屏
             DisplayKeepAlive.shared.engage()
-#if FOCUSIN_DELTA
-            // Delta：教師端 payload 標記通道——"multicast" 組播 / "unicast" 單播
             if message.payload == "multicast" {
                 startMulticastVideo()
+#if !FOCUSIN_STABLE
                 startMulticastAudio()
+#endif
             } else {
                 startUnicastVideo()
+#if !FOCUSIN_STABLE
                 startUnicastAudio()
-            }
-#elseif FOCUSIN_BETA
-            startMulticastVideo()
-#elseif FOCUSIN_ALPHA
-            audio.start()
-#else
-            // stable：無聲音功能
 #endif
+            }
 
         // 廣播幀改走二進位通道（PeerConnection.onFrame），此處不再處理 JSON 幀
         case .streamFrame:
@@ -301,39 +272,30 @@ final class CommandListener: ObservableObject {
             isBroadcasting = false
             kiosk.clearBroadcastImage()
             DisplayKeepAlive.shared.release()
-#if FOCUSIN_DELTA
             stopUnicastVideo()
-            stopUnicastAudio()   // 停止單播音訊播放器，重設 lockedFormat / isPrimed
             stopMulticastVideo()
-            stopMulticastAudio() // 含 audio.stop()
-#elseif FOCUSIN_BETA
-            stopMulticastVideo()
-#elseif FOCUSIN_ALPHA
-            audio.stop()
-#else
-            // stable：無聲音功能
+#if !FOCUSIN_STABLE
+            stopUnicastAudio()
+            stopMulticastAudio()
 #endif
 
-#if FOCUSIN_BETA
-        // —— v1.5-beta：AP 組播探測 ——
+        // —— AP 組播探測 ——
         case .multicastProbeStart:
             startMulticastProbe(params: message.payload)
         case .multicastProbeReport:
             break   // 教師端使用
         case .multicastProbeStop:
             stopMulticastProbe()
-#endif
 
         default:
             break
         }
     }
 
-#if FOCUSIN_BETA
-    // MARK: - v1.5-beta 組播畫面接收
+    // MARK: - 組播畫面接收
 
     private let multicastVideo = MulticastTransport()
-    /// Delta：組播音訊接收（UDP 組播模式）
+    /// 組播音訊接收（UDP 組播模式）
     private let multicastAudio = MulticastTransport()
     private let h264Decoder = H264Decoder()
     private var hasDecodedFrame = false
@@ -342,7 +304,6 @@ final class CommandListener: ObservableObject {
         multicastVideo.stop()
         hasDecodedFrame = false
         h264Decoder.start { [weak self] pixelBuffer in
-            // 背景佇列：pixel buffer → NSImage → 主執行緒更新畫面
             let image = Self.image(from: pixelBuffer)
             guard let image else { return }
             Task { @MainActor in
@@ -352,13 +313,12 @@ final class CommandListener: ObservableObject {
         multicastVideo.startReceiver(port: MulticastTransport.videoPort, ifaceIP: nil) { [weak self] data in
             guard let self,
                   let frame = MulticastTransport.unpackH264Frame(data) else { return }
-            // 過濾：尚未解出第一幀前只接受關鍵幀（快速同步）
             if !self.hasDecodedFrame && !frame.key { return }
             self.hasDecodedFrame = true
             self.h264Decoder.decode(frame.annexB, isKeyframe: frame.key,
                                     sps: frame.sps, pps: frame.pps)
         }
-        appendLog("Beta 組播畫面接收已啟動（\(MulticastTransport.group):\(MulticastTransport.videoPort)）")
+        appendLog("組播畫面接收已啟動（\(MulticastTransport.group):\(MulticastTransport.videoPort)）")
     }
 
     private func stopMulticastVideo() {
@@ -367,48 +327,40 @@ final class CommandListener: ObservableObject {
         hasDecodedFrame = false
     }
 
-    /// 啟動組播音訊接收：解包 FZAU → 餵給播放器（與單播音訊共用 BroadcastAudioPlayer）。
+#if !FOCUSIN_STABLE
+    /// 啟動組播音訊接收：解包 FZAU / APAU → 餵給播放器。
     private func startMulticastAudio() {
         multicastAudio.stop()
         multicastAudio.startReceiver(port: MulticastTransport.audioPort, ifaceIP: nil) { [weak self] data in
             guard let self else { return }
             if let packet = MulticastTransport.unpackAirPlayAudio(data) {
-                Task { @MainActor in
-                    self.audio.playAirPlay(packet: packet)
-                }
+                self.audio.playAirPlay(packet: packet)
             } else if let audio = MulticastTransport.unpackAudio(data) {
-                Task { @MainActor in
-                    self.audio.play(pcm: audio.pcm, format: audio.format)
-                }
+                self.audio.play(pcm: audio.pcm, format: audio.format)
             }
         }
-        appendLog("Delta 組播音訊接收已啟動（\(MulticastTransport.group):\(MulticastTransport.audioPort)）")
+        appendLog("組播音訊接收已啟動（\(MulticastTransport.group):\(MulticastTransport.audioPort)）")
     }
 
     private func stopMulticastAudio() {
         multicastAudio.stop()
-        audio.stop()   // 釋放 AVAudioEngine，重設 lockedFormat 與 isPrimed
+        audio.stop()
     }
+#endif
 
-#if FOCUSIN_DELTA
-    // MARK: - Delta 單播畫面接收（普通模式：H.264 幀走 WebSocket）
+    // MARK: - 單播畫面接收（H.264 幀走 WebSocket）
 
-    /// 啟動單播解碼（與組播共用 h264Decoder；由 onFrame 送入幀）。
     private func startUnicastVideo() {
         multicastVideo.stop()
         hasDecodedFrame = false
         h264Decoder.start { [weak self] pixelBuffer in
             let image = Self.image(from: pixelBuffer)
-            guard let image else {
-                DiagLog.log("單播 onFrame: image 轉換失敗 px=\(CVPixelBufferGetWidth(pixelBuffer))x\(CVPixelBufferGetHeight(pixelBuffer))")
-                return
-            }
-            DiagLog.log("單播 onFrame: 解碼成功 \(image.size.width)x\(image.size.height)")
+            guard let image else { return }
             Task { @MainActor in
                 self?.kiosk.setBroadcastImage(image)
             }
         }
-        appendLog("Delta 單播畫面接收已啟動（H.264 over WebSocket）")
+        appendLog("單播畫面接收已啟動（H.264 over WebSocket）")
     }
 
     private func stopUnicastVideo() {
@@ -416,27 +368,23 @@ final class CommandListener: ObservableObject {
         hasDecodedFrame = false
     }
 
-    /// 啟動單播音訊播放（Delta：WebSocket 單播模式）。
-    /// AVAudioEngine 由 AudioPlayer.play() 惰性啟動；此處先停止殘留狀態，
-    // 確保本次廣播的 lockedFormat / isPrimed 從乾淨狀態開始。
+#if !FOCUSIN_STABLE
     private func startUnicastAudio() {
         audio.stop()
-        appendLog("Delta 單播音訊通道已就緒（WebSocket）")
+        appendLog("單播音訊通道已就緒（WebSocket）")
     }
 
-    /// 停止單播音訊播放（Delta：WebSocket 單播模式）。
     private func stopUnicastAudio() {
         audio.stop()
     }
+#endif
 
-    /// 解一幀 H.264（供 onFrame 背景佇列呼叫；未解出首幀前只接受關鍵幀）。
     private func decodeH264(_ frame: (annexB: Data, key: Bool, sps: Data?, pps: Data?)) {
         if !hasDecodedFrame && !frame.key { return }
         hasDecodedFrame = true
         h264Decoder.decode(frame.annexB, isKeyframe: frame.key,
                            sps: frame.sps, pps: frame.pps)
     }
-#endif
 
     /// CVPixelBuffer → NSImage（BGRA）。
     /// 用 CIContext 同步渲染成 CGImage（拷貝像素），避免解碼 session 重用 buffer 導致引用失效。
@@ -483,7 +431,6 @@ final class CommandListener: ObservableObject {
         probeReceiver.stop()
         appendLog("組播探測統計已停止")
     }
-#endif
 
     // MARK: - 系統動作
 

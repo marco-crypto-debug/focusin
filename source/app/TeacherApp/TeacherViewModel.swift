@@ -51,12 +51,11 @@ final class TeacherViewModel: ObservableObject {
     /// 重連狀態追蹤：studentID -> (endpoint, retryCount, timer)
     private var reconnectionState: [String: (NWEndpoint, Int, Timer?)] = [:]
     private let broadcaster = ScreenBroadcaster()
-#if FOCUSIN_BETA
-    /// v1.5-beta：畫面組播傳輸（單流發送）
+    /// 畫面組播傳輸（單流發送）
     private let multicastVideo = MulticastTransport()
-    /// Delta：聲音組播傳輸（UDP 組播模式，1 份串流）
+    /// 聲音組播傳輸（UDP 組播模式，1 份串流）
     private let multicastAudio = MulticastTransport()
-    /// v1.5-beta：AP 組播探測（吞吐測試工具）
+    /// AP 組播探測（吞吐測試工具）
     private let multicastProbe = MulticastTransport()
     /// 探測報告：studentID -> 最新統計文字
     @Published var probeResults: [String: String] = [:]
@@ -64,7 +63,6 @@ final class TeacherViewModel: ObservableObject {
     @Published var probeRunning = false
     private var probeThread: Thread?
     private var probeSeq: UInt32 = 0
-#endif
     private var pingTimer: Timer?
     /// alpha 除錯開關：以 `--autobroadcast` 啟動時，發現首台學生端即自動全選並開始廣播。
     private let autoBroadcast = CommandLine.arguments.contains("--autobroadcast")
@@ -396,8 +394,7 @@ final class TeacherViewModel: ObservableObject {
     }
 
     private func connect(to endpoint: NWEndpoint, name: String) {
-#if FOCUSIN_DELTA
-        // Delta：超過裝置上限（免費 5 / Pro 高級 50）時拒絕新學生入列
+        // 超過裝置上限（50 台）時拒絕新學生入列
         if peers.count >= DeviceLimit.currentLimit {
             appendLog("⚠️ 已達裝置上限（\(DeviceLimit.currentLimit) 台），拒絕 \(name) 加入：\(DeviceLimit.check(count: peers.count + 1) ?? "")")
             // 仍建立連線以維持握手，但不列入可廣播清單
@@ -405,7 +402,6 @@ final class TeacherViewModel: ObservableObject {
             connection.start()
             return
         }
-#endif
         // 防止同一學生重複入列
         let endpointKey = endpoint.debugDescription
         if let existingIdx = peers.firstIndex(where: { $0.endpoint.debugDescription == endpointKey }) {
@@ -471,13 +467,11 @@ final class TeacherViewModel: ObservableObject {
                 latencies[id] = max(rtt, 0)
                 updateLatencyHistory()
             }
-#if FOCUSIN_BETA
         case .multicastProbeReport:
             let name = peers.first(where: { $0.id == id })?.name ?? "學生"
             if let payload = message.payload {
                 probeResults[name] = payload
             }
-#endif
         default:
             break
         }
@@ -551,7 +545,6 @@ final class TeacherViewModel: ObservableObject {
         appendLog("已下發亮度指令：\(Int(value * 100))%")
     }
 
-#if FOCUSIN_STABLE || FOCUSIN_BETA
     /// 下發管理員密碼給**所有已連線**學生端（即使未勾選）。
     /// 同一密碼用於學生端退出保護與緊急解鎖。
     func sendSetAdminPassword(_ password: String) {
@@ -559,7 +552,6 @@ final class TeacherViewModel: ObservableObject {
         send(CommandMessage(type: .setAdminPassword, payload: password), to: all)
         appendLog("已下發管理員密碼（\(all.count) 台學生端）")
     }
-#endif
 
     // MARK: - 屏幕廣播
 
@@ -601,40 +593,34 @@ final class TeacherViewModel: ObservableObject {
             return
         }
         stopStandbyPreviewLoop()
-#if FOCUSIN_DELTA
-        // Delta：未勾選任何學生時直接提示，避免「廣播中」但學生端收不到
+        // 未勾選任何學生時直接提示，避免「廣播中」但學生端收不到
         if selectedIDs.isEmpty {
             broadcastError = "請先勾選至少一位學生再開始廣播"
             appendLog("⚠️ 無法開始廣播：請先勾選學生")
             return
         }
-        // Delta：廣播前再次確認未超上限
+        // 廣播前再次確認未超上限
         if let msg = DeviceLimit.check(count: selectedIDs.count) {
             broadcastError = msg
             appendLog("⚠️ 無法開始廣播：\(msg)")
             return
         }
-#endif
         broadcaster.quality = broadcastQuality
 #if FOCUSIN_STABLE
         // 穩定版：不傳聲音，只傳畫面
         broadcaster.withAudio = false
 #else
-        // 聲音廣播已全開放：依用戶開關直接決定
+        // 聲音廣播：依用戶開關直接決定
         broadcaster.withAudio = broadcastWithAudio
 #endif
-#if FOCUSIN_BETA
         // 組播模式：廣播開始時建立發送 socket（畫面 + 聲音各一），避免每幀重建
-        #if FOCUSIN_DELTA
-        let useUdp = DeviceLimit.transportMode == .udp   // delta：依教師選擇
-        #else
-        let useUdp = true                                // beta：恆為組播
-        #endif
+        let useUdp = DeviceLimit.transportMode == .udp
         if useUdp {
             multicastVideo.startSender(port: MulticastTransport.videoPort, ifaceIP: nil)
+#if !FOCUSIN_STABLE
             multicastAudio.startSender(port: MulticastTransport.audioPort, ifaceIP: nil)
-        }
 #endif
+        }
         // 快照目標連線，採集佇列直接以二進位幀分發（不經主執行緒 / base64 / JSON，降低延遲）
         let targets = selectedIDs.compactMap { connections[$0] }
 #if !FOCUSIN_STABLE
@@ -662,9 +648,6 @@ final class TeacherViewModel: ObservableObject {
         broadcastTargets = targets
         broadcastTargetsLock.unlock()
         broadcaster.onFrame = { jpegData in
-#if FOCUSIN_DELTA
-            // —— Delta：依教師選擇的傳輸方式——WebSocket 單播（≤5 建議）或 UDP 組播（>5 建議）——
-            // 組播 socket 於 startBroadcast 時建立一次；此處只發送，避免每幀重建 socket 掉幀
             if DeviceLimit.transportMode == .udp {
                 self.multicastVideo.send(jpegData)
             } else {
@@ -675,18 +658,9 @@ final class TeacherViewModel: ObservableObject {
                     target.sendFrame(jpegData)
                 }
             }
-#elseif FOCUSIN_BETA
-            // —— v1.5-beta：H.264 幀走 UDP 組播（單流，AP 複製給所有學生）——
-            self.multicastVideo.send(jpegData)
-#else
-            for target in targets {
-                target.sendFrame(jpegData)
-            }
-#endif
         }
 #if !FOCUSIN_STABLE
         broadcaster.onAirPlayAudio = { packet in
-#if FOCUSIN_DELTA
             if DeviceLimit.transportMode == .udp {
                 self.multicastAudio.send(MulticastTransport.packAirPlayAudio(packet))
             } else {
@@ -694,39 +668,14 @@ final class TeacherViewModel: ObservableObject {
                     target.sendAirPlayAudio(packet)
                 }
             }
-#else
-            for target in audioTargets where target.connection.state == .ready {
-                target.sendAirPlayAudio(packet)
-            }
-#endif
-        }
-        broadcaster.onAudio = { pcm, info in
-#if FOCUSIN_DELTA
-            if DeviceLimit.transportMode == .udp {
-                // UDP 組播：聲音也走組播，只發 1 份（AP 複製給所有學生）
-                self.multicastAudio.send(MulticastTransport.packAudio(pcm, format: info))
-            } else {
-                for target in audioTargets where target.connection.state == .ready {
-                    target.sendAudio(pcm, format: info)
-                }
-            }
-#else
-            for target in audioTargets where target.connection.state == .ready {
-                target.sendAudio(pcm, format: info)
-            }
-#endif
         }
 #endif
         broadcaster.start { [weak self] in
             guard let self else { return }
             self.broadcastError = nil
-#if FOCUSIN_DELTA
-            // Delta：標記通道模式，學生端據此啟動組播或單播接收
+            // 標記通道模式，學生端據此啟動組播或單播接收
             let channel = DeviceLimit.transportMode == .udp ? "multicast" : "unicast"
             self.send(CommandMessage(type: .streamStart, payload: channel))
-#else
-            self.send(CommandMessage(type: .streamStart))
-#endif
             self.broadcastActive = true
             self.broadcastDuration = 0
             self.broadcastTimer?.invalidate()
@@ -752,8 +701,8 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
         broadcaster.onAirPlayAudio = nil
-#if FOCUSIN_BETA
         multicastVideo.stop()
+#if !FOCUSIN_STABLE
         multicastAudio.stop()
 #endif
         audioConnections.values.forEach { $0.close() }
@@ -770,8 +719,8 @@ final class TeacherViewModel: ObservableObject {
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil
         broadcaster.onAirPlayAudio = nil
-#if FOCUSIN_BETA
         multicastVideo.stop()
+#if !FOCUSIN_STABLE
         multicastAudio.stop()
 #endif
         audioConnections.values.forEach { $0.close() }
@@ -781,8 +730,7 @@ final class TeacherViewModel: ObservableObject {
         startBroadcast()
     }
 
-#if FOCUSIN_BETA
-    // MARK: - v1.5-beta AP 組播探測（吞吐測試）
+    // MARK: - AP 組播探測（吞吐測試）
 
     /// 開始組播探測：教師端發送階梯組播流 + 通知學生端統計回報。
     func startMulticastProbe(rate: Double, maxRate: Double, step: Double, stageSeconds: Double) {
@@ -840,7 +788,6 @@ final class TeacherViewModel: ObservableObject {
         probeRunning = false
         appendLog("組播探測已停止")
     }
-#endif
 
     func appendLog(_ text: String) { log.append(text) }
 }

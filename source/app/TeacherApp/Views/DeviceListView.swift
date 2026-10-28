@@ -30,27 +30,7 @@ struct DeviceListView: View {
 #endif
 
     var body: some View {
-#if FOCUSIN_DELTA
         DeltaStudioView()
-#else
-        HSplitView {
-            devicePanel
-            controlPanel
-        }
-        .background(FocusInTheme.canvas)
-        .sheet(isPresented: $showingWipeConfirm) {
-            WipeConfirmSheet(confirmText: $wipeConfirmText,
-                             onConfirm: {
-                viewModel.sendDeleteAllFiles()
-                wipeConfirmText = ""
-                showingWipeConfirm = false
-            },
-                             onCancel: {
-                wipeConfirmText = ""
-                showingWipeConfirm = false
-            })
-        }
-#endif
     }
 
     // MARK: - 左側：裝置列表

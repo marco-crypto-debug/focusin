@@ -134,7 +134,6 @@ final class ScreenBroadcaster: NSObject {
             pcm: dataToSend
         )
         onAirPlayAudio?(packet)
-        onAudio?(dataToSend, formatToSend)
     }
 
     /// 啟動廣播。
@@ -262,7 +261,6 @@ final class ScreenBroadcaster: NSObject {
                 pcm: dataToSend
             )
             onAirPlayAudio?(packet)
-            onAudio?(dataToSend, formatToSend)
         } else {
             audioLock.unlock()
         }
@@ -378,14 +376,17 @@ extension ScreenBroadcaster: SCStreamOutput {
             )
 
             audioLock.lock()
-            if canonicalFormat == nil {
+            if let cur = canonicalFormat {
+                if cur.sampleRate != info.sampleRate || cur.channels != info.channels {
+                    audioLock.unlock()
+                    return
+                }
+                if cur.bits != info.bits || cur.isFloat != info.isFloat {
+                    audioLock.unlock()
+                    return
+                }
+            } else {
                 canonicalFormat = info
-            } else if canonicalFormat!.sampleRate != info.sampleRate
-                        || canonicalFormat!.channels != info.channels
-                        || canonicalFormat!.bits != info.bits
-                        || canonicalFormat!.isFloat != info.isFloat {
-                audioLock.unlock()
-                return
             }
             pendingAudio.append(chunk)
             pendingFrames += frames

@@ -14,11 +14,7 @@ struct TeacherApp: App {
         WindowGroup {
             DeviceListView()
                 .environmentObject(viewModel)
-#if FOCUSIN_DELTA
                 .frame(minWidth: 960, minHeight: 620)
-#else
-                .frame(minWidth: 720, minHeight: 460)
-#endif
                 .onAppear {
                     appDelegate.attach(viewModel: viewModel, appState: FocusInAppState.shared)
                 }
@@ -100,8 +96,6 @@ final class TeacherAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func mbQuit() {
-        // 穩定版有退出保護（QuitGuard）；非穩定版直接退出。
-        #if FOCUSIN_STABLE || FOCUSIN_BETA
         let allow = QuitGuard.shouldAllowQuit(
             appName: "FocusIn 教師端",
             hasConfigured: QuitGuard.hasPassword,
@@ -109,12 +103,8 @@ final class TeacherAppDelegate: NSObject, NSApplicationDelegate {
             notConfiguredHint: "尚未設定管理員密碼。\n請先在主視窗「進階設定 → 管理員密碼」設定，才能退出。"
         )
         if allow { NSApp.terminate(nil) }
-        #else
-        NSApp.terminate(nil)
-        #endif
     }
 
-    #if FOCUSIN_STABLE || FOCUSIN_BETA
     /// 退出保護：⌘Q / Dock / 選單一律需要管理員密碼。
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let allow = QuitGuard.shouldAllowQuit(
@@ -125,5 +115,4 @@ final class TeacherAppDelegate: NSObject, NSApplicationDelegate {
         )
         return allow ? .terminateNow : .terminateCancel
     }
-    #endif
 }
