@@ -80,6 +80,7 @@ final class TeacherViewModel: ObservableObject {
         refreshWiFiName()
         startWiFiMonitoring()
         startStandbyPreviewLoop()
+        StressTestManager.shared.bind(viewModel: self)
         broadcaster.onPreviewImage = { [weak self] img in
             Task { @MainActor in
                 self?.previewImage = img
@@ -316,6 +317,8 @@ final class TeacherViewModel: ObservableObject {
     }
 
     private func handleConnectionLost(id: String, endpoint: NWEndpoint) {
+        let peerName = peers.first(where: { $0.id == id })?.name ?? id
+        StressTestManager.shared.recordDisconnect(peerName: peerName)
         // 關閉前先解除回呼：close() 會觸發 onConnectionLost，若不清除會再次進入本函式，
         // 連帶把「重連成功後的新連線」也關掉，造成無限重連循環
         connections[id]?.onConnectionLost = nil
@@ -336,6 +339,7 @@ final class TeacherViewModel: ObservableObject {
         if let idx = peers.firstIndex(where: { $0.id == id }) {
             peers[idx].name = name
         }
+        StressTestManager.shared.recordReconnect(peerName: name)
         appendLog("\(name) 重連成功")
     }
 
@@ -622,7 +626,7 @@ final class TeacherViewModel: ObservableObject {
         }
     }
 
-    private func startBroadcast() {
+    func startBroadcast() {
         broadcastError = nil
         checkScreenRecordingPermission()
         if !hasScreenRecordingPermission {
@@ -687,6 +691,9 @@ final class TeacherViewModel: ObservableObject {
         broadcastTargets = targets
         broadcastTargetsLock.unlock()
         broadcaster.onFrame = { jpegData in
+            Task { @MainActor in
+                StressTestManager.shared.recordFrame(size: jpegData.count)
+            }
             if DeviceLimit.transportMode == .udp {
                 self.multicastVideo.send(jpegData)
             } else {
@@ -728,6 +735,8 @@ final class TeacherViewModel: ObservableObject {
             Task { @MainActor in
                 self?.broadcastActive = false
                 self?.broadcastError = message
+                self?.appendLog("廣播錯誤：\(message)")
+                StressTestManager.shared.recordFault(message: message)
             }
         }
     }
@@ -753,7 +762,7 @@ final class TeacherViewModel: ObservableObject {
     }
 
     /// 畫質切換時：先停再開，讓新畫質立即生效。
-    private func restartBroadcast() {
+    func restartBroadcast() {
         broadcaster.stop()
         broadcaster.onFrame = nil
         broadcaster.onAudio = nil

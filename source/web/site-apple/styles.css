@@ -468,11 +468,9 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(42px);
-  opacity: 0.5;
+  opacity: 0.55;
   pointer-events: none;
   animation-play-state: paused;
-  will-change: transform;
 }
 .orb.orb-play {
   animation-play-state: running;
@@ -483,7 +481,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   top: 60px;
   left: 50%;
   margin-left: -520px;
-  background: radial-gradient(circle, rgba(215, 25, 32, 0.22), transparent 65%);
+  background: radial-gradient(circle, rgba(215, 25, 32, 0.22) 0%, rgba(215, 25, 32, 0.12) 34%, rgba(215, 25, 32, 0.04) 52%, transparent 70%);
   animation: orbFloat 16s ease-in-out infinite alternate;
 }
 .orb-b {
@@ -492,7 +490,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   top: 180px;
   left: 50%;
   margin-left: 80px;
-  background: radial-gradient(circle, rgba(139, 61, 255, 0.24), transparent 65%);
+  background: radial-gradient(circle, rgba(139, 61, 255, 0.24) 0%, rgba(139, 61, 255, 0.13) 34%, rgba(139, 61, 255, 0.04) 52%, transparent 70%);
   animation: orbFloat 18s ease-in-out -6s infinite alternate-reverse;
 }
 .orb-c {
@@ -501,7 +499,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   top: 720px;
   left: 50%;
   margin-left: -260px;
-  background: radial-gradient(circle, rgba(91, 124, 255, 0.16), transparent 65%);
+  background: radial-gradient(circle, rgba(91, 124, 255, 0.16) 0%, rgba(91, 124, 255, 0.08) 34%, rgba(91, 124, 255, 0.02) 52%, transparent 70%);
   animation: orbFloat 22s ease-in-out -10s infinite alternate;
 }
 .grid-veil {
@@ -593,22 +591,18 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   z-index: 1;
   margin-top: clamp(48px, 6vw, 76px);
   padding: 24px 28px 0;
-  perspective: 1800px;
 }
 .hero-stage {
   position: relative;
   max-width: 980px;
   margin: 0 auto;
-  transform-style: preserve-3d;
-  transition: transform 0.5s var(--ease-out);
-  will-change: transform;
+  transition: transform 0.4s var(--ease-out);
 }
 .stage-glow {
   position: absolute;
   inset: 8% -8% -6%;
-  background: radial-gradient(60% 60% at 50% 55%, rgba(215, 25, 32, 0.28), rgba(139, 61, 255, 0.14) 48%, transparent 70%);
-  filter: blur(60px);
-  opacity: 0.8;
+  background: radial-gradient(60% 60% at 50% 55%, rgba(215, 25, 32, 0.25) 0%, rgba(139, 61, 255, 0.13) 38%, rgba(139, 61, 255, 0.04) 58%, transparent 74%);
+  opacity: 0.85;
   z-index: 0;
 }
 .pulse-ring {
@@ -618,17 +612,16 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   width: 780px;
   height: 780px;
   margin: -390px 0 0 -390px;
-  border: 1px solid rgba(215, 25, 32, 0.16);
+  border: 1px solid rgba(215, 25, 32, 0.14);
   border-radius: 50%;
   z-index: 0;
-  animation: pulseRing 8s ease-out infinite;
   pointer-events: none;
+  opacity: 0.6;
 }
-.pulse-ring.ring-b { animation-delay: 4s; }
-@keyframes pulseRing {
-  0% { transform: scale(0.72); opacity: 0; }
-  18% { opacity: 0.9; }
-  100% { transform: scale(1.18); opacity: 0; }
+.pulse-ring.ring-b {
+  transform: scale(0.86);
+  border-color: rgba(139, 61, 255, 0.12);
+  opacity: 0.45;
 }
 
 .teacher-window {
@@ -638,14 +631,14 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   margin: 0 auto;
   border-radius: 20px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow:
-    0 70px 140px -50px rgba(40, 10, 50, 0.5),
-    0 18px 45px -24px rgba(0, 0, 0, 0.35),
+    0 50px 100px -40px rgba(40, 10, 50, 0.35),
+    0 16px 36px -20px rgba(0, 0, 0, 0.25),
     0 0 0 1px rgba(0, 0, 0, 0.05);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   transform: translateZ(0);
 }
 .tw-titlebar,
@@ -1135,8 +1128,6 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   background: #111114;
   border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 34px 70px -26px rgba(0, 0, 0, 0.55);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
 }
 .fc-a {
   top: -28px;
@@ -1362,6 +1353,19 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   to { transform: translateX(-50%); }
 }
 
+/* ---------- Performance optimization: defer offscreen layout & rendering ---------- */
+.demo-section,
+.statement,
+.features,
+.focus,
+.how,
+.pricing,
+.download,
+.faq {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 700px;
+}
+
 /* ---------- Live demo ---------- */
 .demo-section {
   position: relative;
@@ -1377,8 +1381,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   width: 1250px;
   height: 760px;
   margin-left: -625px;
-  background: radial-gradient(50% 50% at 50% 50%, rgba(215, 25, 32, 0.26), rgba(139, 61, 255, 0.12) 48%, transparent 72%);
-  filter: blur(70px);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(215, 25, 32, 0.22) 0%, rgba(139, 61, 255, 0.10) 38%, rgba(139, 61, 255, 0.03) 58%, transparent 74%);
   pointer-events: none;
 }
 .demo-section .container { position: relative; z-index: 1; }
@@ -2273,8 +2276,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   right: -20%;
   width: 70%;
   height: 100%;
-  background: radial-gradient(circle, rgba(215, 25, 32, 0.28), transparent 68%);
-  filter: blur(30px);
+  background: radial-gradient(circle, rgba(215, 25, 32, 0.22) 0%, rgba(215, 25, 32, 0.08) 42%, transparent 68%);
   pointer-events: none;
 }
 .compare-icon {
@@ -2813,8 +2815,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   right: -10%;
   width: 760px;
   height: 760px;
-  background: radial-gradient(circle, rgba(215, 25, 32, 0.22), rgba(139, 61, 255, 0.1) 45%, transparent 68%);
-  filter: blur(80px);
+  background: radial-gradient(circle, rgba(215, 25, 32, 0.20) 0%, rgba(139, 61, 255, 0.09) 36%, rgba(139, 61, 255, 0.02) 56%, transparent 70%);
   pointer-events: none;
 }
 .focus-grid {
@@ -3186,8 +3187,7 @@ h1, h2, h3, h4, p { text-wrap: pretty; }
   width: 1100px;
   height: 700px;
   margin-left: -550px;
-  background: radial-gradient(50% 50% at 50% 50%, rgba(215, 25, 32, 0.16), rgba(139, 61, 255, 0.08) 48%, transparent 70%);
-  filter: blur(70px);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(215, 25, 32, 0.15) 0%, rgba(139, 61, 255, 0.07) 38%, rgba(139, 61, 255, 0.02) 58%, transparent 72%);
   pointer-events: none;
 }
 .download .container { position: relative; z-index: 1; }

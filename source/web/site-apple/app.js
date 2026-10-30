@@ -163,7 +163,7 @@
   }
 
   /* ------------------------------------------------------------------
-     Hero parallax
+     Hero parallax (ultra-low GPU 2D micro-offset)
   ------------------------------------------------------------------ */
   const hero = $('.hero');
   const heroStage = $('#heroStage');
@@ -172,11 +172,9 @@
 
   function applyParallax() {
     if (!heroStage) return;
-    const rotateY = pointer.x * 2.6;
-    const rotateX = pointer.y * -2.2;
-    const tx = pointer.x * 9;
-    const ty = pointer.y * 7;
-    heroStage.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    const tx = pointer.x * 8;
+    const ty = pointer.y * 6;
+    heroStage.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
     parallaxFrame = 0;
   }
 
@@ -756,7 +754,7 @@
       "nav.focus": "專注鎖定",
       "nav.download": "下載",
       "nav.cta": "下載",
-      "hero.announce": "FocusIn Delta 1.5.11 正式推出",
+      "hero.announce": "FocusIn Delta 1.5.12 正式推出",
       "hero.title": "一個畫面，<br><span class=\"text-gradient\">送達每一部 Mac。</span>",
       "hero.sub": "FocusIn 把你的 Mac 變成即時課堂廣播工作室。在同一 Wi-Fi 下將屏幕即時串流到每一部學生機，鎖定屏幕並下發指令 —— 零硬件、零帳號、零雲端。",
       "hero.dl": "下載 Mac 版",
@@ -841,7 +839,7 @@
       "nav.focus": "专注锁定",
       "nav.download": "下载",
       "nav.cta": "下载",
-      "hero.announce": "FocusIn Delta 1.5.11 正式发布",
+      "hero.announce": "FocusIn Delta 1.5.12 正式发布",
       "hero.title": "一个屏幕，<br><span class=\"text-gradient\">广播到每台 Mac。</span>",
       "hero.sub": "FocusIn 将你的 Mac 变成实时课堂广播工作室。在局域网内将屏幕瞬间广播给所有学生机，一键锁定全屏并下发指令 —— 无需外接硬件、无需账号、无需云端。",
       "hero.dl": "下载 Mac 版",

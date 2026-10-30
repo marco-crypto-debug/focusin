@@ -19,7 +19,7 @@ ROOT="/Users/marco/Documents/FocusIn"
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 TARGET="arm64-apple-macos14.0"
 BUILD_SHA="$(git -C "$ROOT" rev-parse --short HEAD)"
-VERSION_BASE="${FOCUSIN_VERSION:-1.5.11}"
+VERSION_BASE="${FOCUSIN_VERSION:-1.5.12}"
 
 SHARED_SRC=(
   "$ROOT/source/app/Shared/Networking/PeerConnection.swift"
@@ -47,6 +47,7 @@ TEACHER_SRC=(
   "$ROOT/source/app/TeacherApp/TeacherViewModel.swift"
   "$ROOT/source/app/TeacherApp/ScreenBroadcaster.swift"
   "$ROOT/source/app/TeacherApp/H264Encoder.swift"
+  "$ROOT/source/app/TeacherApp/StressTestManager.swift"
   "$ROOT/source/app/TeacherApp/Views/DeviceListView.swift"
   "$ROOT/source/app/TeacherApp/Views/DeltaStudioView.swift"
 )
