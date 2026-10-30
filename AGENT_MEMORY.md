@@ -14,6 +14,29 @@
 
 ## 🕒 1. Episodic Action Timeline (以前的 Agent 做了些什麼)
 <!-- EPISODIC_LOG_START -->
+### 🔹 [2026-10-30T13:20:00.000Z] @Antigravity
+- **Summary**: Implemented 24H/48H broadcast stress test engine, maximized website performance with low-GPU rendering, published v1.5.12-delta release DMGs, and deployed directly to Cloudflare Pages
+- **Files Touched**: `source/app/TeacherApp/StressTestManager.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/tools/build.sh`, `source/tools/build-site-apple.py`, `source/web/site-apple/styles.css`, `source/web/site-apple/app.js`, `source/web/site-apple/index.html`, `source/web/public/index.html`, `source/web/public/_headers`, `source/web/site/FocusIn官網.html`, `AGENT_MEMORY.md`
+- **Key Decisions**:
+  - **TeacherApp 24H / 48H Continuous Stress Test Engine**:
+    - Built `StressTestManager.swift` supporting 10min, 24h, and 48h automated stress testing.
+    - Integrated frame rate, network throughput, memory residency (via Mach `mach_task_basic_info`), and fault telemetry.
+    - Implemented stream stagnation detection (restarts broadcast if 0 frames for >15s) and automatic peer disconnect / reconnect tracking with 100% recovery verification.
+    - Added display keep-alive engagement (`DisplayKeepAlive.shared.engage()`) to prevent screen sleep during 24h/48h runs.
+    - Added persistent file logging (`~/Library/Logs/FocusIn-StressTest.log`) and one-click diagnostic report exporter (`.txt`).
+    - Integrated dedicated "壓力測試" dashboard and top bar real-time status pill into `DeltaStudioView`.
+  - **Website Extreme Speed & Low-GPU Optimization**:
+    - Replaced heavy GPU Gaussian blur filters (`filter: blur(42px)`, `blur(60px)`, `blur(70px)`, `blur(80px)`) on `.orb`, `.stage-glow`, `.demo-glow`, and `.focus-glow` with pure multi-stop radial gradient falloffs, eliminating offscreen Gaussian shader passes.
+    - Removed `will-change: transform` and unthrottled 3D perspective compositing (`rotateX`, `rotateY`, `perspective: 1800px`) in favor of smooth 2D micro-offset (`translate3d`), reducing GPU rendering load on the hero section to near zero.
+    - Added `content-visibility: auto; contain-intrinsic-size: 1px 700px;` to all below-the-fold sections, deferring offscreen layout and DOM paint until scrolled into view.
+    - Minified CSS and JS during site bundling in `source/tools/build-site-apple.py`.
+    - Added preconnect and DNS-prefetch resource hints for GitHub release asset downloads.
+    - Created `source/web/public/_headers` specifying immutable caching for `/assets/*`, instant edge revalidation for HTML, and strict security headers.
+  - **Release & Cloudflare Deployment**:
+    - Bumped version to `v1.5.12-delta` across apps, website, and build scripts.
+    - Compiled and signed stable DMGs: `FocusIn-Teacher.dmg`, `FocusIn-Student.dmg`, `FocusIn-Delta-Teacher.dmg`, `FocusIn-Delta-Student.dmg`.
+    - Published GitHub Release `v1.5.12-delta` and verified direct download URLs via `curl -sIL`.
+    - Deployed production bundle directly to Cloudflare Pages (`https://focusin.pages.dev`). Verified HTTP 200, edge cache headers, and asset delivery.
 ### 🔹 [2026-10-28T14:40:00.000Z] @OmO
 - **Summary**: Implemented seamless in-place auto update functionality (no manual reinstallation needed, restart to update)
 - **Files Touched**: `source/app/Shared/Utility/UpdateChecker.swift`, `source/app/TeacherApp/TeacherViewModel.swift`, `source/app/TeacherApp/Views/DeltaStudioView.swift`, `source/app/StudentApp/CommandListener.swift`, `source/app/StudentApp/Views/DeltaStudentStudioView.swift`, `AGENT_MEMORY.md`
